@@ -116,7 +116,7 @@ struct Issue: Item, Announceable, Closeable {
 	}
 
     var hasNewComments: Bool {
-        return comments.contains(where: { $0.syncState == .new })
+        return comments.contains(where: { $0.syncState == .new && !$0.viewerDidAuthor })
     }
 
 	func printSummaryLine() {
@@ -185,8 +185,8 @@ struct Issue: Item, Announceable, Closeable {
 				}
 				log()
 			}
-		}
-	}
+        }
+    }
 
 	var comments: [Comment] {
 		return children(field: "comments")
