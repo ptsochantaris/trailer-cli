@@ -95,9 +95,9 @@ extension Item {
 	}
 
     static func processAnnouncements() {
-        if allItems.first is Announceable {
-            allItems.values.forEach {
-                ($0 as! Announceable).announceIfNeeded()
+        allItems.values.forEach {
+            if let i = $0 as? Announceable {
+                i.announceIfNeeded()
             }
         }
     }
