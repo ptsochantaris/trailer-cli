@@ -143,8 +143,10 @@ struct Repo: Item, Announceable {
         printSummaryLine()
     }
 
-    var parentIsNew: Bool {
-        return false
+    func announceIfNeeded() {
+        if syncState == .new {
+            printSummaryLine()
+        }
     }
 
 	var pullRequests: [PullRequest] {

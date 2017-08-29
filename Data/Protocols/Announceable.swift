@@ -10,13 +10,5 @@ import Foundation
 
 protocol Announceable: DetailPrinter {
     func announceIfNeeded()
-    var parentIsNew: Bool { get }
 }
 
-extension Announceable {
-    func announceIfNeeded() {
-        if !parentIsNew {
-            printSummaryLine()
-        }
-    }
-}

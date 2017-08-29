@@ -14,12 +14,12 @@ struct DB {
         Milestone.self,
         Status.self,
         ReviewRequest.self,
-        Review.self,
         Reaction.self,
-        Comment.self,
         Label.self,
         Issue.self,
         PullRequest.self,
+        Comment.self,
+        Review.self,
         Repo.self,
         Org.self,
         User.self,
@@ -37,14 +37,18 @@ struct DB {
 	}
 
 	static func save(purgeUntouchedItems: Bool) {
-		if purgeUntouchedItems {
+        log(level: .debug, "Processing Announcements...")
+        allTypes.forEach { $0.processAnnouncements() }
+
+        if purgeUntouchedItems {
 			log(level: .debug, "Purging stale items...")
-			allTypes.forEach({ $0.purgeUntouchedItems() })
-			allTypes.forEach({ $0.purgeStaleRelationships() })
+			allTypes.forEach { $0.purgeUntouchedItems() }
+			allTypes.forEach { $0.purgeStaleRelationships() }
 		}
+
 		log(level: .debug, "Saving DB...")
 		let e = JSONEncoder()
-		allTypes.forEach({ $0.saveAll(using: e) })
+		allTypes.forEach { $0.saveAll(using: e) }
 		log(level: .verbose, "Saved DB to \(config.saveLocation.path)/")
 	}
 }

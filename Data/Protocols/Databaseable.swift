@@ -11,6 +11,7 @@ import Foundation
 protocol Databaseable {
     static func saveAll(using encoder: JSONEncoder)
     static func loadAll(using decoder: JSONDecoder)
+    static func processAnnouncements()
     static func purgeUntouchedItems()
     static func purgeStaleRelationships()
 }

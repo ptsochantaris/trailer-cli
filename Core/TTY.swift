@@ -21,6 +21,7 @@ struct TTY {
             .replacingOccurrences(of: "[R*", with: "\u{1b}[31m")
             .replacingOccurrences(of: "[G*", with: "\u{1b}[32m")
             .replacingOccurrences(of: "[*", with: "\u{1b}[33m")
+            .replacingOccurrences(of: "[B*", with: "\u{1b}[34m")
             .replacingOccurrences(of: "*]", with: "\u{1b}[39m")
             .replacingOccurrences(of: "[!", with: "\u{1b}[1m")
             .replacingOccurrences(of: "[$", with: "\u{1b}[2m")

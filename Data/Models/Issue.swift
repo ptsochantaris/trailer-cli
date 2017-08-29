@@ -8,7 +8,7 @@
 
 import Foundation
 
-struct Issue: Item, Announceable {
+struct Issue: Item, Announceable, Closeable {
 	var id: String
 	var parents: [String: [Relationship]]
 	var syncState: SyncState
@@ -95,6 +95,14 @@ struct Issue: Item, Announceable {
 		}
 	}
 
+    var shouldAnnounceClosure: Bool {
+        return state == .closed
+    }
+
+    func announceClosure() {
+        printSummaryLine()
+    }
+
 	var commentedByMe: Bool {
 		return comments.contains(where: { $0.viewerDidAuthor })
 	}
@@ -107,10 +115,18 @@ struct Issue: Item, Announceable {
 		return comments.contains(where: { $0.body.localizedCaseInsensitiveContains(myLogin) })
 	}
 
+    var hasNewComments: Bool {
+        return comments.contains(where: { $0.syncState == .new })
+    }
+
 	func printSummaryLine() {
         var line = "[!"
-        if syncState == .new {
+        if state == .closed {
+            line += "[B*CLOSED"
+        } else if syncState == .new {
             line += "[R*NEW"
+        } else if hasNewComments {
+            line += "[R*COMMENTS"
         } else {
             line += "[*"
         }
@@ -124,8 +140,12 @@ struct Issue: Item, Announceable {
 		log(line)
 	}
 
-    var parentIsNew: Bool {
-        return (repo?.syncState ?? .new) == .new
+    func announceIfNeeded() {
+        if let r = repo, r.syncState == .updated {
+            if syncState == .new || (syncState == .updated && hasNewComments) {
+                printSummaryLine()
+            }
+        }
     }
 
 	func printDetails() {

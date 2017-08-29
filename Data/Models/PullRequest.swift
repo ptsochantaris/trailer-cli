@@ -20,7 +20,7 @@ enum MergeableState: String, Codable {
 	}
 }
 
-struct PullRequest: Item, Announceable {
+struct PullRequest: Item, Announceable, Closeable {
 	var id: String
 	var parents: [String: [Relationship]]
 	var syncState: SyncState
@@ -112,6 +112,14 @@ struct PullRequest: Item, Announceable {
 		}
 	}
 
+    var shouldAnnounceClosure: Bool {
+        return state == .closed || state == .merged
+    }
+
+    func announceClosure() {
+        printSummaryLine()
+    }
+
 	var commentedByMe: Bool {
 		return comments.contains(where: { $0.viewerDidAuthor })
 	}
@@ -124,10 +132,26 @@ struct PullRequest: Item, Announceable {
 		return comments.contains(where: { $0.body.localizedCaseInsensitiveContains(myLogin) })
 	}
 
+    var hasNewComments: Bool {
+        return comments.contains(where: { $0.syncState == .new })
+    }
+
+    var hasNewReviews: Bool {
+        return reviews.contains(where: { $0.syncState == .new })
+    }
+
 	func printSummaryLine() {
         var line = "[!"
-        if syncState == .new {
+        if state == .closed {
+            line += "[B*CLOSED"
+        } else if state == .merged {
+            line += "[G*MERGED"
+        } else if syncState == .new {
             line += "[R*NEW"
+        } else if hasNewComments {
+            line += "[R*COMMENTS"
+        } else if hasNewReviews {
+            line += "[R*REVIEWS"
         } else {
             line += "[*"
         }
@@ -143,6 +167,14 @@ struct PullRequest: Item, Announceable {
 
     var parentIsNew: Bool {
         return (repo?.syncState ?? .new) == .new
+    }
+
+    func announceIfNeeded() {
+        if let r = repo, r.syncState == .updated {
+            if syncState == .new || (syncState == .updated && (hasNewComments || hasNewReviews)) {
+                printSummaryLine()
+            }
+        }
     }
 
 	func printDetails() {

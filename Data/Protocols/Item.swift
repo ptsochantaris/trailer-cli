@@ -75,17 +75,32 @@ extension Item {
 		
 		var purgedItemCount = 0
 		for id in allItems.keys {
-			if allItems[id]!.syncState == .none {
+            guard let item = allItems[id] else { continue }
+            let s = item.syncState
+			if s == .none {
 				log(level: .debug, "\(typeName) \(id) no longer present in server data")
 				purgedItemCount += 1
 				allItems[id] = nil
-			}
+            } else if s == .updated, let i = item as? Closeable, i.shouldAnnounceClosure {
+                log(level: .debug, "\(typeName) \(id) is closed or merged, will remove")
+                i.announceClosure()
+                purgedItemCount += 1
+                allItems[id] = nil
+            }
 		}
 
 		if purgedItemCount > 0 {
 			log(level: .verbose, "Purged \(purgedItemCount) \(typeName) item(s) after update")
 		}
 	}
+
+    static func processAnnouncements() {
+        if allItems.first is Announceable {
+            allItems.values.forEach {
+                ($0 as! Announceable).announceIfNeeded()
+            }
+        }
+    }
 
 	static func saveAll(using encoder: JSONEncoder) {
 
@@ -94,9 +109,6 @@ extension Item {
 			if $0.syncState == .new {
                 newItemCount += 1
 				log(level: .debug, "Created \(typeName) \($0.id)")
-                if let item = $0 as? Announceable {
-                    item.announceIfNeeded()
-                }
                 var new = $0
                 new.syncState = .none
 				return new

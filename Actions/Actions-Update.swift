@@ -74,8 +74,20 @@ extension Actions {
 
 		///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-		var prIdList = [String: String]()
-		var issueIdList = [String: String]()
+        var prIdList = [String: String]()
+        for p in PullRequest.allItems.values {
+            if let r = p.repo, r.syncState != .none {
+                prIdList[p.id] = r.id
+            }
+        }
+
+        var issueIdList = [String: String]()
+        for i in Issue.allItems.values {
+            if let r = i.repo, r.syncState != .none {
+                issueIdList[i.id] = r.id
+            }
+        }
+
 		let itemIdParser = { (node: [AnyHashable : Any]) in
 
 			guard let repoId = node["id"] as? String else {
@@ -150,7 +162,7 @@ extension Actions {
 			BatchGroup(templateGroup: Group(name: "repositories", fields: [Repo.prAndIssueIdsFragment]), idList: repoIds, perNodeBlock: itemIdParser))
 		successOrAbort(itemQuery)
 
-		///////////////////////////////////////////////////////////////////////////////////////////////////////////
+        ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 		if prIdList.count > 0 {
 			let currentPRsRefresh = Query(name: "PRs", rootElement:

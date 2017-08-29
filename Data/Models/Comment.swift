@@ -92,7 +92,7 @@ struct Comment: Item, DetailPrinter {
             log("[![*@\(a)*] \(agoFormat(prefix: "Commented ", since: createdAt))!]")
         }
     }
-	
+
 	var reactions: [Reaction] {
 		return children(field: "reactions")
 	}
