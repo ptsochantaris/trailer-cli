@@ -143,6 +143,14 @@ struct Repo: Item, Announceable {
         printSummaryLine()
     }
 
+    var shouldSyncPrs: Bool {
+        return (visibility == .onlyPrs || visibility == .visible) && syncState != .none
+    }
+
+    var shouldSyncIssues: Bool {
+        return (visibility == .onlyIssues || visibility == .visible) && syncState != .none
+    }
+
     func announceIfNeeded() {
         if syncState == .new {
             printSummaryLine()

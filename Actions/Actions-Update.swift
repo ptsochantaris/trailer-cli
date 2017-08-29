@@ -76,14 +76,14 @@ extension Actions {
 
         var prIdList = [String: String]()
         for p in PullRequest.allItems.values {
-            if let r = p.repo, r.syncState != .none {
+            if let r = p.repo, r.shouldSyncPrs {
                 prIdList[p.id] = r.id
             }
         }
 
         var issueIdList = [String: String]()
         for i in Issue.allItems.values {
-            if let r = i.repo, r.syncState != .none {
+            if let r = i.repo, r.shouldSyncIssues {
                 issueIdList[i.id] = r.id
             }
         }

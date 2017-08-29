@@ -11,17 +11,17 @@ import Foundation
 struct DB {
 	
 	private static let allTypes: [Databaseable.Type] = [
+        Org.self,
+        Repo.self,
+        Issue.self,
+        PullRequest.self,
         Milestone.self,
         Status.self,
         ReviewRequest.self,
-        Reaction.self,
         Label.self,
-        Issue.self,
-        PullRequest.self,
         Comment.self,
         Review.self,
-        Repo.self,
-        Org.self,
+        Reaction.self,
         User.self,
 	]
 
@@ -32,7 +32,7 @@ struct DB {
 		log(level: .verbose, "Loaded DB")
 		config.myUser = User.allItems.values.first { $0.isMe }
 		if let me = config.myUser {
-			log(level: .verbose, "API user is @\(me.login)")
+			log(level: .verbose, "API user is [*@\(me.login)*]")
 		}
 	}
 
