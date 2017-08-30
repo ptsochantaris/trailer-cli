@@ -25,7 +25,7 @@ struct Actions {
         let invalidArguments = CommandLine.arguments.filter({ $0.hasPrefix("-") }).filter { arg in
             switch arg {
             case "-v", "-V", "-server", "-token", "-r", "-o", "-t", "-a", "-l", "-h", "-comments", "-body", "-pageSize", "-mine", "-participated", "-mentioned",
-                 "-mergeable", "-conflict", "-red", "-green", "-e", "-before", "-within":
+                 "-mergeable", "-conflict", "-red", "-green", "-e", "-before", "-within", "-n":
                 return false
             default:
                 return true

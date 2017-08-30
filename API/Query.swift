@@ -78,13 +78,15 @@ struct Query {
 		return s
 	}
 
-	func run(shouldRetry: Bool = true, completion: @escaping (Bool)->Void) {
+    private static let RETRY_COUNT = 3
+
+	func run(shouldRetry: Int = Query.RETRY_COUNT, completion: @escaping (Bool)->Void) {
 
 		func errorCompletion(_ message: String) {
-			if shouldRetry {
+			if shouldRetry > 1 {
 				log(level: .verbose, "[*\(name)*] \(message)")
 				log(level: .verbose, "[*\(name)*] Retrying")
-				run(shouldRetry: false, completion: completion)
+				run(shouldRetry: shouldRetry-1, completion: completion)
 			} else {
 				log("[*\(name)*] \(message)")
 				completion(false)
@@ -132,7 +134,7 @@ struct Query {
 			return nil
 		}
 
-		if shouldRetry && !subQuery {
+		if shouldRetry == Query.RETRY_COUNT && !subQuery {
 			log("[*\(name)*] Fetching")
 		}
 		let Q = queryText

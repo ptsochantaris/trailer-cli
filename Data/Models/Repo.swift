@@ -151,9 +151,14 @@ struct Repo: Item, Announceable {
         return (visibility == .onlyIssues || visibility == .visible) && syncState != .none
     }
 
-    func announceIfNeeded() {
+    func announceIfNeeded(notificationMode: NotificationMode) {
         if syncState == .new {
-            printSummaryLine()
+            switch notificationMode {
+            case .standard, .consoleCommentsAndReviews:
+                printSummaryLine()
+            case .none:
+                break
+            }
         }
     }
 

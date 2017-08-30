@@ -8,6 +8,10 @@
 
 import Foundation
 
+enum NotificationMode {
+    case none, standard, consoleCommentsAndReviews
+}
+
 struct DB {
 	
 	private static let allTypes: [Databaseable.Type] = [
@@ -36,9 +40,10 @@ struct DB {
 		}
 	}
 
-	static func save(purgeUntouchedItems: Bool) {
+    static func save(purgeUntouchedItems: Bool, notificationMode: NotificationMode) {
+
         log(level: .debug, "Processing Announcements...")
-        allTypes.forEach { $0.processAnnouncements() }
+        allTypes.forEach { $0.processAnnouncements(notificationMode: notificationMode) }
 
         if purgeUntouchedItems {
 			log(level: .debug, "Purging stale items...")

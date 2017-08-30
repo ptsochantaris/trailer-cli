@@ -9,6 +9,6 @@
 import Foundation
 
 protocol Announceable: DetailPrinter {
-    func announceIfNeeded()
+    func announceIfNeeded(notificationMode: NotificationMode)
 }
 

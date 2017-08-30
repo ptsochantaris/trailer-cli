@@ -32,7 +32,10 @@ extension Actions {
     static func failUpdate(_ message: String?) {
         printErrorMesage(message)
         log("[!Please provide one of the following options for 'update'!]")
-        printOption(name: "all", description: "Update all items.")
+        printOption(name: "all", description: "Update all items")
+        log()
+        log("[!Options for notifications:!]")
+        printOption(name: "-n", description: "List new comments and reviews on items")
         log()
     }
 
@@ -226,7 +229,12 @@ extension Actions {
 
 		///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-		DB.save(purgeUntouchedItems: true)
+        let n: NotificationMode =
+            (commandLineArgument(matching: "-n") != nil) ? .consoleCommentsAndReviews :
+                .standard
+
+        DB.save(purgeUntouchedItems: true, notificationMode: n)
+        Notifications.processQueue()
 		log("Update done.")
 		log(level: .verbose, "Total update API cost: \(config.totalQueryCosts)")
 		log(level: .verbose, "Remaining API limit: \(config.totalApiRemaining)")

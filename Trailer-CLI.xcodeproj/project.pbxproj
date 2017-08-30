@@ -17,6 +17,7 @@
 		164B79D51F4AD3FF00B7CFD6 /* DB.swift in Sources */ = {isa = PBXBuildFile; fileRef = 164B79D41F4AD3FF00B7CFD6 /* DB.swift */; };
 		16597AAD1F47812900844C14 /* Fragment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16597AAC1F47812900844C14 /* Fragment.swift */; };
 		166FE4261F4A2E0D008DBEE8 /* Org.swift in Sources */ = {isa = PBXBuildFile; fileRef = 166FE4251F4A2E0D008DBEE8 /* Org.swift */; };
+		169EBC151F575282001C2320 /* Notifications.swift in Sources */ = {isa = PBXBuildFile; fileRef = 169EBC141F575282001C2320 /* Notifications.swift */; };
 		16B5D9F91F55A3DE0040345F /* Closeable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16B5D9F81F55A3DE0040345F /* Closeable.swift */; };
 		16B9DFB81F544A120010DA83 /* Databaseable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16B9DFB71F544A120010DA83 /* Databaseable.swift */; };
 		16B9DFBC1F544A590010DA83 /* Identifiable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16B9DFBB1F544A590010DA83 /* Identifiable.swift */; };
@@ -74,6 +75,7 @@
 		164B79D41F4AD3FF00B7CFD6 /* DB.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DB.swift; sourceTree = "<group>"; };
 		16597AAC1F47812900844C14 /* Fragment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Fragment.swift; sourceTree = "<group>"; };
 		166FE4251F4A2E0D008DBEE8 /* Org.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Org.swift; sourceTree = "<group>"; };
+		169EBC141F575282001C2320 /* Notifications.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Notifications.swift; sourceTree = "<group>"; };
 		16B5D9F81F55A3DE0040345F /* Closeable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Closeable.swift; sourceTree = "<group>"; };
 		16B9DFB71F544A120010DA83 /* Databaseable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Databaseable.swift; sourceTree = "<group>"; };
 		16B9DFBB1F544A590010DA83 /* Identifiable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Identifiable.swift; sourceTree = "<group>"; };
@@ -151,6 +153,7 @@
 				160CAD941F516A43001172E2 /* Actions-List.swift */,
 				160CAD961F516A4F001172E2 /* Actions-Open.swift */,
 				160CAD981F516B14001172E2 /* Actions-Config.swift */,
+				169EBC141F575282001C2320 /* Notifications.swift */,
 			);
 			path = Actions;
 			sourceTree = "<group>";
@@ -307,6 +310,7 @@
 				16DC46FB1F477A9900F0F3E3 /* User.swift in Sources */,
 				16DC470B1F477B3F00F0F3E3 /* Milestone.swift in Sources */,
 				16DC46FF1F477AC800F0F3E3 /* PullRequest.swift in Sources */,
+				169EBC151F575282001C2320 /* Notifications.swift in Sources */,
 				16B9DFC71F544B7C0010DA83 /* ItemState.swift in Sources */,
 				16DC47141F477C2300F0F3E3 /* Field.swift in Sources */,
 				160CAD911F516A24001172E2 /* Actions-Update.swift in Sources */,

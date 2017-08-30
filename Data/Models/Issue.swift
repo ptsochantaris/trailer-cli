@@ -140,9 +140,16 @@ struct Issue: Item, Announceable, Closeable {
 		log(line)
 	}
 
-    func announceIfNeeded() {
+    func announceIfNeeded(notificationMode: NotificationMode) {
         if let r = repo, r.syncState == .updated {
-            if syncState == .new || (syncState == .updated && hasNewComments) {
+            if syncState == .new {
+                switch notificationMode {
+                case .consoleCommentsAndReviews, .standard:
+                    printSummaryLine()
+                case .none:
+                    break
+                }
+            } else if syncState == .updated && hasNewComments {
                 printSummaryLine()
             }
         }

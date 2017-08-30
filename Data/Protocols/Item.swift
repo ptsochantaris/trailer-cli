@@ -71,7 +71,7 @@ extension Item {
 		}
 	}
 
-	static func purgeUntouchedItems() {
+    static func purgeUntouchedItems() {
 		
 		var purgedItemCount = 0
 		for id in allItems.keys {
@@ -94,10 +94,10 @@ extension Item {
 		}
 	}
 
-    static func processAnnouncements() {
+    static func processAnnouncements(notificationMode: NotificationMode) {
         allItems.values.forEach {
             if let i = $0 as? Announceable {
-                i.announceIfNeeded()
+                i.announceIfNeeded(notificationMode: notificationMode)
             }
         }
     }

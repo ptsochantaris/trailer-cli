@@ -22,7 +22,7 @@ enum ReviewState: String, Codable {
 	}
 }
 
-struct Review: Item, DetailPrinter {
+struct Review: Item, Announceable {
 	var id: String
 	var parents: [String: [Relationship]]
 	var syncState: SyncState
@@ -97,6 +97,31 @@ struct Review: Item, DetailPrinter {
 			return nil
 		}
 	}
+
+    func announceIfNeeded(notificationMode: NotificationMode) {
+        if syncState == .new {
+            switch notificationMode {
+            case .consoleCommentsAndReviews:
+                let a = author?.login ?? ""
+                let n = pullRequest?.number ?? 0
+                let t = pullRequest?.title ?? ""
+                let d: String
+                switch state {
+                case .approved:
+                    d = "@\(a) reviewed [G*(approving)*]"
+                case .changes_requested:
+                    d = "@\(a) reviewed [R*(requesting changes)*]"
+                case .commented:
+                    d = "@\(a) reviewed"
+                default:
+                    return
+                }
+                Notifications.notify(title: d, subtitle: "#\(n) \(t)", details: body)
+            case .standard, .none:
+                break
+            }
+        }
+    }
 
 	func printDetails() {
         printSummaryLine()

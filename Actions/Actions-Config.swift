@@ -40,7 +40,7 @@ extension Actions {
 			r.printDetails()
 		}
 		if changedCount > 0 {
-			DB.save(purgeUntouchedItems: false)
+			DB.save(purgeUntouchedItems: false, notificationMode: .none)
 		}
 	}
 

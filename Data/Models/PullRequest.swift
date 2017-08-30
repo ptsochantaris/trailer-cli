@@ -169,9 +169,16 @@ struct PullRequest: Item, Announceable, Closeable {
         return (repo?.syncState ?? .new) == .new
     }
 
-    func announceIfNeeded() {
+    func announceIfNeeded(notificationMode: NotificationMode) {
         if let r = repo, r.syncState == .updated {
-            if syncState == .new || (syncState == .updated && (hasNewComments || hasNewReviews)) {
+            if syncState == .new {
+                switch notificationMode {
+                case .consoleCommentsAndReviews, .standard:
+                    printSummaryLine()
+                case .none:
+                    break
+                }
+            } else if syncState == .updated && hasNewComments {
                 printSummaryLine()
             }
         }

@@ -8,7 +8,7 @@
 
 import Foundation
 
-struct Comment: Item, DetailPrinter {
+struct Comment: Item, Announceable {
 	var id: String
 	var parents: [String: [Relationship]]
 	var syncState: SyncState
@@ -80,6 +80,20 @@ struct Comment: Item, DetailPrinter {
 			return nil
 		}
 	}
+
+    func announceIfNeeded(notificationMode: NotificationMode) {
+        if syncState == .new {
+            switch notificationMode {
+            case .consoleCommentsAndReviews:
+                let a = author?.login ?? ""
+                let n = pullRequest?.number ?? issue?.number ?? 0
+                let t = pullRequest?.title ?? issue?.title ?? ""
+                Notifications.notify(title: "@\(a) commented", subtitle: "#\(n) \(t)", details: body)
+            case .standard, .none:
+                break
+            }
+        }
+    }
 
 	func printDetails() {
         printSummaryLine()
