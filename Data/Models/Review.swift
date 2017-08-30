@@ -105,18 +105,19 @@ struct Review: Item, Announceable {
                 let a = author?.login ?? ""
                 let n = pullRequest?.number ?? 0
                 let t = pullRequest?.title ?? ""
+                let r = pullRequest?.repo?.nameWithOwner ?? ""
                 let d: String
                 switch state {
                 case .approved:
-                    d = "@\(a) reviewed [G*(approving)*]"
+                    d = "[\(r)] @\(a) reviewed [G*(approving)*]"
                 case .changes_requested:
-                    d = "@\(a) reviewed [R*(requesting changes)*]"
-                case .commented:
-                    d = "@\(a) reviewed"
+                    d = "[\(r)] @\(a) reviewed [R*(requesting changes)*]"
+                case .commented where !body.isEmpty:
+                    d = "[\(r)] @\(a) reviewed"
                 default:
                     return
                 }
-                Notifications.notify(title: d, subtitle: "#\(n) \(t)", details: body)
+                Notifications.notify(title: d, subtitle: "#\(n) \(t))", details: body)
             case .standard, .none:
                 break
             }

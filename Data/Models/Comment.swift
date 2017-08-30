@@ -88,7 +88,9 @@ struct Comment: Item, Announceable {
                 let a = author?.login ?? ""
                 let n = pullRequest?.number ?? issue?.number ?? 0
                 let t = pullRequest?.title ?? issue?.title ?? ""
-                Notifications.notify(title: "@\(a) commented", subtitle: "#\(n) \(t)", details: body)
+                let r = pullRequest?.repo?.nameWithOwner ?? issue?.repo?.nameWithOwner ?? ""
+                Notifications.notify(title: "[\(r)] @\(a) commented", subtitle: "#\(n) \(t)", details: body)
+
             case .standard, .none:
                 break
             }
