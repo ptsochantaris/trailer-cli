@@ -117,7 +117,7 @@ struct Review: Item, Announceable {
                 default:
                     return
                 }
-                Notifications.notify(title: d, subtitle: "PR #\(n) \(t))", details: body)
+                Notifications.notify(title: d, subtitle: "PR #\(n) \(t))", details: body, relatedDate: createdAt)
             case .standard, .none:
                 break
             }

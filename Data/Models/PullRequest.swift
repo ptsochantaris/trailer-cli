@@ -261,9 +261,9 @@ struct PullRequest: Item, Announceable, Closeable {
 				}
 				if pendingReviewers.count > 0 {
 					if pendingReviewers.count > 1 {
-						log("[*[ ]" + pendingReviewers.joined(separator: ", ") + "haven't reviewed yet")
+						log("[*[ ] " + pendingReviewers.joined(separator: ", ") + " haven't reviewed yet")
 					} else {
-						log("[*[ ]" + pendingReviewers.joined(separator: ", ") + "hasn't reviewed yet")
+						log("[*[ ] " + pendingReviewers.joined(separator: ", ") + " hasn't reviewed yet")
 					}
 				}
                 log("*]!]")

@@ -108,7 +108,7 @@ struct Comment: Item, Announceable {
                 }
                 let title = "[\(r)] @\(a) commented" + (inReview ? " [*(in review)*]" : "")
                 let subtitle = (inPr ? "PR" : "Issue") + " #\(n) \(t)"
-                Notifications.notify(title: title, subtitle: subtitle, details: body)
+                Notifications.notify(title: title, subtitle: subtitle, details: body, relatedDate: createdAt)
 
             case .standard, .none:
                 break

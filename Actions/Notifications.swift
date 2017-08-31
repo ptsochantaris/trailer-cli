@@ -14,10 +14,19 @@ struct Notifications {
         let title: String?
         let subtitle: String?
         let details: String?
+        let relatedDate: Date
+
+        private static let formatter: DateFormatter = {
+            let f = DateFormatter()
+            f.dateStyle = .short
+            f.timeStyle = .short
+            return f
+        }()
 
         func go() {
             if let title = title, !title.isEmpty {
-                log("[!\(title)!]")
+                let d = Notification.formatter.string(from: relatedDate)
+                log("[!\(d) \(title)!]")
             }
             if let subtitle = subtitle, !subtitle.isEmpty {
                 log("[$\(subtitle)!]")
@@ -31,13 +40,13 @@ struct Notifications {
 
     private static var notificationQueue = [Notification]()
 
-    static func notify(title: String?, subtitle: String?, details: String?) {
-        let n = Notification(title: title, subtitle: subtitle, details: details)
+    static func notify(title: String?, subtitle: String?, details: String?, relatedDate: Date) {
+        let n = Notification(title: title, subtitle: subtitle, details: details, relatedDate: relatedDate)
         notificationQueue.append(n)
     }
 
     static func processQueue() {
-        for n in notificationQueue {
+        for n in notificationQueue.sorted(by: { $0.relatedDate < $1.relatedDate }) {
             n.go()
         }
         notificationQueue.removeAll()
