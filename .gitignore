@@ -1,4 +1,2 @@
-*.xcbkptlist
-xcuserdata/
-.DS_Store
-
+.build/
+*.xcodeproj/
