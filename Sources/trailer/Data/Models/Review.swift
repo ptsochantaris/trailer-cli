@@ -102,22 +102,21 @@ struct Review: Item, Announceable {
         if syncState == .new {
             switch notificationMode {
             case .consoleCommentsAndReviews:
-                let a = author?.login ?? ""
-                let n = pullRequest?.number ?? 0
-                let t = pullRequest?.title ?? ""
-                let r = pullRequest?.repo?.nameWithOwner ?? ""
-                let d: String
-                switch state {
-                case .approved:
-                    d = "[\(r)] @\(a) reviewed [G*(approving)*]"
-                case .changes_requested:
-                    d = "[\(r)] @\(a) reviewed [R*(requesting changes)*]"
-                case .commented where !body.isEmpty:
-                    d = "[\(r)] @\(a) reviewed"
-                default:
-                    return
+                if let p = pullRequest, let re = pullRequest?.repo, let a = p.author?.login, re.syncState != .new {
+                    let r = re.nameWithOwner
+                    let d: String
+                    switch state {
+                    case .approved:
+                        d = "[\(r)] @\(a) reviewed [G*(approving)*]"
+                    case .changes_requested:
+                        d = "[\(r)] @\(a) reviewed [R*(requesting changes)*]"
+                    case .commented where !body.isEmpty:
+                        d = "[\(r)] @\(a) reviewed"
+                    default:
+                        return
+                    }
+                    Notifications.notify(title: d, subtitle: "PR #\(p.number) \(p.title))", details: body, relatedDate: createdAt)
                 }
-                Notifications.notify(title: d, subtitle: "PR #\(n) \(t))", details: body, relatedDate: createdAt)
             case .standard, .none:
                 break
             }

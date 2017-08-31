@@ -91,16 +91,16 @@ struct Comment: Item, Announceable {
                 let r: String
                 let inReview: Bool
                 let inPr: Bool
-                if let p = pullRequest {
-                    n = p.number; t = p.title; r = p.repo?.nameWithOwner ?? ""
+                if let p = pullRequest, let re = p.repo, re.syncState != .new {
+                    n = p.number; t = p.title; r = re.nameWithOwner
                     inReview = false
                     inPr = true
-                } else if let i = issue {
-                    n = i.number; t = i.title; r = i.repo?.nameWithOwner ?? ""
+                } else if let i = issue, let re = i.repo, re.syncState != .new {
+                    n = i.number; t = i.title; r = re.nameWithOwner
                     inReview = false
                     inPr = false
-                } else if let rv = review, let p = rv.pullRequest {
-                    n = p.number; t = p.title; r = p.repo?.nameWithOwner ?? ""
+                } else if let rv = review, let p = rv.pullRequest, let re = p.repo, re.syncState != .new {
+                    n = p.number; t = p.title; r = re.nameWithOwner
                     inReview = true
                     inPr = false
                 } else {
