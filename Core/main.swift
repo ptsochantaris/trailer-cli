@@ -18,7 +18,7 @@ func go() {
 
 	if let p = commandLineValue(for: "-pageSize") {
 		if let i = Int(p) {
-			if i < 10 || i > 99 {
+			if i < 10 || i > 100 {
 				reportAndExit(message: "Provided page size '\(p)' is invalid, must be from 10 to 100")
 			} else {
 				config.pageSize = i

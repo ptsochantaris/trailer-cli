@@ -35,7 +35,7 @@ struct Group: Ingesting {
 			if onlyLast {
 				brackets.append("last: 1")
 			} else {
-				brackets.append("first: \(config.pageSize)")
+				brackets.append("first: 100")
 				if let lastCursor = lastCursor {
 					brackets.append("after: \"\(lastCursor)\"")
 				}

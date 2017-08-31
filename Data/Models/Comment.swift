@@ -86,10 +86,29 @@ struct Comment: Item, Announceable {
             switch notificationMode {
             case .consoleCommentsAndReviews:
                 let a = author?.login ?? ""
-                let n = pullRequest?.number ?? issue?.number ?? 0
-                let t = pullRequest?.title ?? issue?.title ?? ""
-                let r = pullRequest?.repo?.nameWithOwner ?? issue?.repo?.nameWithOwner ?? ""
-                Notifications.notify(title: "[\(r)] @\(a) commented", subtitle: "#\(n) \(t)", details: body)
+                let n: Int
+                let t: String
+                let r: String
+                let inReview: Bool
+                let inPr: Bool
+                if let p = pullRequest {
+                    n = p.number; t = p.title; r = p.repo?.nameWithOwner ?? ""
+                    inReview = false
+                    inPr = true
+                } else if let i = issue {
+                    n = i.number; t = i.title; r = i.repo?.nameWithOwner ?? ""
+                    inReview = false
+                    inPr = false
+                } else if let rv = review, let p = rv.pullRequest {
+                    n = p.number; t = p.title; r = p.repo?.nameWithOwner ?? ""
+                    inReview = true
+                    inPr = false
+                } else {
+                    break
+                }
+                let title = "[\(r)] @\(a) commented" + (inReview ? " [*(in review)*]" : "")
+                let subtitle = (inPr ? "PR" : "Issue") + " #\(n) \(t)"
+                Notifications.notify(title: title, subtitle: subtitle, details: body)
 
             case .standard, .none:
                 break
