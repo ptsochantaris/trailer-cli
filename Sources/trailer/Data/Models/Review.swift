@@ -37,6 +37,8 @@ struct Review: Item, Announceable {
 	var createdAt = Date.distantPast
 	var updatedAt = Date.distantPast
 
+    var syncNeedsComments = false
+
 	var comments: [Comment] {
 		return children(field: "comments")
 	}
@@ -79,6 +81,8 @@ struct Review: Item, Announceable {
 
 	mutating func apply(_ node: [AnyHashable:Any]) -> Bool {
 		guard node.keys.count > 5 else { return false }
+
+        syncNeedsComments = (node["comments"] as? [AnyHashable : Any])?["totalCount"] as? Int ?? 0 > 0
 
 		state = ReviewState(rawValue: node["state"] as? String ?? "PENDING") ?? ReviewState.pending
 		body = node["body"] as? String ?? ""
@@ -156,6 +160,12 @@ struct Review: Item, Announceable {
 		Field(name: "viewerDidAuthor"),
 		Field(name: "createdAt"),
 		Field(name: "updatedAt"),
-		Group(name: "author", fields: [User.fragment])
+		Group(name: "author", fields: [User.fragment]),
+        Group(name: "comments", fields: [Field(name: "totalCount")]),
 		])
+
+    static let commentsFragment = Fragment(name: "ReviewCommentsFragment", on: "PullRequestReview", fields: [
+        Field(name: "id"), // not using fragment, no need to re-parse
+        Group(name: "comments", fields: [Comment.fragmentForReviews], usePaging: true)
+        ])
 }

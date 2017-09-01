@@ -17,7 +17,7 @@ struct Comment: Item, Announceable {
 	static var allItems = [String:Comment]()
 	static var idField = "id"
 
-	var totalReactions: Int = 0
+	var syncNeedsReactions = false
 
 	var body = ""
 	var viewerDidAuthor = false
@@ -28,7 +28,6 @@ struct Comment: Item, Announceable {
 		case id
 		case parents
 		case elementType
-		case totalReactions
 		case body
 		case viewerDidAuthor
 		case createdAt
@@ -40,7 +39,6 @@ struct Comment: Item, Announceable {
 		id = try c.decode(String.self, forKey: .id)
 		parents = try c.decode([String: [Relationship]].self, forKey: .parents)
 		elementType = try c.decode(String.self, forKey: .elementType)
-		totalReactions = try c.decode(Int.self, forKey: .totalReactions)
 		body = try c.decode(String.self, forKey: .body)
 		viewerDidAuthor = try c.decode(Bool.self, forKey: .viewerDidAuthor)
 		createdAt = try c.decode(Date.self, forKey: .createdAt)
@@ -53,7 +51,6 @@ struct Comment: Item, Announceable {
 		try c.encode(id, forKey: .id)
 		try c.encode(parents, forKey: .parents)
 		try c.encode(elementType, forKey: .elementType)
-		try c.encode(totalReactions, forKey: .totalReactions)
 		try c.encode(body, forKey: .body)
 		try c.encode(viewerDidAuthor, forKey: .viewerDidAuthor)
 		try c.encode(createdAt, forKey: .createdAt)
@@ -63,7 +60,7 @@ struct Comment: Item, Announceable {
 	mutating func apply(_ node: [AnyHashable:Any]) -> Bool {
 		guard node.keys.count > 5 else { return false }
 
-		totalReactions = (node["reactions"] as? [AnyHashable : Any])?["totalCount"] as? Int ?? 0
+		syncNeedsReactions = (node["reactions"] as? [AnyHashable : Any])?["totalCount"] as? Int ?? 0 > 0
 		body = node["body"] as? String ?? ""
 		viewerDidAuthor = node["viewerDidAuthor"] as? Bool ?? false
 		createdAt = GHDateFormatter.parseGH8601(node["createdAt"] as? String) ?? Date.distantPast
@@ -167,22 +164,18 @@ struct Comment: Item, Announceable {
 		Group(name: "author", fields: [User.fragment])
 	]
 
-	static let fragment = Fragment(name: "commentFields", on: "IssueComment", fields: commentFields)
-	static let reviewCommentFragment = Fragment(name: "commentFields", on: "PullRequestReviewComment", fields: commentFields)
+	static let fragmentForItems = Fragment(name: "commentFieldsForItems", on: "IssueComment", fields: commentFields)
+    static let fragmentForReviews = Fragment(name: "commentFieldsForReviews", on: "PullRequestReviewComment", fields: commentFields)
 
-	static let reactionsHolderIssueFragment = Fragment(name: "IssueReactionsHolder", on: "IssueComment", fields: [
-		Field(name: "id"), // not using fragment, no need to re-parse
-		Group(name: "reactions", fields: [Reaction.fragment], usePaging: true)
-		])
+    static let pullRequestReviewCommentReactionFragment = Fragment(name: "PullRequestReviewCommentReactionFragment", on: "PullRequestReviewComment", fields: [
+        Field(name: "id"), // not using fragment, no need to re-parse
+        Group(name: "reactions", fields: [Reaction.fragment], usePaging: true)
+        ])
 
-	static let reactionsHolderPRFragment = Fragment(name: "PRReactionsHolder", on: "PullRequestReviewComment", fields: [
-		Field(name: "id"), // not using fragment, no need to re-parse
-		Group(name: "reactions", fields: [Reaction.fragment], usePaging: true)
-		])
+    static let issueCommentReactionFragment = Fragment(name: "IssueCommentReactionsFragment", on: "IssueComment", fields: [
+        Field(name: "id"), // not using fragment, no need to re-parse
+        Group(name: "reactions", fields: [Reaction.fragment], usePaging: true)
+        ])
 
-	static let reviewCommentHolderFragment = Fragment(name: "reviewHolder", on: "PullRequestReview", fields: [
-		Field(name: "id"), // not using fragment, no need to re-parse
-		Group(name: "comments", fields: [Comment.reviewCommentFragment], usePaging: true)
-		])
 }
 

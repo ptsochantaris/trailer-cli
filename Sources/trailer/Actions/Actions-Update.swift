@@ -167,11 +167,13 @@ extension Actions {
 
         ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+        var queriesForPrsAndIssues = [Query]()
+
 		if prIdList.count > 0 {
 			let currentPRsRefresh = Query(name: "PRs", rootElement:
 				BatchGroup(templateGroup: Group(name: "items", fields: [PullRequest.fragment]), idList: Array(prIdList.keys))
 			)
-			successOrAbort(currentPRsRefresh)
+            queriesForPrsAndIssues.append(currentPRsRefresh)
 
 			let prsMissingParents = PullRequest.allItems.values.filter { $0.repo == nil }
 			for pr in prsMissingParents {
@@ -194,7 +196,7 @@ extension Actions {
 			let currentIssuesRefresh = Query(name: "Issues", rootElement:
 				BatchGroup(templateGroup: Group(name: "items", fields: [Issue.fragment]), idList: Array(issueIdList.keys))
 			)
-			successOrAbort(currentIssuesRefresh)
+            queriesForPrsAndIssues.append(currentIssuesRefresh)
 
 			let issuesMissingParents = Issue.allItems.values.filter { $0.repo == nil }
 			for issue in issuesMissingParents {
@@ -211,27 +213,41 @@ extension Actions {
 			}
 		}
 
+        if !queriesForPrsAndIssues.isEmpty {
+            successOrAbort(queriesForPrsAndIssues)
+        }
+
 		///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-		let reviewIds = Review.allItems.values.flatMap { $0.syncState == .none ? nil : $0.id }
-		let reviewCommentsRefresh = Query(name: "Review Comments", rootElement:
-			BatchGroup(templateGroup: Group(name: "reviews", fields: [Comment.reviewCommentHolderFragment]), idList: reviewIds)
+		let itemIdsWithComments = Review.allItems.values.flatMap({ $0.syncState == .none || !$0.syncNeedsComments ? nil : $0.id })
+            + PullRequest.allItems.values.flatMap({ $0.syncState == .none || !$0.syncNeedsComments ? nil : $0.id })
+            + Issue.allItems.values.flatMap({ $0.syncState == .none || !$0.syncNeedsComments ? nil : $0.id })
+		let reviewCommentsRefresh = Query(name: "Comments", rootElement:
+			BatchGroup(templateGroup: Group(name: "items", fields: [
+                Review.commentsFragment,
+                PullRequest.commentsFragment,
+                Issue.commentsFragment,
+                ]), idList: itemIdsWithComments)
 		)
-		successOrAbort(reviewCommentsRefresh)
 
 		///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-		let commentIdsWithReactions = Comment.allItems.values.flatMap { ($0.syncState == .none || $0.totalReactions == 0) ? nil : $0.id }
-		let reactionsRefresh = Query(name: "Comment Reactions", rootElement:
-			BatchGroup(templateGroup: Group(name: "comments", fields: [Comment.reactionsHolderPRFragment, Comment.reactionsHolderIssueFragment]), idList: commentIdsWithReactions)
+        let itemIdsWithReactions = Comment.allItems.values.flatMap({ ($0.syncState == .none || !$0.syncNeedsReactions) ? nil : $0.id })
+            + PullRequest.allItems.values.flatMap({ ($0.syncState == .none || !$0.syncNeedsReactions) ? nil : $0.id })
+            + Issue.allItems.values.flatMap({ ($0.syncState == .none || !$0.syncNeedsReactions) ? nil : $0.id })
+		let reactionsRefresh = Query(name: "Reactions", rootElement:
+			BatchGroup(templateGroup: Group(name: "items", fields: [
+                Comment.pullRequestReviewCommentReactionFragment,
+                Comment.issueCommentReactionFragment,
+                PullRequest.reactionsFragment,
+                Issue.reactionsFragment
+                ]), idList: itemIdsWithReactions)
 		)
-		successOrAbort(reactionsRefresh)
+		successOrAbort([reactionsRefresh, reviewCommentsRefresh])
 
 		///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-        let n: NotificationMode =
-            (commandLineArgument(matching: "-n") != nil) ? .consoleCommentsAndReviews :
-                .standard
+        let n: NotificationMode = (commandLineArgument(matching: "-n") != nil) ? .consoleCommentsAndReviews : .standard
 
         DB.save(purgeUntouchedItems: true, notificationMode: n)
         Notifications.processQueue()

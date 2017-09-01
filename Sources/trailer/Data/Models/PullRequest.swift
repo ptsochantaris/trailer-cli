@@ -39,6 +39,9 @@ struct PullRequest: Item, Announceable, Closeable {
 	var url = emptyURL
 	var viewerDidAuthor = false
 
+    var syncNeedsReactions = false
+    var syncNeedsComments = false
+
 	private enum CodingKeys : CodingKey {
 		case id
 		case parents
@@ -90,7 +93,10 @@ struct PullRequest: Item, Announceable, Closeable {
 	mutating func apply(_ node: [AnyHashable:Any]) -> Bool {
 		guard node.keys.count > 9 else { return false }
 
-		mergeable = MergeableState(rawValue: node["mergeable"] as? String ?? "UNKNOWN") ?? MergeableState.unknown
+        syncNeedsReactions = (node["reactions"] as? [AnyHashable : Any])?["totalCount"] as? Int ?? 0 > 0
+        syncNeedsComments = (node["comments"] as? [AnyHashable : Any])?["totalCount"] as? Int ?? 0 > 0
+
+        mergeable = MergeableState(rawValue: node["mergeable"] as? String ?? "UNKNOWN") ?? MergeableState.unknown
 		bodyText = node["bodyText"] as? String ?? ""
 		state = ItemState(rawValue: node["state"] as? String ?? "CLOSED") ?? ItemState.closed
 		createdAt = GHDateFormatter.parseGH8601(node["createdAt"] as? String) ?? Date.distantPast
@@ -354,12 +360,12 @@ struct PullRequest: Item, Announceable, Closeable {
 		Group(name: "author", fields: [User.fragment]),
 
 		Group(name: "labels", fields: [Label.fragment], usePaging: true),
-		Group(name: "comments", fields: [Comment.fragment], usePaging: true),
-
 		Group(name: "assignees", fields: [User.fragment], usePaging: true),
 		Group(name: "reviews", fields: [Review.fragment], usePaging: true),
 		Group(name: "reviewRequests", fields: [ReviewRequest.fragment], usePaging: true),
-		Group(name: "reactions", fields: [Reaction.fragment], usePaging: true),
+
+        Group(name: "reactions", fields: [Field(name: "totalCount")]),
+        Group(name: "comments", fields: [Field(name: "totalCount")]),
 
 		Group(name: "commits", fields: [
 			Group(name: "commit", fields: [
@@ -371,4 +377,14 @@ struct PullRequest: Item, Announceable, Closeable {
 				])
 			], usePaging: true, onlyLast: true)
 		])
+
+    static let reactionsFragment = Fragment(name: "PullRequestReactionFragment", on: "PullRequest", fields: [
+        Field(name: "id"), // not using fragment, no need to re-parse
+        Group(name: "reactions", fields: [Reaction.fragment], usePaging: true)
+        ])
+
+    static let commentsFragment = Fragment(name: "PullRequestCommentsFragment", on: "PullRequest", fields: [
+        Field(name: "id"), // not using fragment, no need to re-parse
+        Group(name: "comments", fields: [Comment.fragmentForItems], usePaging: true)
+        ])
 }

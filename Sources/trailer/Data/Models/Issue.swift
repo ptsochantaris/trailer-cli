@@ -25,6 +25,8 @@ struct Issue: Item, Announceable, Closeable {
 	var url = emptyURL
 	var state = ItemState.closed
 	var viewerDidAuthor = false
+    var syncNeedsReactions = false
+    var syncNeedsComments = false
 
 	private enum CodingKeys : CodingKey {
 		case id
@@ -74,7 +76,10 @@ struct Issue: Item, Announceable, Closeable {
 	mutating func apply(_ node: [AnyHashable:Any]) -> Bool {
 		guard node.keys.count > 8 else { return false }
 
-		bodyText = node["bodyText"] as? String ?? ""
+        syncNeedsReactions = (node["reactions"] as? [AnyHashable : Any])?["totalCount"] as? Int ?? 0 > 0
+        syncNeedsComments = (node["comments"] as? [AnyHashable : Any])?["totalCount"] as? Int ?? 0 > 0
+
+        bodyText = node["bodyText"] as? String ?? ""
 		createdAt = GHDateFormatter.parseGH8601(node["createdAt"] as? String) ?? Date.distantPast
 		updatedAt = GHDateFormatter.parseGH8601(node["updatedAt"] as? String) ?? Date.distantPast
 		number = node["number"] as? Int ?? 0
@@ -239,10 +244,19 @@ struct Issue: Item, Announceable, Closeable {
 
 		Group(name: "milestone", fields: [Milestone.fragment]),
 		Group(name: "author", fields: [User.fragment]),
-
 		Group(name: "labels", fields: [Label.fragment], usePaging: true),
-		Group(name: "comments", fields: [Comment.fragment], usePaging: true),
 		Group(name: "assignees", fields: [User.fragment], usePaging: true),
-		Group(name: "reactions", fields: [Reaction.fragment], usePaging: true)
+        Group(name: "reactions", fields: [Field(name: "totalCount")]),
+        Group(name: "comments", fields: [Field(name: "totalCount")]),
 		])
+
+    static let reactionsFragment = Fragment(name: "IssueReactionFragment", on: "Issue", fields: [
+        Field(name: "id"), // not using fragment, no need to re-parse
+        Group(name: "reactions", fields: [Reaction.fragment], usePaging: true)
+        ])
+
+    static let commentsFragment = Fragment(name: "IssueCommentsFragment", on: "Issue", fields: [
+        Field(name: "id"), // not using fragment, no need to re-parse
+        Group(name: "comments", fields: [Comment.fragmentForItems], usePaging: true)
+        ])
 }
