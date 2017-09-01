@@ -32,6 +32,8 @@ struct Query {
 
 	private static let urlSession: URLSession = {
 		let c = URLSessionConfiguration.default
+		c.httpMaximumConnectionsPerHost = 1
+		c.httpShouldUsePipelining = true
 		return URLSession(configuration: c, delegate: nil, delegateQueue: processingQueue)
 	}()
 
@@ -46,6 +48,24 @@ struct Query {
 		self.parent = parent
 		self.name = name
 		self.subQuery = subQuery
+	}
+
+	static func batching(_ name: String, fields: [Element], idList: [String], perNodeBlock: BatchGroup.NodeBlock? = nil) -> [Query] {
+		var list = idList
+		var segments = [[String]]()
+		while !list.isEmpty {
+			let p = min(config.pageSize, list.count)
+			segments.append(Array(list[0..<p]))
+			list = Array(list[p...])
+		}
+		var isNext = false
+		return segments.map {
+			let q = Query(name: name, rootElement: BatchGroup(templateGroup: Group(name: "items", fields: fields), idList: $0, perNodeBlock: perNodeBlock), subQuery: isNext)
+			if !isNext {
+				isNext = true
+			}
+			return q
+		}
 	}
 
 	var queryText: String {
@@ -109,9 +129,6 @@ struct Query {
 					completion(success)
 				})
 			} else {
-				if !subQuery {
-					log(level: .verbose, "[*\(name)*] Completed successfully")
-				}
 				completion(true)
 			}
 		}
@@ -167,8 +184,13 @@ struct Query {
 					}
 
 				} else {
-					let msg = (json["errors"] as? [[AnyHashable:Any]])?.first?["message"] as? String ?? "Unspecified server error: \(json)"
-					errorCompletion("Failed with error: '\(msg)'")
+					if let errors = json["errors"] as? [[AnyHashable:Any]] {
+						let msg = errors.first?["message"] as? String ?? "Unspecified server error: \(json)"
+						errorCompletion("Failed with error: '\(msg)'")
+					} else {
+						let msg = json["message"] as? String ?? "Unspecified server error: \(json)"
+						errorCompletion("Failed with error: '\(msg)'")
+					}
 				}
 
 			} else {

@@ -16,12 +16,12 @@ extension Actions {
 
 	static private func successOrAbort(_ queries: [Query]) {
 
-		var success = false
+		var success = true
 		let group = DispatchGroup()
 		for q in queries {
 			group.enter()
 			q.run { s in
-				if s { success = s }
+				if !s { success = false }
 				group.leave()
 			}
 		}
@@ -161,19 +161,14 @@ extension Actions {
 		}
 
 		let repoIds = Repo.allItems.values.flatMap { return $0.visibility == .hidden ? nil : $0.id }
-		let itemQuery = Query(name: "Item IDs", rootElement:
-			BatchGroup(templateGroup: Group(name: "repositories", fields: [Repo.prAndIssueIdsFragment]), idList: repoIds, perNodeBlock: itemIdParser))
-		successOrAbort(itemQuery)
+		let itemQueries = Query.batching("Item IDs", fields: [Repo.prAndIssueIdsFragment], idList: repoIds, perNodeBlock: itemIdParser)
+		successOrAbort(itemQueries)
 
         ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-        var queriesForPrsAndIssues = [Query]()
-
 		if prIdList.count > 0 {
-			let currentPRsRefresh = Query(name: "PRs", rootElement:
-				BatchGroup(templateGroup: Group(name: "items", fields: [PullRequest.fragment]), idList: Array(prIdList.keys))
-			)
-            queriesForPrsAndIssues.append(currentPRsRefresh)
+			let prQueries = Query.batching("PRs", fields: [PullRequest.fragment], idList: Array(prIdList.keys))
+			successOrAbort(prQueries)
 
 			let prsMissingParents = PullRequest.allItems.values.filter { $0.repo == nil }
 			for pr in prsMissingParents {
@@ -190,13 +185,9 @@ extension Actions {
 			}
 		}
 
-		///////////////////////////////////////////////////////////////////////////////////////////////////////////
-
 		if issueIdList.count > 0 {
-			let currentIssuesRefresh = Query(name: "Issues", rootElement:
-				BatchGroup(templateGroup: Group(name: "items", fields: [Issue.fragment]), idList: Array(issueIdList.keys))
-			)
-            queriesForPrsAndIssues.append(currentIssuesRefresh)
+			let issueQueries = Query.batching("Issues", fields: [Issue.fragment], idList: Array(issueIdList.keys))
+			successOrAbort(issueQueries)
 
 			let issuesMissingParents = Issue.allItems.values.filter { $0.repo == nil }
 			for issue in issuesMissingParents {
@@ -213,37 +204,34 @@ extension Actions {
 			}
 		}
 
-        if !queriesForPrsAndIssues.isEmpty {
-            successOrAbort(queriesForPrsAndIssues)
-        }
-
 		///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 		let itemIdsWithComments = Review.allItems.values.flatMap({ $0.syncState == .none || !$0.syncNeedsComments ? nil : $0.id })
             + PullRequest.allItems.values.flatMap({ $0.syncState == .none || !$0.syncNeedsComments ? nil : $0.id })
             + Issue.allItems.values.flatMap({ $0.syncState == .none || !$0.syncNeedsComments ? nil : $0.id })
-		let reviewCommentsRefresh = Query(name: "Comments", rootElement:
-			BatchGroup(templateGroup: Group(name: "items", fields: [
-                Review.commentsFragment,
-                PullRequest.commentsFragment,
-                Issue.commentsFragment,
-                ]), idList: itemIdsWithComments)
-		)
+
+		let commentQueries = Query.batching("Comments", fields: [
+			Review.commentsFragment,
+			PullRequest.commentsFragment,
+			Issue.commentsFragment,
+			], idList: itemIdsWithComments)
+
+		successOrAbort(commentQueries)
 
 		///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
         let itemIdsWithReactions = Comment.allItems.values.flatMap({ ($0.syncState == .none || !$0.syncNeedsReactions) ? nil : $0.id })
             + PullRequest.allItems.values.flatMap({ ($0.syncState == .none || !$0.syncNeedsReactions) ? nil : $0.id })
             + Issue.allItems.values.flatMap({ ($0.syncState == .none || !$0.syncNeedsReactions) ? nil : $0.id })
-		let reactionsRefresh = Query(name: "Reactions", rootElement:
-			BatchGroup(templateGroup: Group(name: "items", fields: [
+
+		let reactionsQueries = Query.batching("Reactions", fields: [
                 Comment.pullRequestReviewCommentReactionFragment,
                 Comment.issueCommentReactionFragment,
                 PullRequest.reactionsFragment,
                 Issue.reactionsFragment
-                ]), idList: itemIdsWithReactions)
-		)
-		successOrAbort([reactionsRefresh, reviewCommentsRefresh])
+                ], idList: itemIdsWithReactions)
+
+		successOrAbort(reactionsQueries)
 
 		///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
