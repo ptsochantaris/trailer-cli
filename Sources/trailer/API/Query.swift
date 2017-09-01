@@ -167,12 +167,12 @@ struct Query {
 
 				if let data = extractNodeData(from: json) {
 
-					log(level: .verbose, "[*\(self.name)*] Processing page of data")
-
 					if let rateLimit = extractRateLimit(from: json), let cost = rateLimit["cost"] as? Int, let remaining = rateLimit["remaining"] as? Int, let nodeCount = rateLimit["nodeCount"] as? Int {
 						config.totalQueryCosts += cost
 						config.totalApiRemaining = min(config.totalApiRemaining, remaining)
-						log(level: .verbose, "[*\(self.name)*] Cost: [!\(cost)!], Remaining: [!\(remaining)!] - Node Count: [!\(nodeCount)!]")
+						log(level: .verbose, "[*\(self.name)*] Processed page (Cost: [!\(cost)!], Remaining: [!\(remaining)!] - Node Count: [!\(nodeCount)!])")
+					} else {
+						log(level: .verbose, "[*\(self.name)*] Processed page")
 					}
 
 					let r = self.rootElement
