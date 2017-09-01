@@ -7,7 +7,6 @@
 //
 
 import Foundation
-import Dispatch
 
 enum Action: String {
 	case update
