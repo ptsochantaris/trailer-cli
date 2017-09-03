@@ -106,7 +106,7 @@ struct Review: Item, Announceable {
         if syncState == .new {
             switch notificationMode {
             case .consoleCommentsAndReviews:
-                if let p = pullRequest, let re = pullRequest?.repo, let a = p.author?.login, re.syncState != .new {
+                if let p = pullRequest, p.syncState != .new, let re = pullRequest?.repo, let a = p.author?.login, re.syncState != .new {
                     let r = re.nameWithOwner
                     let d: String
                     switch state {

@@ -17,6 +17,10 @@ extension Actions {
 		printOption(name: "pr <number>", description: "Show an issue with the specified number")
 		printOption(name: "issue <number>", description: "Show a PR with the specified number")
 		log()
+		log("[!Options (can combine)!]")
+		printOption(name: "-body", description: "Show the body of the item")
+		printOption(name: "-comments", description: "Show the comments on the item")
+		log()
 		printFilterOptions()
 	}
 

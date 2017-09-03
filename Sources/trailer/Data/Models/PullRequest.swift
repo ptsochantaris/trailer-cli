@@ -155,9 +155,9 @@ struct PullRequest: Item, Announceable, Closeable {
         } else if syncState == .new {
             line += "[R*NEW"
         } else if hasNewComments {
-            line += "[R*COMMENTS"
+            line += "[*COMMENTS"
         } else if hasNewReviews {
-            line += "[R*REVIEWS"
+            line += "[*REVIEWS"
         } else {
             line += "[*"
         }

@@ -24,7 +24,7 @@ struct Actions {
         let invalidArguments = CommandLine.arguments.filter({ $0.hasPrefix("-") }).filter { arg in
             switch arg {
             case "-v", "-V", "-server", "-token", "-r", "-o", "-t", "-a", "-l", "-h", "-comments", "-body", "-pageSize", "-mine", "-participated", "-mentioned",
-                 "-mergeable", "-conflict", "-red", "-green", "-e", "-before", "-within", "-n":
+                 "-mergeable", "-conflict", "-red", "-green", "-e", "-before", "-within", "-n", "-purge":
                 return false
             default:
                 return true
@@ -109,7 +109,7 @@ struct Actions {
 	}
 
 	static func printFilterOptions(onlyRepos: Bool = false) {
-		log("[!Options (can combine):!]")
+		log("[!Filter options (can combine):!]")
 		printOption(name :"-o <org>", description: "Filter for an org name")
 		printOption(name :"-r <repo>", description: "Filter for a repo name")
 		printOption(name :"-h", description: "Exclude repos/orgs without PRs or Issues")
@@ -120,7 +120,7 @@ struct Actions {
 			return
 		}
 
-		log("[!Options affecting PRs or Issues (can combine):!]")
+		log("[!Filter options affecting PRs or Issues (can combine):!]")
 		printOption(name :"-mine", description: "List items authored by me, or assigned to me")
 		printOption(name :"-participated", description: "List items which I have commented on")
 		printOption(name :"-mentioned", description: "List items mentioning me in their body or comments")
@@ -130,7 +130,7 @@ struct Actions {
 		printOption(name :"-a <author>", description: "Filter for a specific author")
 		printOption(name :"-l <label>", description: "Filter for a specific label")
 		log()
-		log("[!Options affecting PRs (can combine):!]")
+		log("[!Filter options affecting PRs (can combine):!]")
 		printOption(name :"-mergeable", description: "Filter for mergeable PRs")
 		printOption(name :"-conflict", description: "Filter for un-mergeable PRs")
 		printOption(name :"-green", description: "Filter for PRs with only green statuses")

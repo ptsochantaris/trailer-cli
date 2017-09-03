@@ -192,6 +192,16 @@ struct Repo: Item, Announceable {
 		Group(name: "issues", fields: [Field(name: "id")], extraParams: ["states": "OPEN"], usePaging: true),
 		])
 
+	static let prIdsFragment = Fragment(name: "repoFields", on: "Repository", fields: [
+		Field(name: "id"),
+		Group(name: "pullRequests", fields: [Field(name: "id")], extraParams: ["states": "OPEN"], usePaging: true),
+		])
+
+	static let issueIdsFragment = Fragment(name: "repoFields", on: "Repository", fields: [
+		Field(name: "id"),
+		Group(name: "issues", fields: [Field(name: "id")], extraParams: ["states": "OPEN"], usePaging: true),
+		])
+
 	func openURL() {
 		log("Opening url: [*\(url)*]")
 		let p = Process()

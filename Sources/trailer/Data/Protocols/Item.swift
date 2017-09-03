@@ -11,6 +11,7 @@ import Foundation
 protocol Item: Identifiable, Databaseable, Equatable {
 	static var allItems: [String:Self] { get set }
 	static func parse(parent: Parent?, elementType: String, node: [AnyHashable : Any], level: Int) -> Self?
+	static func assumeSynced()
 	static var idField: String { get }
 
 	init?(id: String, type: String, parents: [String: [Relationship]], node: [AnyHashable:Any])
@@ -20,6 +21,11 @@ protocol Item: Identifiable, Databaseable, Equatable {
 }
 
 extension Item {
+
+	static func assumeSynced() {
+		allItems = allItems.mapValues { var i = $0; i.syncState = .updated; return i }
+	}
+
 	private static var dataURL: URL {
 		return config.saveLocation.appendingPathComponent("\(typeName).json", isDirectory: false)
 	}

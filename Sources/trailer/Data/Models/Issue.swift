@@ -131,7 +131,7 @@ struct Issue: Item, Announceable, Closeable {
         } else if syncState == .new {
             line += "[R*NEW"
         } else if hasNewComments {
-            line += "[R*COMMENTS"
+            line += "[*COMMENTS"
         } else {
             line += "[*"
         }
