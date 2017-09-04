@@ -22,22 +22,23 @@ A version of [Trailer](http://ptsochantaris.github.io/trailer/) that runs on the
 **Note: Requires Swift 4.x.** Use the simple *(and perhaps not suitable for all setups)* script `install.sh` to place a built binary in /usr/local/bin, or you can manually build the project by entering `swift build -c release --static-swift-stdlib` and move the binary from the `.build` subdirectory to wherever you like.
 
 ## Usage
-Run Trailer without any arguments for some help text.
+Run Trailer without any arguments for some help text. To get started:
 
-In short, using Trailer entails:
+- Create an API access token from the GitHub API (from [here](https://github.com/settings/tokens)). The token you create on GitHub should contain all the `repo` permissions as well as the `read:org` permission. Tell Trailer about it:
 
-- Creating and specifying an API access token for the GitHub API. Tell Trailer about it:
 ```
 trailer -token <API access token>
 ```
-> Note: The token you create on GitHub should contain all the `repo` permissions as well as the `read:org` permission.
 
-- Regularly updating your local data cache to keep things current (and get notifications of activity, etc)
+- Update your local data cache anytime to get notifications of activity, etc.
+
 ```
 trailer update all -v
 ```
 
-If all goes well, you can then use the `trailer list` command or `trailer show` command to browse and view items, as well as the `trailer config` command to restrict PRs/Issues to specific repositories and reduce clutter, noise, and API usage when updating.
+- Don't overdo it though, especially if you watch or are a member of many repos, as the API is quite strict on rate limits and may temporarily block you if you update too often.
+- If all goes well, you can then use the `trailer list` command or `trailer show` command to browse and view items, as well as the `trailer config` command to restrict PRs/Issues to specific repositories and reduce clutter, noise, and API usage when updating.
+- See below for some examples of common commands.
 
 ## Examples
 
@@ -59,4 +60,14 @@ List all items in repositories containing the letters "swift" and authored by us
 ```
 trailer show issue 5 -body -comments
 ```
-Show issue #5. If there are more than one issues with the number #5 in different repositories, trailer will list them. You can then narrow the search down using `-r` or `-a` to specify which repo or author's issue you want to examine.
+Show issue #5. If there are more than one issues with the number #5 in different repositories, trailer will list them. You can then narrow the search down using `-r` or `-a` to specify which repo or author's issue you want to examine. The `-body` command will cause the Issue's main text to be displayed in addition to its details. The `-comments` command will also verbosely display all the comments/reviews in that issue.
+
+## Multiple Servers
+
+```
+trailer -s local.server.my.net -token <enterprise token>
+trailer -s local.server.my.net update
+trailer -s local.server.my.net list items
+```
+
+The `-s` command switches the context of trailer to another server. For instance, a local GitHub Enterprise server. All commands work identically, but will apply to this context. You can have as many parallel `-s` contexts as you like.
