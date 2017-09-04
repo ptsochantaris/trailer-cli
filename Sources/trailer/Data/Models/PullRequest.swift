@@ -233,6 +233,17 @@ struct PullRequest: Item, Announceable, Closeable {
 
 		log()
 
+		let react = reactions
+		if !react.isEmpty {
+			log("[!Reactions!]")
+			for r in react {
+				if let u = r.user {
+					log("\(r.emoji)  - @\(u.login)")
+				}
+			}
+			log()
+		}
+
 		let s = statuses
 		if !s.isEmpty {
             log("[!Statuses")
@@ -264,15 +275,15 @@ struct PullRequest: Item, Announceable, Closeable {
 			let blockingReviewers = reviewerToReview.values.filter({ $0.state == .changes_requested }).flatMap({ $0.author?.login }).map({ "@"+$0 })
 			let pendingReviewers = reviewRqs.flatMap({ $0.reviewer?.login }).map({ "@"+$0 }).filter({ !(approvingReviewers.contains($0) || blockingReviewers.contains($0)) })
 			if !approvingReviewers.isEmpty || !blockingReviewers.isEmpty || !pendingReviewers.isEmpty {
-				log("[!Reviews:")
+				log("[!Reviews")
 				if approvingReviewers.count > 0 {
 					log("[G*[+] " + approvingReviewers.joined(separator: ", ") + " approved changes")
 				}
 				if blockingReviewers.count > 0 {
 					if blockingReviewers.count > 1 {
-						log("[R*[X] " + blockingReviewers.joined(separator: ", ") + " require further changes")
+						log("[R*[X] " + blockingReviewers.joined(separator: ", ") + " request changes")
 					} else {
-						log("[R*[X] " + blockingReviewers.joined(separator: ", ") + " requires further changes")
+						log("[R*[X] " + blockingReviewers.joined(separator: ", ") + " requests changes")
 					}
 				}
 				if pendingReviewers.count > 0 {

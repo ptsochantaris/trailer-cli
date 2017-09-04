@@ -122,16 +122,8 @@ struct Review: Item, Announceable {
 		}
     }
 
-	func printDetails() {
-        printSummaryLine()
-		if !body.isEmpty {
-            log(body.trimmingCharacters(in: .whitespacesAndNewlines), unformatted: true)
-			log()
-		}
-	}
-
-    func printSummaryLine() {
-        if let a = author?.login {
+	private func printHeader() {
+		if let a = author?.login {
 			switch state {
 			case .approved:
 				log("[![*@\(a)*] \(agoFormat(prefix: "[G*Approved Changes*] ", since: createdAt))!]")
@@ -140,8 +132,20 @@ struct Review: Item, Announceable {
 			default:
 				log("[![*@\(a)*] \(agoFormat(prefix: "Reviewed ", since: createdAt))!]")
 			}
-            log()
-        }
+		}
+	}
+
+	func printDetails() {
+		printHeader()
+		if !body.isEmpty {
+            log(body.trimmingCharacters(in: .whitespacesAndNewlines), unformatted: true)
+			log()
+		}
+	}
+
+    func printSummaryLine() {
+		printHeader()
+		log()
     }
 
 	var pullRequest: PullRequest? {

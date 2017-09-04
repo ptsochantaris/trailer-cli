@@ -116,6 +116,17 @@ struct Comment: Item, Announceable {
 	func printDetails() {
         printSummaryLine()
         log(body.trimmingCharacters(in: .whitespacesAndNewlines), unformatted: true)
+
+		let react = reactions
+		if !react.isEmpty {
+			let reactionList = react.flatMap {
+				if let u = $0.user {
+					return "[\($0.emoji)  @\(u.login)]"
+				}
+				return nil
+			}
+			log(reactionList.joined(separator: ", "))
+		}
         log()
 	}
 

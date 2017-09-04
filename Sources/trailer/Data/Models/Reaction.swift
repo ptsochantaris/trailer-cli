@@ -59,6 +59,22 @@ struct Reaction: Item {
 		}
 	}
 
+	var user: User? {
+		return children(field: "user").first
+	}
+
+	var emoji: String {
+		switch content {
+		case "THUMBS_UP": return "👍"
+		case "THUMBS_DOWN": return "👎"
+		case "LAUGH": return "😄"
+		case "HOORAY": return "🎉"
+		case "CONFUSED": return "😕"
+		case "HEART": return "❤️"
+		default: return "?"
+		}
+	}
+
 	static let fragment = Fragment(name: "reactions", on: "Reaction", fields: [
 		Field(name: "id"),
 		Field(name: "content"),

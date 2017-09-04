@@ -185,6 +185,17 @@ struct Issue: Item, Announceable, Closeable {
 		}
 		log()
 
+		let react = reactions
+		if !react.isEmpty {
+			log("[!Reactions!]")
+			for r in react {
+				if let u = r.user {
+					log("\(r.emoji)  - @\(u.login)")
+				}
+			}
+			log()
+		}
+
 		if commandLineArgument(matching: "-body") != nil {
 			let b = bodyText.trimmingCharacters(in: .whitespacesAndNewlines)
 			if b.count > 0 {
