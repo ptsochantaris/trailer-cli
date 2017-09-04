@@ -155,13 +155,13 @@ struct PullRequest: Item, Announceable, Closeable {
         } else if syncState == .new {
             line += "[R*NEW"
         } else if hasNewComments {
-            line += "[*COMMENTS"
+            line += "[C*COMMENTED"
         } else if hasNewReviews {
-            line += "[*REVIEWS"
-        } else {
-            line += "[*"
-        }
-        line += ">*] PR [*\(number)*] \(title)!]"
+            line += "[C*REVIEWED"
+		} else {
+			line += "[*>"
+		}
+        line += "*] PR [*\(number)*] \(title)!]"
 		if let r = repo {
 			line += " (\(r.nameWithOwner))"
 		}

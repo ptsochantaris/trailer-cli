@@ -91,9 +91,16 @@ extension Actions {
 		log("Starting update...")
 		config.totalQueryCosts = 0
 
+		let userWantsAll = typesToSync.contains(.all)
+		let userWantsRepos = userWantsAll || typesToSync.contains(.repos)
+		let userWantsPrs = userWantsAll || typesToSync.contains(.prs)
+		let userWantsIssues = userWantsAll || typesToSync.contains(.issues)
+		let userWantsComments = userWantsAll || typesToSync.contains(.comments)
+		let userWantsReactions = userWantsAll || typesToSync.contains(.reactions)
+
 		///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-		if typesToSync.contains(.repos) || typesToSync.contains(.all) {
+		if userWantsRepos {
 			let repositoryListQuery = Query(name: "Repos", rootElement:
 				Group(name: "viewer", fields: [
 					User.fragment,
@@ -108,9 +115,6 @@ extension Actions {
 		}
 
 		///////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-		let userWantsPrs = typesToSync.contains(.all) || typesToSync.contains(.prs)
-		let userWantsIssues = typesToSync.contains(.all) || typesToSync.contains(.issues)
 
 		var prIdList = [String: String]()
 		if userWantsPrs {
@@ -253,7 +257,7 @@ extension Actions {
 
 		///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-		if typesToSync.contains(.comments) || typesToSync.contains(.all) {
+		if userWantsComments {
 
 			if !(userWantsPrs || userWantsIssues) {
 				log("Warning: Can't sync comments without PRs or Issues being synced too, ignoring")
@@ -274,7 +278,7 @@ extension Actions {
 
 		///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-		if typesToSync.contains(.reactions) || typesToSync.contains(.all) {
+		if userWantsReactions {
 
 			if !(userWantsPrs || userWantsIssues) {
 				log("Warning: Can't sync reactions without at least PRs or Issues being synced too, ignoring")
@@ -297,7 +301,6 @@ extension Actions {
 		///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
         let n: NotificationMode = (commandLineArgument(matching: "-n") != nil) ? .consoleCommentsAndReviews : .standard
-
 		DB.save(purgeUntouchedItems: true, notificationMode: n)
         Notifications.processQueue()
 		log("Update done.")

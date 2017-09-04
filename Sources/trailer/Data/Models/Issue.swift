@@ -131,11 +131,11 @@ struct Issue: Item, Announceable, Closeable {
         } else if syncState == .new {
             line += "[R*NEW"
         } else if hasNewComments {
-            line += "[*COMMENTS"
-        } else {
-            line += "[*"
-        }
-        line += ">*] Issue [![*\(number)*] \(title)!]"
+            line += "[C*COMMENTED"
+		} else {
+			line += "[*>"
+		}
+        line += "*] Issue [![*\(number)*] \(title)!]"
 		if let r = repo {
 			line += " (\(r.nameWithOwner))"
 		}
