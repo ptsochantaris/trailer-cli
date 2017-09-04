@@ -110,6 +110,7 @@ extension Actions {
 					]))
 			successOrAbort(repositoryListQuery)
 		} else {
+			log(level: .info, "[*Repos*] skipped...")
 			Org.assumeSynced()
 			Repo.assumeSynced()
 		}
@@ -215,6 +216,28 @@ extension Actions {
 			successOrAbort(itemQueries)
 		}
 
+		if !userWantsPrs {
+			log(level: .info, "[*PRs*] skipped...")
+			PullRequest.assumeSynced()
+			Issue.assumeSynced()
+			Milestone.assumeSynced()
+			Status.assumeSynced()
+			Review.assumeSynced()
+			ReviewRequest.assumeSynced()
+			Label.assumeSynced()
+			Reaction.assumeSynced()
+			User.assumeSynced()
+		}
+
+		if !userWantsIssues {
+			log(level: .info, "[*Issues*] skipped...")
+			Issue.assumeSynced()
+			Milestone.assumeSynced()
+			Label.assumeSynced()
+			Reaction.assumeSynced()
+			User.assumeSynced()
+		}
+
         ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 		if prIdList.count > 0 {
@@ -259,43 +282,67 @@ extension Actions {
 
 		if userWantsComments {
 
-			if !(userWantsPrs || userWantsIssues) {
-				log("Warning: Can't sync comments without PRs or Issues being synced too, ignoring")
+			var itemIdsWithComments = [String]()
+
+			if userWantsPrs {
+				itemIdsWithComments += Review.allItems.values.flatMap({ $0.syncState == .none || !$0.syncNeedsComments ? nil : $0.id })
+				itemIdsWithComments += PullRequest.allItems.values.flatMap({ $0.syncState == .none || !$0.syncNeedsComments ? nil : $0.id })
+			} else {
+				itemIdsWithComments += Review.allItems.keys
+				itemIdsWithComments += PullRequest.allItems.keys
 			}
 
-			let itemIdsWithComments = Review.allItems.values.flatMap({ $0.syncState == .none || !$0.syncNeedsComments ? nil : $0.id })
-				+ PullRequest.allItems.values.flatMap({ $0.syncState == .none || !$0.syncNeedsComments ? nil : $0.id })
-				+ Issue.allItems.values.flatMap({ $0.syncState == .none || !$0.syncNeedsComments ? nil : $0.id })
+			if userWantsIssues {
+				itemIdsWithComments += Issue.allItems.values.flatMap({ $0.syncState == .none || !$0.syncNeedsComments ? nil : $0.id })
+			} else {
+				itemIdsWithComments += Issue.allItems.keys
+			}
 
-			let commentQueries = Query.batching("Comments", fields: [
+			successOrAbort(Query.batching("Comments", fields: [
 				Review.commentsFragment,
 				PullRequest.commentsFragment,
 				Issue.commentsFragment,
-				], idList: itemIdsWithComments)
+				], idList: itemIdsWithComments))
 
-			successOrAbort(commentQueries)
+		} else {
+			log(level: .info, "[*Comments*] skipped...")
+			Comment.assumeSynced()
 		}
 
 		///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 		if userWantsReactions {
 
-			if !(userWantsPrs || userWantsIssues) {
-				log("Warning: Can't sync reactions without at least PRs or Issues being synced too, ignoring")
+			var itemIdsWithReactions = [String]()
+			
+			if userWantsComments {
+				itemIdsWithReactions += Comment.allItems.values.flatMap({ ($0.syncState == .none || !$0.syncNeedsReactions) ? nil : $0.id })
+			} else {
+				itemIdsWithReactions += Comment.allItems.keys
 			}
 
-			let itemIdsWithReactions = Comment.allItems.values.flatMap({ ($0.syncState == .none || !$0.syncNeedsReactions) ? nil : $0.id })
-				+ PullRequest.allItems.values.flatMap({ ($0.syncState == .none || !$0.syncNeedsReactions) ? nil : $0.id })
-				+ Issue.allItems.values.flatMap({ ($0.syncState == .none || !$0.syncNeedsReactions) ? nil : $0.id })
+			if userWantsPrs {
+				itemIdsWithReactions += PullRequest.allItems.values.flatMap({ ($0.syncState == .none || !$0.syncNeedsReactions) ? nil : $0.id })
+			} else {
+				itemIdsWithReactions += PullRequest.allItems.keys
+			}
 
-			let reactionsQueries = Query.batching("Reactions", fields: [
-					Comment.pullRequestReviewCommentReactionFragment,
-					Comment.issueCommentReactionFragment,
-					PullRequest.reactionsFragment,
-					Issue.reactionsFragment
-					], idList: itemIdsWithReactions)
+			if userWantsIssues {
+				itemIdsWithReactions += Issue.allItems.values.flatMap({ ($0.syncState == .none || !$0.syncNeedsReactions) ? nil : $0.id })
+			} else {
+				itemIdsWithReactions += Issue.allItems.keys
+			}
 
-			successOrAbort(reactionsQueries)
+			successOrAbort(Query.batching("Reactions", fields: [
+				Comment.pullRequestReviewCommentReactionFragment,
+				Comment.issueCommentReactionFragment,
+				PullRequest.reactionsFragment,
+				Issue.reactionsFragment
+				], idList: itemIdsWithReactions))
+
+		} else {
+			log(level: .info, "[*Reactions*] skipped...")
+			Reaction.assumeSynced()
 		}
 
 		///////////////////////////////////////////////////////////////////////////////////////////////////////////
