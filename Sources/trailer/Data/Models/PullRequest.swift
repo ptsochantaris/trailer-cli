@@ -202,12 +202,10 @@ struct PullRequest: Item, Announceable, Closeable {
 		if let r = repo {
 			log("           [$Repo!] \(r.nameWithOwner)")
 		}
+		log("            [$URL!] \(url.absoluteString)")
 		log(agoFormat(prefix: "        [$Created!] ", since: createdAt) + " by @" + (author?.login ?? ""))
 		log(agoFormat(prefix: "        [$Updated!] ", since: updatedAt))
-		if let m = milestone {
-			log("      [$Milestone!] \(m.title)")
-		}
-		log("            [$URL!] \(url.absoluteString)")
+
         var mergeLine = "    [$Merge check!] [!"
 		switch mergeable {
 		case .conflicting:
@@ -220,6 +218,19 @@ struct PullRequest: Item, Announceable, Closeable {
 		mergeLine += mergeable.rawValue.capitalized
         mergeLine += "*]!]"
         log(mergeLine)
+
+		if let m = milestone {
+			log("      [$Milestone!] \(m.title)")
+		}
+
+		let rs = reviews
+		let reviewComments = rs.reduce([], { $0 + $1.comments })
+		let reviewsWithText = rs.filter { !($0.state == .commented && $0.body.isEmpty) }
+		let commentItems = reviewsWithText as [DetailPrinter] + reviewComments as [DetailPrinter] + comments as [DetailPrinter]
+		if commentItems.count > 0 {
+			log("       [$Comments!] \(commentItems.count)")
+		}
+
 		log()
 
 		let s = statuses
@@ -239,7 +250,6 @@ struct PullRequest: Item, Announceable, Closeable {
 			}
             log("!]")
 		}
-
 
 		let revs = reviews.sorted { $0.createdAt < $1.createdAt }
 		let reviewRqs = reviewRequests
@@ -286,11 +296,7 @@ struct PullRequest: Item, Announceable, Closeable {
 		}
 
 		if commandLineArgument(matching: "-comments") != nil {
-
-			let rs = reviews
-			let rc = rs.reduce([], { $0 + $1.comments })
-			let items = rs as [DetailPrinter] + rc as [DetailPrinter] + comments as [DetailPrinter]
-			let co = items.sorted(by: { $0.createdAt < $1.createdAt })
+			let co = commentItems.sorted(by: { $0.createdAt < $1.createdAt })
 			if !co.isEmpty {
 				for c in co {
 					c.printDetails()

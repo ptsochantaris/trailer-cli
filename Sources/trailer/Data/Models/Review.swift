@@ -103,28 +103,23 @@ struct Review: Item, Announceable {
 	}
 
     func announceIfNeeded(notificationMode: NotificationMode) {
-        if syncState == .new {
-            switch notificationMode {
-            case .consoleCommentsAndReviews:
-                if let p = pullRequest, p.syncState != .new, let re = pullRequest?.repo, let a = p.author?.login, re.syncState != .new {
-                    let r = re.nameWithOwner
-                    let d: String
-                    switch state {
-                    case .approved:
-                        d = "[\(r)] @\(a) reviewed [G*(approving)*]"
-                    case .changes_requested:
-                        d = "[\(r)] @\(a) reviewed [R*(requesting changes)*]"
-                    case .commented where !body.isEmpty:
-                        d = "[\(r)] @\(a) reviewed"
-                    default:
-                        return
-                    }
-                    Notifications.notify(title: d, subtitle: "PR #\(p.number) \(p.title))", details: body, relatedDate: createdAt)
-                }
-            case .standard, .none:
-                break
-            }
-        }
+		if notificationMode != .consoleCommentsAndReviews || syncState != .new { return }
+
+		if let p = pullRequest, p.syncState != .new, let re = pullRequest?.repo, let a = p.author?.login, re.syncState != .new {
+			let r = re.nameWithOwner
+			let d: String
+			switch state {
+			case .approved:
+				d = "[\(r)] @\(a) reviewed [G*(approving)*]"
+			case .changes_requested:
+				d = "[\(r)] @\(a) reviewed [R*(requesting changes)*]"
+			case .commented where !body.isEmpty:
+				d = "[\(r)] @\(a) reviewed"
+			default:
+				return
+			}
+			Notifications.notify(title: d, subtitle: "PR #\(p.number) \(p.title))", details: body, relatedDate: createdAt)
+		}
     }
 
 	func printDetails() {
@@ -137,7 +132,14 @@ struct Review: Item, Announceable {
 
     func printSummaryLine() {
         if let a = author?.login {
-            log("[![*@\(a)*] \(agoFormat(prefix: "Reviewed ", since: createdAt))!]")
+			switch state {
+			case .approved:
+				log("[![*@\(a)*] \(agoFormat(prefix: "[G*Approved Changes*] ", since: createdAt))!]")
+			case .changes_requested:
+				log("[![*@\(a)*] \(agoFormat(prefix: "[R*Requested Changes*] ", since: createdAt))!]")
+			default:
+				log("[![*@\(a)*] \(agoFormat(prefix: "Reviewed ", since: createdAt))!]")
+			}
             log()
         }
     }

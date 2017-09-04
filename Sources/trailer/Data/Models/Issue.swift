@@ -172,12 +172,17 @@ struct Issue: Item, Announceable, Closeable {
 		if let r = repo {
             log("           [$Repo!] \(r.nameWithOwner)")
 		}
+		log("            [$URL!] \(url.absoluteString)")
         log(agoFormat(prefix: "        [$Created!] ", since: createdAt) + " by @" + (author?.login ?? ""))
         log(agoFormat(prefix: "        [$Updated!] ", since: updatedAt))
 		if let m = milestone {
             log("      [$Milestone!] \(m.title)")
 		}
-		log("            [$URL!] \(url.absoluteString)")
+
+		let commentCount = comments.count
+		if commentCount > 0 {
+			log("       [$Comments!] \(commentCount)")
+		}
 		log()
 
 		if commandLineArgument(matching: "-body") != nil {
