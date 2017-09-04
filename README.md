@@ -30,13 +30,12 @@ In short, using Trailer entails:
 ```
 trailer -token <API access token>
 ```
+> Note: The token you create on GitHub should contain all the `repo` permissions as well as the `read:org` permission.
 
 - Regularly updating your local data cache to keep things current (and get notifications of activity, etc)
 ```
 trailer update all -v
 ```
-
-> Note: The token you create on GitHub should contain all the `repo` permissions as well as the `read:org` permission.
 
 If all goes well, you can then use the `trailer list` command or `trailer show` command to browse and view items, as well as the `trailer config` command to restrict PRs/Issues to specific repositories and reduce clutter, noise, and API usage when updating.
 
