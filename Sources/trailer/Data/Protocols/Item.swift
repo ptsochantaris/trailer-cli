@@ -23,7 +23,14 @@ protocol Item: Identifiable, Databaseable, Equatable {
 extension Item {
 
 	static func assumeSynced() {
-		allItems = allItems.mapValues { var i = $0; i.syncState = .updated; return i }
+		allItems = allItems.mapValues {
+			var i = $0
+			i.syncState = .updated
+			i.parents = i.parents.mapValues { relationshipsToAType -> [Relationship] in
+				return relationshipsToAType.map { var n = $0; n.syncState = .updated; return n }
+			}
+			return i
+		}
 	}
 
 	private static var dataURL: URL {
@@ -59,15 +66,13 @@ extension Item {
 						if relationship.syncState == .none {
 							log(level: .debug, "Removing stale relationship from \(item.typeName) \(item.id) to parent ID \(relationship.parentId)")
 							return nil
+						} else if checkItemExists(type: parentTypeName, id: relationship.parentId) { // object actually exists
+							var newRelationship = relationship
+							newRelationship.syncState = .none
+							return newRelationship
 						} else {
-							if checkItemExists(type: parentTypeName, id: relationship.parentId) { // object actually exists
-								var newRelationship = relationship
-								newRelationship.syncState = .none
-								return newRelationship
-							} else {
-								log(level: .debug, "Removing relationship from \(item.typeName) \(item.id) to parent ID \(relationship.parentId) which no longer exists")
-								return nil
-							}
+							log(level: .debug, "Removing relationship from \(item.typeName) \(item.id) to parent ID \(relationship.parentId) which no longer exists")
+							return nil
 						}
 					}
 					newItem.parents[relationshipKey] = relationships
