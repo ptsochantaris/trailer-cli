@@ -84,34 +84,35 @@ extension Actions {
 		let searchForRepo = commandLineValue(for: "-r")
 		let hideEmpty = commandLineArgument(matching: "-h") != nil
 		let onlyEmpty = commandLineArgument(matching: "-e") != nil
-		var result = [Repo]()
-		for r in Repo.allItems.values.sorted(by: { $0.nameWithOwner < $1.nameWithOwner }) {
+		return parallelFilter(Array(Repo.allItems.values)) { r in
+
 			if let s = searchForOrg {
 				if let on = r.org?.name {
 					if !on.localizedCaseInsensitiveContains(s) {
-						continue
+						return false
 					}
 				} else {
-					continue
+					return false
 				}
 			}
 			if let s = searchForRepo, !r.nameWithOwner.localizedCaseInsensitiveContains(s) {
-				continue
+				return false
 			}
 			if onlyEmpty && (r.pullRequests.count > 0 || r.issues.count > 0) {
-				continue
+				return false
 			}
 			if hideEmpty && (r.visibility == .hidden || (r.pullRequests.count == 0 && r.issues.count == 0)) {
-				continue
+				return false
 			}
-			result.append(r)
-		}
-		return result
+
+			return true
+
+		}.sorted { $0.nameWithOwner < $1.nameWithOwner }
 	}
 
 	static func pullRequestsToScan(in repo: Repo, number: Int? = nil) -> [PullRequest] {
 		let a = Args()
-		return repo.pullRequests.filter { p in
+		return parallelFilter(repo.pullRequests) { p in
 
 			if a.mine || a.participated || a.mentioned {
 				var inSection = false
@@ -213,7 +214,7 @@ extension Actions {
 			return []
 		}
 
-		return repo.issues.filter { i in
+		return parallelFilter(repo.issues) { i in
 
 			if a.mine || a.participated || a.mentioned {
 				var inSection = false

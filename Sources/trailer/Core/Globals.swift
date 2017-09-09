@@ -199,3 +199,24 @@ struct GHDateFormatter {
 	}
 #endif
 
+let filterQueue = DispatchQueue(label: "trailer-cli-filtering-process", qos: .userInteractive, attributes: .concurrent)
+
+func parallelFilter<T>(_ items: [T], filter: (T)->Bool) -> [T] {
+
+	let resultQueue = OperationQueue()
+	resultQueue.maxConcurrentOperationCount = 1
+	var filtered = [T]()
+	filterQueue.sync {
+		DispatchQueue.concurrentPerform(iterations: items.count) { iteration in
+			let item = items[iteration]
+			if filter(item) {
+				resultQueue.addOperation {
+					filtered.append(item)
+				}
+			}
+		}
+	}
+	resultQueue.waitUntilAllOperationsAreFinished()
+	return filtered
+}
+
