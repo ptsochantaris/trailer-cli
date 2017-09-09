@@ -1,11 +1,6 @@
 # Command-line Trailer
 Copyright (c) 2017 Paul Tsochantaris. Released under the terms of the MIT licence, see the file LICENCE for details.
 
-## Warning: Work In Progress
-This source is very much a work-in-progress at the moment. There is almost no documentation, and you should expect weirdness, force-pushes, code to break, and no release binaries.
-
-This will change quite soon but, for the moment, please do not rely on this code for anything apart from experimenting.
-
 ## What is it?
 A version of [Trailer](http://ptsochantaris.github.io/trailer/) that runs on the macOS & Linux command-line, can integrate into scripts, be used on remote servers, or simply used because consoles are cool. This version does not aim for feature parity with the mainstream Trailer project although it shares common ideas and concepts.
 
@@ -18,10 +13,15 @@ A version of [Trailer](http://ptsochantaris.github.io/trailer/) that runs on the
 - It uses the new GitHub GraphQL-based v4 API, making syncs very quick. Additionally it allows trimming down both the data that is synced (for instance, skipping comments or issues for a certain sync)
 - It's *way* geekier.
 
+## Warning: Work In Progress
+Trailer-CLI is quite useable, but it is also new and code/features may be in flux for a while, and may contain potential bugs.
+
+Please refer to the "cookbook" section below for an introduction to its features. There are no binaries (yet) but the project can be easily built on the command line on macOS (see right below).
+
 ## Building & Installing
 **Note: Requires Swift 4.x.** Use the simple *(and perhaps not suitable for all setups)* script `install.sh` to place a built binary in /usr/local/bin, or you can manually build the project by entering `swift build -c release --static-swift-stdlib` and move the binary from the `.build` subdirectory to wherever you like.
 
-## Usage
+## Quickstart
 Run Trailer without any arguments for some help text. To get started:
 
 - Create an API access token from the GitHub API (from [here](https://github.com/settings/tokens)). The token you create on GitHub should contain all the `repo` permissions as well as the `read:org` permission. Tell Trailer about it:
@@ -40,7 +40,7 @@ trailer update all -v
 - If all goes well, you can then use the `trailer list` command or `trailer show` command to browse and view items, as well as the `trailer config` command to restrict PRs/Issues to specific repositories and reduce clutter, noise, and API usage when updating.
 - See below for some examples of common commands.
 
-## Examples / Cookbook
+## Cookbook
 
 ```
 trailer 
