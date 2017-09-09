@@ -60,8 +60,9 @@ List all items in repositories containing the letters "swift" and authored by us
 ```
 trailer list items -mine -participated -mentioned
 ```
-List items that are either `mine` (items created or assigned to me), `participated` (i.e. commented on by me) or items where I've been `mentioned` (either in the body or reviews/comments). You can combine these options like above, or use each one by itself. Or for instance, add `-r reponame` to limit this query to repositories whose names match `reponame`, or `-t` to filter for a certain title, and so forth. Check the `help` option for a full list of options.
+List items that are either `mine` (items created or assigned to me), `participated` (i.e. commented on by me) or items where I've been `mentioned` (either in the body or reviews/comments). You can combine these options like above, or use each one by itself. Or for instance, add `-r reponame` to limit this query to repositories whose names match `reponame`, or use `-t` to filter for a certain title, `-a` for an author, and so forth. Check the `help` option for a full list of options.
 
+```
 trailer show issue 5 -body -comments
 ```
 Show issue #5. If there are more than one issues with the number #5 in different repositories, trailer will list them. You can then narrow the search down using `-r` or `-a` to specify which repo or author's issue you want to examine. The `-body` command will cause the Issue's main text to be displayed in addition to its details. The `-comments` command will also verbosely display all the comments/reviews in that issue.
