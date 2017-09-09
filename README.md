@@ -67,6 +67,12 @@ trailer show issue 5 -body -comments
 ```
 Show issue #5. If there are more than one issues with the number #5 in different repositories, trailer will list them. You can then narrow the search down using `-r` or `-a` to specify which repo or author's issue you want to examine. The `-body` command will cause the Issue's main text to be displayed in addition to its details. The `-comments` command will also verbosely display all the comments/reviews in that issue.
 
+```
+trailer open issue 5 -r myrepo
+```
+
+Open the GitHub page for issue #5 from `myRepo` in the default system browser (macOS only for now)
+
 ## Multiple Servers
 
 ```
