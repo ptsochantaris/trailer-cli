@@ -159,8 +159,9 @@ struct GHDateFormatter {
 #if os(OSX)
 	private let agoFormatter: DateComponentsFormatter = {
 		let f = DateComponentsFormatter()
-		f.allowedUnits = [.year, .month, .day, .hour, .minute]
+		f.allowedUnits = [.year, .month, .weekOfMonth, .day, .hour, .minute, .second]
 		f.unitsStyle = .full
+		f.maximumUnitCount = 2
 		return f
 	}()
 	func agoFormat(prefix: String, since: Date?) -> String {
@@ -170,8 +171,12 @@ struct GHDateFormatter {
 		}
 
 		let interval = -since.timeIntervalSinceNow
-		if interval < 60.0 {
-			return "\(prefix)Just now"
+		if interval < 10.0 {
+			if prefix.isEmpty {
+				return "Just now"
+			} else {
+				return "\(prefix)just now"
+			}
 		} else {
 			let duration = agoFormatter.string(from: since, to: Date()) ?? "unknown time"
 			return "\(prefix)\(duration) ago"
@@ -192,7 +197,11 @@ struct GHDateFormatter {
 
 		let interval = -since.timeIntervalSinceNow
 		if interval < 60.0 {
-			return "\(prefix)Just now"
+			if prefix.isEmpty {
+				return "Just now"
+			} else {
+				return "\(prefix)just now"
+			}
 		} else {
 			let time = agoFormatter.string(from: since)
 			return "\(prefix)\(time)"

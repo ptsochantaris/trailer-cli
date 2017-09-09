@@ -37,6 +37,29 @@ struct Config {
 		}
 	}
 
+	var latestSyncDate: Date? {
+		get {
+			if let d = try? Data(contentsOf: saveLocation.appendingPathComponent("latest-sync-date")),
+				let dateString = String(data:d, encoding: .utf8),
+				let dateTicks = TimeInterval(dateString) {
+
+				return Date(timeIntervalSince1970: dateTicks)
+			}
+			return nil
+		}
+		set {
+			let fileURL = saveLocation.appendingPathComponent("latest-sync-date")
+			if let n = newValue {
+				let dateTickString = String(n.timeIntervalSince1970)
+				try! dateTickString.data(using: .utf8)?.write(to: fileURL)
+			} else {
+				if FileManager.default.fileExists(atPath: fileURL.path) {
+					try! FileManager.default.removeItem(at: fileURL)
+				}
+			}
+		}
+	}
+
 	var totalQueryCosts = 0
 	var totalApiRemaining = Int.max
 

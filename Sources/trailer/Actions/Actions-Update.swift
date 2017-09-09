@@ -88,6 +88,9 @@ extension Actions {
 
 	private static func update(_ typesToSync: [UpdateType]) {
 		DB.load()
+		if let d = config.latestSyncDate {
+			log(agoFormat(prefix: "[!Last update was ", since: d) + "!]")
+		}
 		log("Starting update...")
 		config.totalQueryCosts = 0
 
@@ -346,6 +349,8 @@ extension Actions {
 		}
 
 		///////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+		config.latestSyncDate = Date()
 
         let n: NotificationMode = (commandLineArgument(matching: "-n") != nil) ? .consoleCommentsAndReviews : .standard
 		DB.save(purgeUntouchedItems: true, notificationMode: n)
