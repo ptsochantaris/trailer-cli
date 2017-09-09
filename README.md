@@ -152,7 +152,7 @@ trailer update prs comments
 ```
 Update only PRs and also comments related to PRs.
 
-### Multiple Servers
+### Advanced: Multiple Servers
 
 ```
 trailer -s local.server.my.net -token <enterprise token>
