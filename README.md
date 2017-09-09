@@ -91,12 +91,17 @@ Show issue #5. If there are more than one issues with the number #5 in different
 trailer open issue 5 -r myrepo
 ```
 
-Like `show` above, but instead opens the relevant GitHub web page. This, for example, would open issue #5 from `myRepo` in the default system browser (macOS only for now)
+Like `show` above, but instead opens the relevant GitHub web page. This, for example, would open issue #5 from "MyRepo" in the default system browser (macOS only for now)
 
 ```
 trailer list labels -r myrepo
 ```
 List all the labels that are in use currently in repository "MyRepo" (or use `-o` to list them for a specific org)
+
+```
+trailer list items -l bug
+```
+List all items that have a label containing the text "bug".
 
 ## Multiple Servers
 

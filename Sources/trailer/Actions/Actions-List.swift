@@ -127,7 +127,7 @@ extension Actions {
 			if a.mergeable && p.mergeable != .mergeable {
                 return false
 			}
-			
+
 			if a.conflict && p.mergeable != .conflicting {
                 return false
 			}
