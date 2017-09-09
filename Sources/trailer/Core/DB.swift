@@ -35,8 +35,8 @@ struct DB {
 		allTypes.forEach({ $0.loadAll(using: e) })
 		log(level: .verbose, "Loaded DB")
 		config.myUser = User.allItems.values.first { $0.isMe }
-		if let me = config.myUser {
-			log(level: .verbose, "API user is [*@\(me.login)*]")
+		if config.myUser != nil {
+			log(level: .verbose, "API user is [*\(config.myLogin)*]")
 		}
 	}
 

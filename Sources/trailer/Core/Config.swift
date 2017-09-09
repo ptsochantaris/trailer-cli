@@ -13,7 +13,17 @@ struct Config {
 
 	var pageSize = 100
 
-	var myUser: User?
+	var myUser: User? {
+		didSet {
+			if let u = myUser {
+				myLogin = "@\(u.login)"
+			} else {
+				myLogin = ""
+			}
+		}
+	}
+
+	var myLogin: String = ""
 
 	var token: String {
 		get {

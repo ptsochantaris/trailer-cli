@@ -136,6 +136,10 @@ struct Comment: Item, Announceable {
         }
     }
 
+	var mentionsMe: Bool {
+		return body.localizedCaseInsensitiveContains(config.myLogin)
+	}
+
 	var reactions: [Reaction] {
 		return children(field: "reactions")
 	}

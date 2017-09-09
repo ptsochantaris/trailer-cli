@@ -285,15 +285,15 @@ extension Actions {
 			var itemIdsWithComments = [String]()
 
 			if userWantsPrs {
-				itemIdsWithComments += Review.allItems.values.flatMap({ $0.syncState == .none || !$0.syncNeedsComments ? nil : $0.id })
-				itemIdsWithComments += PullRequest.allItems.values.flatMap({ $0.syncState == .none || !$0.syncNeedsComments ? nil : $0.id })
+				itemIdsWithComments += Review.allItems.values.flatMap { $0.syncState == .none || !$0.syncNeedsComments ? nil : $0.id }
+				itemIdsWithComments += PullRequest.allItems.values.flatMap { $0.syncState == .none || !$0.syncNeedsComments ? nil : $0.id }
 			} else {
 				itemIdsWithComments += Review.allItems.keys
 				itemIdsWithComments += PullRequest.allItems.keys
 			}
 
 			if userWantsIssues {
-				itemIdsWithComments += Issue.allItems.values.flatMap({ $0.syncState == .none || !$0.syncNeedsComments ? nil : $0.id })
+				itemIdsWithComments += Issue.allItems.values.flatMap { $0.syncState == .none || !$0.syncNeedsComments ? nil : $0.id }
 			} else {
 				itemIdsWithComments += Issue.allItems.keys
 			}
@@ -316,19 +316,19 @@ extension Actions {
 			var itemIdsWithReactions = [String]()
 			
 			if userWantsComments {
-				itemIdsWithReactions += Comment.allItems.values.flatMap({ ($0.syncState == .none || !$0.syncNeedsReactions) ? nil : $0.id })
+				itemIdsWithReactions += Comment.allItems.values.flatMap { ($0.syncState == .none || !$0.syncNeedsReactions) ? nil : $0.id }
 			} else {
 				itemIdsWithReactions += Comment.allItems.keys
 			}
 
 			if userWantsPrs {
-				itemIdsWithReactions += PullRequest.allItems.values.flatMap({ ($0.syncState == .none || !$0.syncNeedsReactions) ? nil : $0.id })
+				itemIdsWithReactions += PullRequest.allItems.values.flatMap { ($0.syncState == .none || !$0.syncNeedsReactions) ? nil : $0.id }
 			} else {
 				itemIdsWithReactions += PullRequest.allItems.keys
 			}
 
 			if userWantsIssues {
-				itemIdsWithReactions += Issue.allItems.values.flatMap({ ($0.syncState == .none || !$0.syncNeedsReactions) ? nil : $0.id })
+				itemIdsWithReactions += Issue.allItems.values.flatMap { ($0.syncState == .none || !$0.syncNeedsReactions) ? nil : $0.id }
 			} else {
 				itemIdsWithReactions += Issue.allItems.keys
 			}

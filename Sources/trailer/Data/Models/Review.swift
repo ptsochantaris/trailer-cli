@@ -159,6 +159,13 @@ struct Review: Item, Announceable {
 		return children(field: "author").first
 	}
 
+	var mentionsMe: Bool {
+		if body.localizedCaseInsensitiveContains(config.myLogin) {
+			return true
+		}
+		return comments.contains { $0.mentionsMe }
+	}
+
 	static let fragment = Fragment(name: "reviewFields", on: "PullRequestReview", fields: [
 		Field(name: "id"),
 		Field(name: "body"),

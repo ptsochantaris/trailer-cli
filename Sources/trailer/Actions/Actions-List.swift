@@ -115,7 +115,7 @@ extension Actions {
 
 			if a.mine || a.participated || a.mentioned {
 				var inSection = false
-				if a.mine && (p.viewerDidAuthor || p.assignees.contains(config.myUser!)) {
+				if a.mine && (p.viewerDidAuthor || p.isAssignedToMe) {
 					inSection = true
 				}
 				if a.participated && !inSection && p.commentedByMe {
@@ -217,7 +217,7 @@ extension Actions {
 
 			if a.mine || a.participated || a.mentioned {
 				var inSection = false
-				if a.mine && (i.viewerDidAuthor || i.assignees.contains(config.myUser!)) {
+				if a.mine && (i.viewerDidAuthor || i.isAssignedToMe) {
 					inSection = true
 				}
 				if a.participated && !inSection && i.commentedByMe {

@@ -211,11 +211,11 @@ extension Item {
 
 	func children<T: Item>(field: String) -> [T] {
 		let key = "\(typeName):\(field)"
-		return T.allItems.values.flatMap { c -> T? in
-			if let p = c.parents[key], p.contains(where: { $0.parentId == id }) {
-				return c
+		return T.allItems.values.filter { c in
+			if let p = c.parents[key] {
+				return p.contains { $0.parentId == id }
 			}
-			return nil
+			return false
 		}
 	}
 

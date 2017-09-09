@@ -131,11 +131,17 @@ struct PullRequest: Item, Announceable, Closeable {
 	}
 
 	var mentionsMe: Bool {
-		let myLogin = "@"+config.myUser!.login
-		if bodyText.localizedCaseInsensitiveContains(myLogin) {
+		if bodyText.localizedCaseInsensitiveContains(config.myLogin) {
 			return true
 		}
-		return comments.contains(where: { $0.body.localizedCaseInsensitiveContains(myLogin) })
+		return comments.contains { $0.mentionsMe } || reviews.contains { $0.mentionsMe }
+	}
+
+	var isAssignedToMe: Bool {
+		if let u = config.myUser {
+			return assignees.contains(u)
+		}
+		return false
 	}
 
     var hasNewComments: Bool {
