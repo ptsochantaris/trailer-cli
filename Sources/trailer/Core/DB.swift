@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import Dispatch
 
 enum NotificationMode {
     case none, standard, consoleCommentsAndReviews
