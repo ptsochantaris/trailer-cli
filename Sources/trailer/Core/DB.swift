@@ -31,9 +31,15 @@ struct DB {
 
 	static func load() {
 		log(level: .debug, "Loading DB...")
-		let e = JSONDecoder()
-		allTypes.forEach({ $0.loadAll(using: e) })
+		let loadingQueue = DispatchQueue.global(qos: .userInteractive)
+		loadingQueue.sync {
+			let e = JSONDecoder()
+			DispatchQueue.concurrentPerform(iterations: allTypes.count) { iteration in
+				allTypes[iteration].loadAll(using: e)
+			}
+		}
 		log(level: .verbose, "Loaded DB")
+
 		config.myUser = User.allItems.values.first { $0.isMe }
 		if config.myUser != nil {
 			log(level: .verbose, "API user is [*\(config.myLogin)*]")
@@ -52,8 +58,13 @@ struct DB {
 		}
 
 		log(level: .debug, "Saving DB...")
-		let e = JSONEncoder()
-		allTypes.forEach { $0.saveAll(using: e) }
+		let savingQueue = DispatchQueue.global(qos: .userInteractive)
+		savingQueue.sync {
+			let e = JSONEncoder()
+			DispatchQueue.concurrentPerform(iterations: allTypes.count) { iteration in
+				allTypes[iteration].saveAll(using: e)
+			}
+		}
 		log(level: .verbose, "Saved DB to \(config.saveLocation.path)/")
 	}
 }
