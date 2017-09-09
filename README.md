@@ -135,7 +135,7 @@ Updates, if you have many items, can take a while and repeated updates with many
 
 This way you can refresh subsets of things more often, if you want to stay up to date, and refresh everything using the `all` parameter less often.
 
-*Tip: Using the `-v` parameter will provide you with info on how much API usage you have used fro GitHub for the current hourly widow.*
+*Tip: The `-v` parameter will provide you with info on how much API usage you have used on GitHub for the current hourly window.*
 
 ```
 trailer update repos
