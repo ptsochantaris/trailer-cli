@@ -34,6 +34,8 @@ struct Query {
 		let c = URLSessionConfiguration.default
 		c.httpMaximumConnectionsPerHost = 1
 		c.httpShouldUsePipelining = true
+		c.urlCache = nil
+		c.requestCachePolicy = .reloadIgnoringLocalAndRemoteCacheData
 		return URLSession(configuration: c, delegate: nil, delegateQueue: processingQueue)
 	}()
 
