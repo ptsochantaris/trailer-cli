@@ -14,15 +14,15 @@ A version of [Trailer](http://ptsochantaris.github.io/trailer/) that runs on the
 ## Warning: Work In Progress
 Trailer-CLI is quite useable, but it is also new and code/features may be in flux for a while, and may contain potential bugs.
 
-Please refer to the "cookbook" section below for an introduction to its features. There are no binaries (yet) but the project can be easily built on the command line on macOS (see right below).
+Please refer to the "cookbook" section below for an introduction to various features. There are no binaries (yet) but the project can be easily built from source (see right below).
 
 ## Building & Installing
-**Note: Requires Swift 4.x.** Use the simple *(and perhaps not suitable for all setups)* script `install.sh` to place a built binary in /usr/local/bin, or you can manually build the project by entering `swift build -c release --static-swift-stdlib` and move the binary from the `.build` subdirectory to wherever you like.
+**Note: Requires Swift 4.x.** Use the simple *(and perhaps not suitable for all setups)* script `install.sh` to place a built binary in /usr/local/bin, or you can manually build the project by entering `swift build -c release --static-swift-stdlib` and move the `trailer` binary from the `.build` subdirectory to wherever you like.
 
 ## Quickstart
-Run Trailer without any arguments for some help text. To get started:
+Run Trailer without any arguments for some help. To get started:
 
-- Create an API access token from the GitHub API (from [here](https://github.com/settings/tokens)). The token you create on GitHub should contain all the `repo` permissions as well as the `read:org` permission. Tell Trailer about it:
+- Create an API access token for the GitHub API (from [here](https://github.com/settings/tokens)) and tell Trailer about it. **The token you create on GitHub must contain all the `repo` permissions as well as the `read:org` permission**.
 
 ```
 trailer -token <API access token>
@@ -40,6 +40,8 @@ trailer update all -v
 
 ## Cookbook
 
+### Fetching info
+
 ```
 trailer 
 ```
@@ -49,6 +51,8 @@ Get help on the available commands and filters. Highly recommended. You can type
 trailer update all
 ```
 Update the local data from the server. `-v` will give more info, or `-V` will provide *very* verbose debug output on the queries performed.
+
+### Listing and filtering
 
 ```
 trailer list items -r swift -a bob
@@ -81,17 +85,6 @@ trailer list issues -before 1000
 List all issues which have not been updated in the last 1000 days. Alternatively `-within 7` would, for example, list all issues updated within the past 7 days.
 
 ```
-trailer show issue 5 -body -comments
-```
-Show issue #5. If there are more than one issues with the number #5 in different repositories, trailer will list them. You can then narrow the search down using `-r` or `-a` to specify which repo or author's issue you want to examine. The `-body` command will cause the Issue's main text to be displayed in addition to its details. The `-comments` command will also verbosely display all the comments/reviews in that issue.
-
-```
-trailer open issue 5 -r myrepo
-```
-
-Like `show` above, but instead opens the relevant GitHub web page. This, for example, would open issue #5 from "MyRepo" in the default system browser (macOS only for now)
-
-```
 trailer list labels -r myrepo
 ```
 List all the labels that are in use currently in repository "MyRepo" (or use `-o` to list them for a specific org)
@@ -101,7 +94,65 @@ trailer list items -l bug
 ```
 List all items that have a label containing the text "bug".
 
-## Multiple Servers
+### Viewing items
+
+```
+trailer show issue 5 -body -comments
+```
+Show issue #5. If there are more than one issues with the number #5 in different repositories, trailer will list them. You can then narrow the search down using `-r` or `-a` to specify which repo or author's issue you want to examine. The `-body` command will cause the Issue's main text to be displayed in addition to its details. The `-comments` command will also verbosely display all the comments/reviews in that issue.
+
+```
+trailer open issue 5 -r myrepo
+```
+Like `show` above, but instead opens the relevant GitHub web page. This, for example, would open issue #5 from "MyRepo" in the default system browser (macOS only for now)
+
+### Activating / Deactivating Repositories
+
+Trailer will sync everything in your watchlist and the orgs you belong to, by default. This can be a lot of data that you don't need. You can limit the amount of things that get synced on each update in two ways. The recommended way is to limit the repositories from which you want to load info in the first place. Disabling repositories with many items can greatly improve your API usage and sync speed.
+
+```
+trailer config view -r myrepo
+```
+View the activation status of "MyRepo". Bold text means that all items are synced from it. Plain text means the repo is disabled and trailer will not fetch items related to it.
+
+```
+trailer config deactivate -r myrepo
+```
+Deactivates item syncing from "MyRepo". The opposite command, `activate` activates syncing from it.
+
+**(Note: not specifying a filter with `-r` means that ALL repos will be activated/deactivated, so take care when using this command)**
+
+```
+trailer config deactivate
+trailer config activate -r myrepo
+```
+
+Deactivate all repos, and enable only repos whose name matches "myrepo". You can also set certain repos to sync only PRs or issues using the `only-prs` or `only-issues` command.
+
+### Advanced: Shorter Updates
+
+Updates, if you have many items, can take a while and repeated updates with many items can cause the GitHub server to temporarily block you to avoid overload. However, you can reduce the number of things that get synced on a specific update by providing different parameters to the `update` command.
+
+This way you can refresh subsets of things more often, if you want to stay up to date, and refresh everything using the `all` parameter less often.
+
+*Tip: Using the `-v` parameter will provide you with info on how much API usage you have used fro GitHub for the current hourly widow.*
+
+```
+trailer update repos
+```
+Only update the repository list
+
+```
+trailer update comments
+```
+Only update comments for existing PRs and issues.
+
+```
+trailer update prs comments
+```
+Update only PRs and also comments related to PRs.
+
+### Multiple Servers
 
 ```
 trailer -s local.server.my.net -token <enterprise token>
