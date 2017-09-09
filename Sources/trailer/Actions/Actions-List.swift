@@ -114,6 +114,44 @@ extension Actions {
 		let a = Args()
 		return parallelFilter(repo.pullRequests) { p in
 
+			if a.red || a.green {
+				let s = p.statuses
+				if a.red && !s.contains(where: { $0.state == .error || $0.state == .failure }) {
+                    return false
+				}
+				if a.green && s.contains(where: { $0.state != .success }) {
+                    return false
+				}
+			}
+
+			if a.mergeable && p.mergeable != .mergeable {
+                return false
+			}
+			
+			if a.conflict && p.mergeable != .conflicting {
+                return false
+			}
+
+			if let number = number, p.number != number {
+                return false
+			}
+
+			if let a = a.author, !(p.author?.login.localizedCaseInsensitiveContains(a) ?? false) {
+                return false
+			}
+
+			if let t = a.title, !p.title.localizedCaseInsensitiveContains(t) {
+                return false
+			}
+
+			if let l = a.label, !p.labels.contains(where: { $0.id.localizedCaseInsensitiveContains(l) }) {
+                return false
+			}
+
+            if !a.dateValid(for: p.updatedAt) {
+                return false
+            }
+
 			if a.mine || a.participated || a.mentioned {
 				var inSection = false
 				if a.mine && (p.viewerDidAuthor || p.isAssignedToMe) {
@@ -130,37 +168,18 @@ extension Actions {
 				}
 			}
 
-			if a.red || a.green {
-				let s = p.statuses
-				if a.red && !s.contains(where: { $0.state == .error || $0.state == .failure }) {
-                    return false
-				}
-				if a.green && s.contains(where: { $0.state != .success }) {
-                    return false
+			if let b = a.body {
+				if !p.bodyText.localizedCaseInsensitiveContains(b) {
+					return false
 				}
 			}
 
-			if a.mergeable && p.mergeable != .mergeable {
-                return false
+			if let c = a.comment {
+				if !p.commentsOrReviewsInclude(text: c) {
+					return false
+				}
 			}
-			if a.conflict && p.mergeable != .conflicting {
-                return false
-			}
-			if let number = number, p.number != number {
-                return false
-			}
-			if let a = a.author, !(p.author?.login.localizedCaseInsensitiveContains(a) ?? false) {
-                return false
-			}
-			if let t = a.title, !p.title.localizedCaseInsensitiveContains(t) {
-                return false
-			}
-			if let l = a.label, !p.labels.contains(where: { $0.id.localizedCaseInsensitiveContains(l) }) {
-                return false
-			}
-            if !a.dateValid(for: p.updatedAt) {
-                return false
-            }
+
             return true
 
         }.sorted { $0.number < $1.number }
@@ -175,6 +194,8 @@ extension Actions {
 	private struct Args {
 		let author = commandLineValue(for: "-a")?.trimmingCharacters(in: atCharacterSet)
 		let title = commandLineValue(for: "-t")
+		let body = commandLineValue(for: "-b")
+		let comment = commandLineValue(for: "-c")
 		let label = commandLineValue(for: "-l")
 		let mine = commandLineArgument(matching: "-mine") != nil
 		let participated = commandLineArgument(matching: "-participated") != nil
@@ -216,6 +237,26 @@ extension Actions {
 
 		return parallelFilter(repo.issues) { i in
 
+			if let number = number, i.number != number {
+                return false
+			}
+			
+			if let a = a.author, !(i.author?.login.localizedCaseInsensitiveContains(a) ?? false) {
+                return false
+			}
+
+			if let t = a.title, !i.title.localizedCaseInsensitiveContains(t) {
+                return false
+			}
+
+			if let l = a.label, !i.labels.contains(where: { $0.id.localizedCaseInsensitiveContains(l) }) {
+                return false
+			}
+
+            if !a.dateValid(for: i.updatedAt) {
+                return false
+            }
+
 			if a.mine || a.participated || a.mentioned {
 				var inSection = false
 				if a.mine && (i.viewerDidAuthor || i.isAssignedToMe) {
@@ -232,21 +273,18 @@ extension Actions {
 				}
 			}
 
-			if let number = number, i.number != number {
-                return false
+			if let b = a.body {
+				if !i.bodyText.localizedCaseInsensitiveContains(b) {
+					return false
+				}
 			}
-			if let a = a.author, !(i.author?.login.localizedCaseInsensitiveContains(a) ?? false) {
-                return false
+
+			if let c = a.comment {
+				if !i.commentsInclude(text: c) {
+					return false
+				}
 			}
-			if let t = a.title, !i.title.localizedCaseInsensitiveContains(t) {
-                return false
-			}
-			if let l = a.label, !i.labels.contains(where: { $0.id.localizedCaseInsensitiveContains(l) }) {
-                return false
-			}
-            if !a.dateValid(for: i.updatedAt) {
-                return false
-            }
+
             return true
 
         }.sorted { $0.number < $1.number }

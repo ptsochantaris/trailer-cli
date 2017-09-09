@@ -23,7 +23,7 @@ struct Actions {
         // Very rough sanity check to catch typos, should be more fine-grained per action
         let invalidArguments = CommandLine.arguments.filter({ $0.hasPrefix("-") }).filter { arg in
             switch arg {
-            case "-v", "-V", "-server", "-token", "-r", "-o", "-t", "-a", "-l", "-h", "-comments", "-body", "-pageSize", "-mine", "-participated", "-mentioned",
+            case "-v", "-V", "-server", "-token", "-r", "-o", "-t", "-a", "-l", "-h", "-b", "-c", "-comments", "-body", "-pageSize", "-mine", "-participated", "-mentioned",
                  "-mergeable", "-conflict", "-red", "-green", "-e", "-before", "-within", "-n", "-purge":
                 return false
             default:
@@ -126,7 +126,9 @@ struct Actions {
 		printOption(name :"-mentioned", description: "List items mentioning me in their body or comments")
         printOption(name :"-before <days>", description: "List items updated before <days>")
         printOption(name :"-within <days>", description: "List items updated within <days>")
-		printOption(name :"-t <title>", description: "Filter for a specific title")
+		printOption(name :"-t <text>", description: "Filter for a specific title")
+		printOption(name :"-b <text>", description: "Filter for items containing 'text' in their body")
+		printOption(name :"-c <text>", description: "Filter for items containing 'text' in commens/reviews")
 		printOption(name :"-a <author>", description: "Filter for a specific author")
 		printOption(name :"-l <label>", description: "Filter for a specific label")
 		log()

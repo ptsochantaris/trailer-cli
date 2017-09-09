@@ -152,6 +152,16 @@ struct PullRequest: Item, Announceable, Closeable {
         return reviews.contains(where: { $0.syncState == .new && !$0.viewerDidAuthor })
     }
 
+	func commentsOrReviewsInclude(text: String) -> Bool {
+		if comments.contains(where: { $0.includes(text: text) }) {
+			return true
+		}
+		if reviews.contains(where: { $0.includes(text: text) }) {
+			return true
+		}
+		return false
+	}
+
 	func printSummaryLine() {
         var line = "[!"
         if state == .closed {

@@ -113,6 +113,10 @@ struct Comment: Item, Announceable {
         }
     }
 
+	func includes(text: String) -> Bool {
+		return body.localizedCaseInsensitiveContains(text)
+	}
+
 	func printDetails() {
         printSummaryLine()
         log(body.trimmingCharacters(in: .whitespacesAndNewlines), unformatted: true)

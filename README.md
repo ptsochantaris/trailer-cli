@@ -40,7 +40,7 @@ trailer update all -v
 - If all goes well, you can then use the `trailer list` command or `trailer show` command to browse and view items, as well as the `trailer config` command to restrict PRs/Issues to specific repositories and reduce clutter, noise, and API usage when updating.
 - See below for some examples of common commands.
 
-## Examples
+## Examples / Cookbook
 
 ```
 trailer 
@@ -63,6 +63,26 @@ trailer list items -mine -participated -mentioned
 List items that are either `mine` (items created or assigned to me), `participated` (i.e. commented on by me) or items where I've been `mentioned` (either in the body or reviews/comments). You can combine these options like above, or use each one by itself. Or for instance, add `-r reponame` to limit this query to repositories whose names match `reponame`, or use `-t` to filter for a certain title, `-a` for an author, and so forth. Check the `help` option for a full list of options.
 
 ```
+trailer list issues -c "needs update"
+```
+List only issues that have comments (or reviews) which include the next "needs update". Also, you can use the `-b` option to search for items whose body includes this text instead.
+
+```
+trailer list prs -red
+```
+List all PRs that have at least one red non-passing CI status. (Or use `-green` to list items that have all-green CI statuses.)
+
+```
+trailer list prs -conflict
+```
+List all PRs that cannot be merged because of conflicts. (Or use `-mergeable` to only list PRs which are mergeable.)
+
+```
+trailer list issues -before 1000
+```
+List all issues which have not been updated in the last 1000 days. Alternatively `-within 7` would, for example, list all issues updated within the past 7 days.
+
+```
 trailer show issue 5 -body -comments
 ```
 Show issue #5. If there are more than one issues with the number #5 in different repositories, trailer will list them. You can then narrow the search down using `-r` or `-a` to specify which repo or author's issue you want to examine. The `-body` command will cause the Issue's main text to be displayed in addition to its details. The `-comments` command will also verbosely display all the comments/reviews in that issue.
@@ -71,7 +91,12 @@ Show issue #5. If there are more than one issues with the number #5 in different
 trailer open issue 5 -r myrepo
 ```
 
-Open the GitHub page for issue #5 from `myRepo` in the default system browser (macOS only for now)
+Like `show` above, but instead opens the relevant GitHub web page. This, for example, would open issue #5 from `myRepo` in the default system browser (macOS only for now)
+
+```
+trailer list labels -r myrepo
+```
+List all the labels that are in use currently in repository "MyRepo" (or use `-o` to list them for a specific org)
 
 ## Multiple Servers
 

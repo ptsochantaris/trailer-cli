@@ -166,6 +166,11 @@ struct Review: Item, Announceable {
 		return comments.contains { $0.mentionsMe }
 	}
 
+	func includes(text: String) -> Bool {
+		if body.localizedCaseInsensitiveContains(text) { return true }
+		return comments.contains { $0.includes(text: text) }
+	}
+
 	static let fragment = Fragment(name: "reviewFields", on: "PullRequestReview", fields: [
 		Field(name: "id"),
 		Field(name: "body"),

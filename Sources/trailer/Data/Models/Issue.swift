@@ -130,6 +130,10 @@ struct Issue: Item, Announceable, Closeable {
         return comments.contains(where: { $0.syncState == .new && !$0.viewerDidAuthor })
     }
 
+	func commentsInclude(text: String) -> Bool {
+		return comments.contains { $0.includes(text: text) }
+	}
+
 	func printSummaryLine() {
         var line = "[!"
         if state == .closed {
