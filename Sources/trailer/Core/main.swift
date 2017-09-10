@@ -14,6 +14,13 @@ func go() {
 		config.monochrome = true
 	}
 
+	if commandLineArgument(matching: "-version") != nil {
+		log("[!Version [*\(config.versionString)*]!]")
+		Actions.checkForUpdatesSynchronously(reportError: true, alwaysCheck: true)
+		log()
+		exit(0)
+	}
+
 	if let s = URL(string: commandLineValue(for: "-server") ?? "https://api.github.com/graphql"), s.host != nil {
 		config.server = s
 	} else {

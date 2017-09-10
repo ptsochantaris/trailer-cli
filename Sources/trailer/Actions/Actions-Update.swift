@@ -52,6 +52,47 @@ extension Actions {
         log()
     }
 
+	private static func updateCheck(alwaysCheck: Bool, completion: @escaping (String?, Bool)->Void) {
+		DispatchQueue.global(qos: .background).async {
+			var newVersion: String?
+			var success = false
+			if alwaysCheck || config.lastUpdateCheckDate.timeIntervalSinceNow < -3600 {
+				let versionURL = URL(string: "https://api.github.com/repos/ptsochantaris/trailer-cli/releases/latest")!
+				if
+					let data = try? Data(contentsOf: versionURL),
+					let json = (try? JSONSerialization.jsonObject(with: data, options: [])) as? [AnyHashable:Any],
+					let tagName = json["tag_name"] as? String {
+
+					success = true
+					if config.isNewer(tagName) {
+						newVersion = tagName
+					}
+				}
+			}
+			config.lastUpdateCheckDate = Date()
+			completion(newVersion, success)
+		}
+	}
+
+	static func checkForUpdatesSynchronously(reportError: Bool, alwaysCheck: Bool) {
+
+		let g = DispatchGroup()
+		g.enter()
+		var n: String?
+		var s = false
+		updateCheck(alwaysCheck: alwaysCheck) { newVersion, success in
+			n = newVersion
+			s = success
+			g.leave()
+		}
+		g.wait()
+		if let n = n {
+			log("[![G*New Trailer version \(n) is available*]!]")
+		} else if !s {
+			log("[R*(Latest version check failed)*]")
+		}
+	}
+
     static func processUpdateDirective(_ list: [String]) {
         guard list.count > 1 else {
 			failUpdate("Need at least one update type. If in doubt, use 'all'.")
@@ -87,6 +128,12 @@ extension Actions {
     }
 
 	private static func update(_ typesToSync: [UpdateType]) {
+
+		var latestVersion: String?
+		updateCheck(alwaysCheck: false) { newVersion, success in
+			latestVersion = newVersion
+		}
+
 		DB.load()
 		if let d = config.latestSyncDate {
 			log(agoFormat(prefix: "[!Last update was ", since: d) + "!]")
@@ -362,6 +409,9 @@ extension Actions {
 		}
 		if config.totalApiRemaining < Int.max {
 			log(level: .verbose, "Remaining API limit: \(config.totalApiRemaining)")
+		}
+		if let l = latestVersion {
+			log("[![G*New Trailer version \(l) is available*]!]")
 		}
 	}
 }
