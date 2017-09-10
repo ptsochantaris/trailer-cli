@@ -77,8 +77,6 @@ extension Actions {
 				repos.first!.openURL()
 			}
 			break
-		case "help":
-			failOpen(nil)
 		default:
 			failOpen("Unknown argmument: \(command)")
 		}
