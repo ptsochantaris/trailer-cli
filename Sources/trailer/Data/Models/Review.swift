@@ -104,6 +104,7 @@ struct Review: Item, Announceable {
 
     func announceIfNeeded(notificationMode: NotificationMode) {
 		if notificationMode != .consoleCommentsAndReviews || syncState != .new { return }
+		if viewerDidAuthor { return }
 
 		if let p = pullRequest, p.syncState != .new, let re = pullRequest?.repo, let a = p.author?.login, re.syncState != .new {
 			let r = re.nameWithOwner
@@ -157,6 +158,18 @@ struct Review: Item, Announceable {
 
 	var author: User? {
 		return children(field: "author").first
+	}
+
+	mutating func assumeChildrenSynced() {
+		if var u = author {
+			u.assumeSynced(andChildren: true)
+			User.allItems[u.id] = u
+		}
+		for c in comments {
+			var C = c
+			C.assumeSynced(andChildren: true)
+			Comment.allItems[c.id] = C
+		}
 	}
 
 	var mentionsMe: Bool {

@@ -10,7 +10,7 @@ import Foundation
 import Dispatch
 
 enum UpdateType {
-	case all, repos, prs, issues, comments, reactions
+	case repos, prs, issues, comments, reactions
 }
 
 extension Actions {
@@ -42,13 +42,18 @@ extension Actions {
 		
 		log("[!Instead of 'all' you can combine the following!]")
 		printOption(name: "repos", description: "Update repository list")
-		printOption(name: "prs", description: "Update PRs")
-		printOption(name: "issues", description: "Update issues")
-		printOption(name: "comments", description: "Fetch comments PRs/Issues")
-		printOption(name: "reactions", description: "Fetch reactions for items/comments")
+		printOption(name: "items", description: "Update PRs and Issues")
+		printOption(name: "prs", description: "Update PRs only")
+		printOption(name: "issues", description: "Update issues only")
+		printOption(name: "comments", description: "Update comments on items")
+		printOption(name: "reactions", description: "Update reactions for items and comments")
         log()
-        log("[!Options for notifications:!]")
+        log("[!Notifications!]")
         printOption(name: "-n", description: "List new comments and reviews on items")
+		log()
+		log("[!You can also limit updates to specific items using filtering:!]")
+		log()
+		printFilterOptions()
         log()
     }
 
@@ -102,10 +107,17 @@ extension Actions {
 		var updateTypes = [UpdateType]()
 		for param in list.dropFirst() {
 			switch param {
-			case "all": updateTypes.append(.all)
+			case "all":
+				updateTypes.append(.repos)
+				updateTypes.append(.prs)
+				updateTypes.append(.issues)
+				updateTypes.append(.comments)
+				updateTypes.append(.reactions)
+
 			case "repos": updateTypes.append(.repos)
 			case "prs": updateTypes.append(.prs)
 			case "issues": updateTypes.append(.issues)
+			case "items": updateTypes.append(.prs); updateTypes.append(.issues)
 			case "comments": updateTypes.append(.comments)
 			case "reactions": updateTypes.append(.reactions)
 
@@ -129,6 +141,23 @@ extension Actions {
 
 	private static func update(_ typesToSync: [UpdateType]) {
 
+		let repoFilters = RepoFilterArgs()
+		let itemFilters = ItemFilterArgs()
+		let filtersRequested = repoFilters.filteringApplied || itemFilters.filteringApplied
+
+		let userWantsRepos = typesToSync.contains(.repos) && !filtersRequested
+		let userWantsPrs = typesToSync.contains(.prs)
+		let userWantsIssues = typesToSync.contains(.issues)
+		let userWantsComments = typesToSync.contains(.comments)
+		let userWantsReactions = typesToSync.contains(.reactions)
+
+		if !(userWantsRepos || userWantsPrs || userWantsIssues || userWantsComments || userWantsReactions) {
+			failUpdate("This combination of parameters will not cause anything to be updated")
+			exit(1)
+		}
+
+		///////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 		var latestVersion: String?
 		updateCheck(alwaysCheck: false) { newVersion, success in
 			latestVersion = newVersion
@@ -140,13 +169,6 @@ extension Actions {
 		}
 		log("Starting update...")
 		config.totalQueryCosts = 0
-
-		let userWantsAll = typesToSync.contains(.all)
-		let userWantsRepos = userWantsAll || typesToSync.contains(.repos)
-		let userWantsPrs = userWantsAll || typesToSync.contains(.prs)
-		let userWantsIssues = userWantsAll || typesToSync.contains(.issues)
-		let userWantsComments = userWantsAll || typesToSync.contains(.comments)
-		let userWantsReactions = userWantsAll || typesToSync.contains(.reactions)
 
 		///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -161,31 +183,31 @@ extension Actions {
 			successOrAbort(repositoryListQuery)
 		} else {
 			log(level: .info, "[*Repos*] (Skipped)")
-			Org.assumeSynced()
-			Repo.assumeSynced()
+			Org.assumeSynced(andChildren: false)
+			Repo.assumeSynced(andChildren: false)
 		}
 
 		///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-		var prIdList = [String: String]()
+		var prIdList = [String: String]() // existing PRs
 		if userWantsPrs {
-			for p in PullRequest.allItems.values {
+			for p in pullRequestsToScan() {
 				if let r = p.repo, r.shouldSyncPrs {
 					prIdList[p.id] = r.id
 				}
 			}
 		}
 
-		var issueIdList = [String: String]()
+		var issueIdList = [String: String]() // existing Issues
 		if userWantsIssues {
-			for i in Issue.allItems.values {
+			for i in issuesToScan() {
 				if let r = i.repo, r.shouldSyncIssues {
 					issueIdList[i.id] = r.id
 				}
 			}
 		}
 
-		if userWantsPrs || userWantsIssues {
+		if (userWantsPrs || userWantsIssues) && !filtersRequested { // detect new items
 
 			let itemIdParser = { (node: [AnyHashable : Any]) in
 
@@ -266,26 +288,32 @@ extension Actions {
 			successOrAbort(itemQueries)
 		}
 
-		if !userWantsPrs {
-			log(level: .info, "[*PRs*] (Skipped)")
-			PullRequest.assumeSynced()
-			Issue.assumeSynced()
-			Milestone.assumeSynced()
-			Status.assumeSynced()
-			Review.assumeSynced()
-			ReviewRequest.assumeSynced()
-			Label.assumeSynced()
-			Reaction.assumeSynced()
-			User.assumeSynced()
+		if userWantsPrs {
+			if filtersRequested { // do not expire items which are not included in this sync
+				for p in PullRequest.allItems.values {
+					if prIdList[p.id] == nil {
+						var updated = p
+						updated.assumeSynced(andChildren: true)
+						PullRequest.allItems[p.id] = updated
+					}
+				}
+			}
+		} else {
+			PullRequest.assumeSynced(andChildren: true)
 		}
 
-		if !userWantsIssues {
-			log(level: .info, "[*Issues*] (Skipped)")
-			Issue.assumeSynced()
-			Milestone.assumeSynced()
-			Label.assumeSynced()
-			Reaction.assumeSynced()
-			User.assumeSynced()
+		if userWantsIssues {
+			if filtersRequested { // do not expire items which are not included in this sync
+				for i in Issue.allItems.values {
+					if prIdList[i.id] == nil {
+						var updated = i
+						updated.assumeSynced(andChildren: true)
+						Issue.allItems[i.id] = updated
+					}
+				}
+			}
+		} else {
+			Issue.assumeSynced(andChildren: true)
 		}
 
         ///////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -308,6 +336,8 @@ extension Actions {
 					}
 				}
 			}
+		} else {
+			log(level: .info, "[*PRs*] (Skipped)")
 		}
 
 		if issueIdList.count > 0 {
@@ -328,6 +358,8 @@ extension Actions {
 					}
 				}
 			}
+		} else {
+			log(level: .info, "[*Issues*] (Skipped)")
 		}
 
 		///////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -338,12 +370,12 @@ extension Actions {
 
 			if userWantsPrs {
 				itemIdsWithComments += Review.allItems.values.flatMap { $0.syncState == .none || !$0.syncNeedsComments ? nil : $0.id }
-			} else {
+			} else if !filtersRequested {
 				itemIdsWithComments += Review.allItems.keys
 				itemIdsWithComments += PullRequest.allItems.keys
 			}
 
-			if !userWantsIssues {
+			if !userWantsIssues && !filtersRequested {
 				itemIdsWithComments += Issue.allItems.keys
 			}
 
@@ -353,11 +385,13 @@ extension Actions {
 					PullRequest.commentsFragment,
 					Issue.commentsFragment,
 					], idList: itemIdsWithComments))
+			} else {
+				log(level: .info, "[*Comments*] (Skipped)")
 			}
 
 		} else {
 			log(level: .info, "[*Comments*] (Skipped)")
-			Comment.assumeSynced()
+			Comment.assumeSynced(andChildren: true)
 		}
 
 		///////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -393,7 +427,7 @@ extension Actions {
 
 		} else {
 			log(level: .info, "[*Reactions*] (Skipped)")
-			Reaction.assumeSynced()
+			Reaction.assumeSynced(andChildren: true)
 		}
 
 		///////////////////////////////////////////////////////////////////////////////////////////////////////////

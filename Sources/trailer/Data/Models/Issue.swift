@@ -251,6 +251,37 @@ struct Issue: Item, Announceable, Closeable {
 		return children(field: "author").first
 	}
 
+	mutating func assumeChildrenSynced() {
+		for c in comments {
+			var C = c
+			C.assumeSynced(andChildren: true)
+			Comment.allItems[c.id] = C
+		}
+		for c in reactions {
+			var C = c
+			C.assumeSynced(andChildren: true)
+			Reaction.allItems[c.id] = C
+		}
+		for c in labels {
+			var C = c
+			C.assumeSynced(andChildren: true)
+			Label.allItems[c.id] = C
+		}
+		for c in assignees {
+			var C = c
+			C.assumeSynced(andChildren: true)
+			User.allItems[c.id] = C
+		}
+		if var c = milestone {
+			c.assumeSynced(andChildren: true)
+			Milestone.allItems[c.id] = c
+		}
+		if var c = author {
+			c.assumeSynced(andChildren: true)
+			User.allItems[c.id] = c
+		}
+	}
+
 	var repo: Repo? {
 		if let repoId = parents["Repo:issues"]?.first?.parentId {
 			return Repo.allItems[repoId]

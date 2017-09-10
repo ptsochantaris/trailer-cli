@@ -377,6 +377,52 @@ struct PullRequest: Item, Announceable, Closeable {
 		return children(field: "author").first
 	}
 
+	mutating func assumeChildrenSynced() {
+		for c in reviews {
+			var C = c
+			C.assumeSynced(andChildren: true)
+			Review.allItems[c.id] = C
+		}
+		for c in reviewRequests {
+			var C = c
+			C.assumeSynced(andChildren: true)
+			ReviewRequest.allItems[c.id] = C
+		}
+		for c in statuses {
+			var C = c
+			C.assumeSynced(andChildren: true)
+			Status.allItems[c.id] = C
+		}
+		for c in comments {
+			var C = c
+			C.assumeSynced(andChildren: true)
+			Comment.allItems[c.id] = C
+		}
+		for c in reactions {
+			var C = c
+			C.assumeSynced(andChildren: true)
+			Reaction.allItems[c.id] = C
+		}
+		for c in labels {
+			var C = c
+			C.assumeSynced(andChildren: true)
+			Label.allItems[c.id] = C
+		}
+		for c in assignees {
+			var C = c
+			C.assumeSynced(andChildren: true)
+			User.allItems[c.id] = C
+		}
+		if var c = milestone {
+			c.assumeSynced(andChildren: true)
+			Milestone.allItems[c.id] = c
+		}
+		if var c = author {
+			c.assumeSynced(andChildren: true)
+			User.allItems[c.id] = c
+		}
+	}
+
 	static let fragment = Fragment(name: "prFields", on: "PullRequest", elements: [
 		Field(name: "id"),
 		Field(name: "updatedAt"),

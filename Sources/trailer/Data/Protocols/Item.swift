@@ -11,25 +11,32 @@ import Foundation
 protocol Item: Identifiable, Databaseable, Equatable {
 	static var allItems: [String:Self] { get set }
 	static func parse(parent: Parent?, elementType: String, node: [AnyHashable : Any], level: Int) -> Self?
-	static func assumeSynced()
 	static var idField: String { get }
 
 	init?(id: String, type: String, parents: [String: [Relationship]], node: [AnyHashable:Any])
 
 	var parents: [String: [Relationship]] { get set }
 	mutating func apply(_ node: [AnyHashable:Any]) -> Bool
+	mutating func assumeChildrenSynced()
 }
 
 extension Item {
 
-	static func assumeSynced() {
+	static func assumeSynced(andChildren: Bool) {
 		allItems = allItems.mapValues {
 			var i = $0
-			i.syncState = .updated
-			i.parents = i.parents.mapValues { relationshipsToAType -> [Relationship] in
-				return relationshipsToAType.map { var n = $0; n.syncState = .updated; return n }
-			}
+			i.assumeSynced(andChildren: andChildren)
 			return i
+		}
+	}
+
+	mutating func assumeSynced(andChildren: Bool) {
+		syncState = .updated
+		parents = parents.mapValues { relationshipsToAType -> [Relationship] in
+			return relationshipsToAType.map { var n = $0; n.syncState = .updated; return n }
+		}
+		if andChildren {
+			assumeChildrenSynced()
 		}
 	}
 

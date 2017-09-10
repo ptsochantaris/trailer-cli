@@ -60,6 +60,9 @@ struct Milestone: Item {
 		}
 	}
 
+	mutating func assumeChildrenSynced() {
+	}
+	
 	static let fragment = Fragment(name: "milestoneFields", on: "Milestone", elements: [
 		Field(name: "id"),
 		Field(name: "title")

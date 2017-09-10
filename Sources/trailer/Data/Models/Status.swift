@@ -91,6 +91,9 @@ struct Status: Item {
 		return nil
 	}
 
+	mutating func assumeChildrenSynced() {
+	}
+
 	init?(id: String, type: String, parents: [String: [Relationship]], node: [AnyHashable:Any]) {
 		self.id = id
 		self.parents = parents

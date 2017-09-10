@@ -177,6 +177,19 @@ struct Repo: Item, Announceable {
 		return nil
 	}
 
+	mutating func assumeChildrenSynced() {
+		for p in pullRequests {
+			var P = p
+			P.assumeSynced(andChildren: true)
+			PullRequest.allItems[p.id] = P
+		}
+		for i in issues {
+			var I = i
+			I.assumeSynced(andChildren: true)
+			Issue.allItems[i.id] = I
+		}
+	}
+
 	static let fragment = Fragment(name: "repoFields", on: "Repository", elements: [
 		Field(name: "id"),
 		Field(name: "nameWithOwner"),

@@ -63,6 +63,13 @@ struct Reaction: Item {
 		return children(field: "user").first
 	}
 
+	mutating func assumeChildrenSynced() {
+		if var u = user {
+			u.assumeSynced(andChildren: true)
+			User.allItems[u.id] = u
+		}
+	}
+
 	var emoji: String {
 		switch content {
 		case "THUMBS_UP": return "👍"

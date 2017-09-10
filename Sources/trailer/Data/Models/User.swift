@@ -69,6 +69,9 @@ struct User: Item {
 		}
 	}
 
+	mutating func assumeChildrenSynced() {
+	}
+	
 	static let fragment = Fragment(name: "userFields", on: "User", elements: [
 		Field(name: "id"),
 		Field(name: "login"),

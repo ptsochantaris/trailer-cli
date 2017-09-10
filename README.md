@@ -152,6 +152,20 @@ trailer update prs comments
 ```
 Update only PRs and also comments related to PRs.
 
+*It's useful to remember that you can also use the filtering parameters (that you use when listing items) to also filter items for updates. This will affect only existing items though, and **not** scan for new ones. For example:*
+
+```
+trailer update prs comments -t WIP -r swift -n
+``` 
+
+Update existing PRs whose titles include "WIP" (`-t`) and who belong to repository "swift" (`-r`). Update comments for them too, and when done post notifications for new comments / reviews (`-n`)
+
+```
+trailer update prs -red
+``` 
+
+Update only existing PRs which have at least one red CI status.
+
 ### Advanced: Multiple Servers
 
 ```

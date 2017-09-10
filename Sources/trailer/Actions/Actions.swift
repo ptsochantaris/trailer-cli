@@ -109,7 +109,7 @@ struct Actions {
 	}
 
 	static func printFilterOptions(onlyRepos: Bool = false) {
-		log("[!Filter options (can combine):!]")
+		log("[!Filter options (can combine)!]")
 		printOption(name :"-o <org>", description: "Filter for an org name")
 		printOption(name :"-r <repo>", description: "Filter for a repo name")
 		printOption(name :"-h", description: "Exclude repos/orgs without PRs or Issues")
@@ -120,19 +120,19 @@ struct Actions {
 			return
 		}
 
-		log("[!Filter options affecting PRs or Issues (can combine):!]")
-		printOption(name :"-mine", description: "List items authored by me, or assigned to me")
-		printOption(name :"-participated", description: "List items which I have commented on")
-		printOption(name :"-mentioned", description: "List items mentioning me in their body or comments")
-        printOption(name :"-before <days>", description: "List items updated before <days>")
-        printOption(name :"-within <days>", description: "List items updated within <days>")
+		log("[!Filter options affecting PRs or Issues (can combine)!]")
+		printOption(name :"-mine", description: "Filter for items authored by me, or assigned to me")
+		printOption(name :"-participated", description: "Filter for items which I have commented on")
+		printOption(name :"-mentioned", description: "Filter for items mentioning me in their body or comments")
+        printOption(name :"-before <days>", description: "Filter for items updated before <days>")
+        printOption(name :"-within <days>", description: "Filter for items updated within <days>")
 		printOption(name :"-t <text>", description: "Filter for a specific title")
 		printOption(name :"-b <text>", description: "Filter for items containing 'text' in their body")
 		printOption(name :"-c <text>", description: "Filter for items containing 'text' in commens/reviews")
 		printOption(name :"-a <author>", description: "Filter for a specific author")
 		printOption(name :"-l <label>", description: "Filter for a specific label")
 		log()
-		log("[!Filter options affecting PRs (can combine):!]")
+		log("[!Filter options affecting PRs (can combine)!]")
 		printOption(name :"-mergeable", description: "Filter for mergeable PRs")
 		printOption(name :"-conflict", description: "Filter for un-mergeable PRs")
 		printOption(name :"-green", description: "Filter for PRs with only green statuses")
@@ -142,15 +142,13 @@ struct Actions {
 
 	static func findItems(number: Int, includePrs: Bool, includeIssues: Bool, warnIfMultiple: Bool) -> [ListableItem]? {
 		var items = [ListableItem]()
-		for r in Actions.reposToScan {
-			if includePrs {
-				let prs = Actions.pullRequestsToScan(in: r, number: number).map { ListableItem.pullRequest($0) }
-				items.append(contentsOf: prs)
-			}
-			if includeIssues {
-				let issues = Actions.issuesToScan(in: r, number: number).map { ListableItem.issue($0) }
-				items.append(contentsOf: issues)
-			}
+		if includePrs {
+			let prs = Actions.pullRequestsToScan(number: number).map { ListableItem.pullRequest($0) }
+			items.append(contentsOf: prs)
+		}
+		if includeIssues {
+			let issues = Actions.issuesToScan(number: number).map { ListableItem.issue($0) }
+			items.append(contentsOf: issues)
 		}
 		if warnIfMultiple && items.count > 1 {
 			if includePrs && !includeIssues {

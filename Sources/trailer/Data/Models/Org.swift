@@ -59,7 +59,13 @@ struct Org: Item {
 		}
 	}
 
-
+	mutating func assumeChildrenSynced() {
+		for r in repos {
+			var R = r
+			R.assumeSynced(andChildren: true)
+			Repo.allItems[r.id] = R
+		}
+	}
 
 	var repos: [Repo] {
 		return children(field: "repositories")

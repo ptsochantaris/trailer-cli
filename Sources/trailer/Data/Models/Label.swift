@@ -73,6 +73,9 @@ struct Label: Item {
 		return nil
 	}
 
+	mutating func assumeChildrenSynced() {
+	}
+
 	static let fragment = Fragment(name: "labelFields", on: "Label", elements: [
 		Field(name: "name"),
 		Field(name: "color")

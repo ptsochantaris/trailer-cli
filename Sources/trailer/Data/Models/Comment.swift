@@ -79,7 +79,9 @@ struct Comment: Item, Announceable {
 	}
 
     func announceIfNeeded(notificationMode: NotificationMode) {
-        if syncState == .new {
+		if viewerDidAuthor { return }
+
+		if syncState == .new {
             switch notificationMode {
             case .consoleCommentsAndReviews:
                 let a = author?.login ?? ""
@@ -101,14 +103,14 @@ struct Comment: Item, Announceable {
                     inReview = true
                     inPr = false
                 } else {
-                    break
+                    return
                 }
                 let title = "[\(r)] @\(a) commented" + (inReview ? " [*(in review)*]" : "")
                 let subtitle = (inPr ? "PR" : "Issue") + " #\(n) \(t)"
                 Notifications.notify(title: title, subtitle: subtitle, details: body, relatedDate: createdAt)
 
             case .standard, .none:
-                break
+                return
             }
         }
     }
@@ -173,6 +175,13 @@ struct Comment: Item, Announceable {
 		return children(field: "author").first
 	}
 
+	mutating func assumeChildrenSynced() {
+		if var u = author {
+			u.assumeSynced(andChildren: true)
+			User.allItems[u.id] = u
+		}
+	}
+	
 	static let commentFields: [Element] = [
 		Field(name: "id"),
 		Field(name: "body"),

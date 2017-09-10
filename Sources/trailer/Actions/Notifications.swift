@@ -29,7 +29,7 @@ struct Notifications {
                 log("[!\(d) \(title)!]")
             }
             if let subtitle = subtitle, !subtitle.isEmpty {
-                log("[$\(subtitle)!]")
+                log("[*\(subtitle)*]")
             }
             if let details = details, !details.isEmpty {
                 log(details)

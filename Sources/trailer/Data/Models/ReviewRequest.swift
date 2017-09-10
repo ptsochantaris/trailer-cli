@@ -52,6 +52,13 @@ struct ReviewRequest: Item {
 		}
 	}
 
+	mutating func assumeChildrenSynced() {
+		if var u = reviewer {
+			u.assumeSynced(andChildren: true)
+			User.allItems[u.id] = u
+		}
+	}
+
 	var reviewer: User? {
 		return children(field: "reviewer").first
 	}
