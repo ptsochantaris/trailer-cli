@@ -5,7 +5,7 @@ swift package reset
 
 echo "*** Building"
 if [ `uname -s` = "Linux" ] ; then
-	swift build -c release -Xswiftc -Ounchecked -Xswiftc -whole-module-optimization
+	swift build -c release -Xswiftc -Ounchecked
 else
 	swift build -c release -Xswiftc -static-stdlib -Xswiftc -Ounchecked -Xswiftc -whole-module-optimization
 fi
