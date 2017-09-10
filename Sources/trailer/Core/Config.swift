@@ -13,6 +13,8 @@ struct Config {
 
 	var pageSize = 100
 
+	var monochrome = false
+
 	var myUser: User? {
 		didSet {
 			if let u = myUser {

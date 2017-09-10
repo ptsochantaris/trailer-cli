@@ -69,7 +69,7 @@ struct User: Item {
 		}
 	}
 
-	static let fragment = Fragment(name: "userFields", on: "User", fields: [
+	static let fragment = Fragment(name: "userFields", on: "User", elements: [
 		Field(name: "id"),
 		Field(name: "login"),
 		Field(name: "avatarUrl")

@@ -177,7 +177,7 @@ struct Repo: Item, Announceable {
 		return nil
 	}
 
-	static let fragment = Fragment(name: "repoFields", on: "Repository", fields: [
+	static let fragment = Fragment(name: "repoFields", on: "Repository", elements: [
 		Field(name: "id"),
 		Field(name: "nameWithOwner"),
 		Field(name: "isFork"),
@@ -186,18 +186,18 @@ struct Repo: Item, Announceable {
 		Field(name: "updatedAt"),
 		])
 
-	static let prAndIssueIdsFragment = Fragment(name: "repoFields", on: "Repository", fields: [
+	static let prAndIssueIdsFragment = Fragment(name: "repoFields", on: "Repository", elements: [
 		Field(name: "id"),
 		Group(name: "pullRequests", fields: [Field(name: "id")], extraParams: ["states": "OPEN"], usePaging: true),
 		Group(name: "issues", fields: [Field(name: "id")], extraParams: ["states": "OPEN"], usePaging: true),
 		])
 
-	static let prIdsFragment = Fragment(name: "repoFields", on: "Repository", fields: [
+	static let prIdsFragment = Fragment(name: "repoFields", on: "Repository", elements: [
 		Field(name: "id"),
 		Group(name: "pullRequests", fields: [Field(name: "id")], extraParams: ["states": "OPEN"], usePaging: true),
 		])
 
-	static let issueIdsFragment = Fragment(name: "repoFields", on: "Repository", fields: [
+	static let issueIdsFragment = Fragment(name: "repoFields", on: "Repository", elements: [
 		Field(name: "id"),
 		Group(name: "issues", fields: [Field(name: "id")], extraParams: ["states": "OPEN"], usePaging: true),
 		])

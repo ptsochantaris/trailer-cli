@@ -257,7 +257,7 @@ struct Issue: Item, Announceable, Closeable {
 		return nil
 	}
 	
-	static let fragment = Fragment(name: "issueFields", on: "Issue", fields: [
+	static let fragment = Fragment(name: "issueFields", on: "Issue", elements: [
 		Field(name: "id"),
 		Field(name: "bodyText"),
 		Field(name: "createdAt"),
@@ -276,12 +276,12 @@ struct Issue: Item, Announceable, Closeable {
         Group(name: "comments", fields: [Field(name: "totalCount")]),
 		])
 
-    static let reactionsFragment = Fragment(name: "IssueReactionFragment", on: "Issue", fields: [
+    static let reactionsFragment = Fragment(name: "IssueReactionFragment", on: "Issue", elements: [
         Field(name: "id"), // not using fragment, no need to re-parse
         Group(name: "reactions", fields: [Reaction.fragment], usePaging: true)
         ])
 
-    static let commentsFragment = Fragment(name: "IssueCommentsFragment", on: "Issue", fields: [
+    static let commentsFragment = Fragment(name: "IssueCommentsFragment", on: "Issue", elements: [
         Field(name: "id"), // not using fragment, no need to re-parse
         Group(name: "comments", fields: [Comment.fragmentForItems], usePaging: true)
         ])

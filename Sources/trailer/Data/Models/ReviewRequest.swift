@@ -63,7 +63,7 @@ struct ReviewRequest: Item {
 		return nil
 	}
 
-	static let fragment = Fragment(name: "reviewRequestFields", on: "ReviewRequest", fields: [
+	static let fragment = Fragment(name: "reviewRequestFields", on: "ReviewRequest", elements: [
 		Field(name: "id"),
 		Group(name: "reviewer", fields: [User.fragment]),
 		])

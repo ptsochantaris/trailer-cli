@@ -73,7 +73,7 @@ struct Label: Item {
 		return nil
 	}
 
-	static let fragment = Fragment(name: "labelFields", on: "Label", fields: [
+	static let fragment = Fragment(name: "labelFields", on: "Label", elements: [
 		Field(name: "name"),
 		Field(name: "color")
 		])

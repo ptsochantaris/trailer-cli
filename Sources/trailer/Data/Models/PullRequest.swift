@@ -376,7 +376,7 @@ struct PullRequest: Item, Announceable, Closeable {
 		return children(field: "author").first
 	}
 
-	static let fragment = Fragment(name: "prFields", on: "PullRequest", fields: [
+	static let fragment = Fragment(name: "prFields", on: "PullRequest", elements: [
 		Field(name: "id"),
 		Field(name: "updatedAt"),
 		Field(name: "mergeable"),
@@ -411,12 +411,12 @@ struct PullRequest: Item, Announceable, Closeable {
 			], usePaging: true, onlyLast: true)
 		])
 
-    static let reactionsFragment = Fragment(name: "PullRequestReactionFragment", on: "PullRequest", fields: [
+    static let reactionsFragment = Fragment(name: "PullRequestReactionFragment", on: "PullRequest", elements: [
         Field(name: "id"), // not using fragment, no need to re-parse
         Group(name: "reactions", fields: [Reaction.fragment], usePaging: true)
         ])
 
-    static let commentsFragment = Fragment(name: "PullRequestCommentsFragment", on: "PullRequest", fields: [
+    static let commentsFragment = Fragment(name: "PullRequestCommentsFragment", on: "PullRequest", elements: [
         Field(name: "id"), // not using fragment, no need to re-parse
         Group(name: "comments", fields: [Comment.fragmentForItems], usePaging: true)
         ])

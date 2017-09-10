@@ -10,6 +10,10 @@ import Foundation
 
 func go() {
 
+	if commandLineArgument(matching: "-mono") != nil {
+		config.monochrome = true
+	}
+
 	if let s = URL(string: commandLineValue(for: "-server") ?? "https://api.github.com/graphql"), s.host != nil {
 		config.server = s
 	} else {

@@ -75,7 +75,7 @@ struct Reaction: Item {
 		}
 	}
 
-	static let fragment = Fragment(name: "reactions", on: "Reaction", fields: [
+	static let fragment = Fragment(name: "reactions", on: "Reaction", elements: [
 		Field(name: "id"),
 		Field(name: "content"),
 		Group(name: "user", fields: [User.fragment])

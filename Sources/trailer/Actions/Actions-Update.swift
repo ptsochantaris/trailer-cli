@@ -113,7 +113,7 @@ extension Actions {
 					]))
 			successOrAbort(repositoryListQuery)
 		} else {
-			log(level: .info, "[*Repos*] skipped...")
+			log(level: .info, "[*Repos*] (Skipped)")
 			Org.assumeSynced()
 			Repo.assumeSynced()
 		}
@@ -220,7 +220,7 @@ extension Actions {
 		}
 
 		if !userWantsPrs {
-			log(level: .info, "[*PRs*] skipped...")
+			log(level: .info, "[*PRs*] (Skipped)")
 			PullRequest.assumeSynced()
 			Issue.assumeSynced()
 			Milestone.assumeSynced()
@@ -233,7 +233,7 @@ extension Actions {
 		}
 
 		if !userWantsIssues {
-			log(level: .info, "[*Issues*] skipped...")
+			log(level: .info, "[*Issues*] (Skipped)")
 			Issue.assumeSynced()
 			Milestone.assumeSynced()
 			Label.assumeSynced()
@@ -308,7 +308,7 @@ extension Actions {
 				], idList: itemIdsWithComments))
 
 		} else {
-			log(level: .info, "[*Comments*] skipped...")
+			log(level: .info, "[*Comments*] (Skipped)")
 			Comment.assumeSynced()
 		}
 
@@ -344,7 +344,7 @@ extension Actions {
 				], idList: itemIdsWithReactions))
 
 		} else {
-			log(level: .info, "[*Reactions*] skipped...")
+			log(level: .info, "[*Reactions*] (Skipped)")
 			Reaction.assumeSynced()
 		}
 

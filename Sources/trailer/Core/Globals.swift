@@ -98,6 +98,10 @@ func reportAndExit(message: String?) -> Never {
 
 	log("[![*\t-v*]!]\t\t\tEnable verbose output, -V provides a debug trace")
 	log()
+
+	log("[![*\t-mono*]!]\t\t\tGenerate monochrome text output")
+	log()
+
 	log("[!ACTION can be one of the following - applies to the active server:!]")
 	log()
 

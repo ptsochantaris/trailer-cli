@@ -183,15 +183,15 @@ struct Comment: Item, Announceable {
 		Group(name: "author", fields: [User.fragment])
 	]
 
-	static let fragmentForItems = Fragment(name: "commentFieldsForItems", on: "IssueComment", fields: commentFields)
-    static let fragmentForReviews = Fragment(name: "commentFieldsForReviews", on: "PullRequestReviewComment", fields: commentFields)
+	static let fragmentForItems = Fragment(name: "commentFieldsForItems", on: "IssueComment", elements: commentFields)
+    static let fragmentForReviews = Fragment(name: "commentFieldsForReviews", on: "PullRequestReviewComment", elements: commentFields)
 
-    static let pullRequestReviewCommentReactionFragment = Fragment(name: "PullRequestReviewCommentReactionFragment", on: "PullRequestReviewComment", fields: [
+    static let pullRequestReviewCommentReactionFragment = Fragment(name: "PullRequestReviewCommentReactionFragment", on: "PullRequestReviewComment", elements: [
         Field(name: "id"), // not using fragment, no need to re-parse
         Group(name: "reactions", fields: [Reaction.fragment], usePaging: true)
         ])
 
-    static let issueCommentReactionFragment = Fragment(name: "IssueCommentReactionsFragment", on: "IssueComment", fields: [
+    static let issueCommentReactionFragment = Fragment(name: "IssueCommentReactionsFragment", on: "IssueComment", elements: [
         Field(name: "id"), // not using fragment, no need to re-parse
         Group(name: "reactions", fields: [Reaction.fragment], usePaging: true)
         ])

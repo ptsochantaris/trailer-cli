@@ -171,7 +171,7 @@ struct Review: Item, Announceable {
 		return comments.contains { $0.includes(text: text) }
 	}
 
-	static let fragment = Fragment(name: "reviewFields", on: "PullRequestReview", fields: [
+	static let fragment = Fragment(name: "reviewFields", on: "PullRequestReview", elements: [
 		Field(name: "id"),
 		Field(name: "body"),
 		Field(name: "state"),
@@ -182,7 +182,7 @@ struct Review: Item, Announceable {
         Group(name: "comments", fields: [Field(name: "totalCount")]),
 		])
 
-    static let commentsFragment = Fragment(name: "ReviewCommentsFragment", on: "PullRequestReview", fields: [
+    static let commentsFragment = Fragment(name: "ReviewCommentsFragment", on: "PullRequestReview", elements: [
         Field(name: "id"), // not using fragment, no need to re-parse
         Group(name: "comments", fields: [Comment.fragmentForReviews], usePaging: true)
         ])

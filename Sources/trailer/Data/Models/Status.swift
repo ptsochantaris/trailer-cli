@@ -101,7 +101,7 @@ struct Status: Item {
 		}
 	}
 
-	static var fragment = Fragment(name: "statusFields", on: "StatusContext", fields: [
+	static var fragment = Fragment(name: "statusFields", on: "StatusContext", elements: [
 		Field(name: "id"),
 		Field(name: "context"),
 		Field(name: "description"),

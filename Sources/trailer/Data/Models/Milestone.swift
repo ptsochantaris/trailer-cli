@@ -60,7 +60,7 @@ struct Milestone: Item {
 		}
 	}
 
-	static let fragment = Fragment(name: "milestoneFields", on: "Milestone", fields: [
+	static let fragment = Fragment(name: "milestoneFields", on: "Milestone", elements: [
 		Field(name: "id"),
 		Field(name: "title")
 		])
