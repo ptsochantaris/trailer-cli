@@ -1,8 +1,15 @@
 #!/bin/sh
+
 echo "*** Cleaning"
 swift package reset
+
 echo "*** Building"
-swift build -c release -Xswiftc -static-stdlib -Xswiftc -Ounchecked -Xswiftc -whole-module-optimization
+if [ `uname -s` = "Linux" ] ; then
+	swift build -c release -Xswiftc -Ounchecked -Xswiftc -whole-module-optimization
+else
+	swift build -c release -Xswiftc -static-stdlib -Xswiftc -Ounchecked -Xswiftc -whole-module-optimization
+fi
+
 if [ $? -eq 0 ]; then
 	SRC="$(swift build -c release --show-bin-path)/trailer"
 	echo "*** Stripping symbols"
