@@ -40,7 +40,6 @@ struct PullRequest: Item, Announceable, Closeable {
 	var viewerDidAuthor = false
 
     var syncNeedsReactions = false
-    var syncNeedsComments = false
 
 	private enum CodingKeys : CodingKey {
 		case id
@@ -94,7 +93,6 @@ struct PullRequest: Item, Announceable, Closeable {
 		guard node.keys.count > 9 else { return false }
 
         syncNeedsReactions = (node["reactions"] as? [AnyHashable : Any])?["totalCount"] as? Int ?? 0 > 0
-        syncNeedsComments = (node["comments"] as? [AnyHashable : Any])?["totalCount"] as? Int ?? 0 > 0
 
         mergeable = MergeableState(rawValue: node["mergeable"] as? String ?? "UNKNOWN") ?? MergeableState.unknown
 		bodyText = node["bodyText"] as? String ?? ""
@@ -123,7 +121,7 @@ struct PullRequest: Item, Announceable, Closeable {
     }
 
     func announceClosure() {
-        printSummaryLine()
+        printSummaryLine(closing: true)
     }
 
 	var commentedByMe: Bool {
@@ -163,10 +161,13 @@ struct PullRequest: Item, Announceable, Closeable {
 	}
 
 	func printSummaryLine() {
+		printSummaryLine(closing : false)
+	}
+	func printSummaryLine(closing: Bool) {
         var line = "[!"
-        if state == .closed {
+        if closing && state == .closed {
             line += "[B*CLOSED"
-        } else if state == .merged {
+        } else if closing && state == .merged {
             line += "[G*MERGED"
         } else if syncState == .new {
             line += "[R*NEW"
@@ -398,7 +399,6 @@ struct PullRequest: Item, Announceable, Closeable {
 		Group(name: "reviewRequests", fields: [ReviewRequest.fragment], usePaging: true),
 
         Group(name: "reactions", fields: [Field(name: "totalCount")]),
-        Group(name: "comments", fields: [Field(name: "totalCount")]),
 
 		Group(name: "commits", fields: [
 			Group(name: "commit", fields: [
@@ -410,6 +410,12 @@ struct PullRequest: Item, Announceable, Closeable {
 				])
 			], usePaging: true, onlyLast: true)
 		])
+
+	static var fragmentWithComments: Fragment {
+		var f = fragment
+		f.addField(Group(name: "comments", fields: [Comment.fragmentForItems], usePaging: true))
+		return f
+	}
 
     static let reactionsFragment = Fragment(name: "PullRequestReactionFragment", on: "PullRequest", elements: [
         Field(name: "id"), // not using fragment, no need to re-parse

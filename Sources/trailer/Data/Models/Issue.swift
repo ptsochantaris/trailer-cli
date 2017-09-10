@@ -26,7 +26,6 @@ struct Issue: Item, Announceable, Closeable {
 	var state = ItemState.closed
 	var viewerDidAuthor = false
     var syncNeedsReactions = false
-    var syncNeedsComments = false
 
 	private enum CodingKeys : CodingKey {
 		case id
@@ -77,7 +76,6 @@ struct Issue: Item, Announceable, Closeable {
 		guard node.keys.count > 8 else { return false }
 
         syncNeedsReactions = (node["reactions"] as? [AnyHashable : Any])?["totalCount"] as? Int ?? 0 > 0
-        syncNeedsComments = (node["comments"] as? [AnyHashable : Any])?["totalCount"] as? Int ?? 0 > 0
 
         bodyText = node["bodyText"] as? String ?? ""
 		createdAt = GHDateFormatter.parseGH8601(node["createdAt"] as? String) ?? Date.distantPast
@@ -105,7 +103,7 @@ struct Issue: Item, Announceable, Closeable {
     }
 
     func announceClosure() {
-        printSummaryLine()
+		printSummaryLine(closing: true)
     }
 
 	var commentedByMe: Bool {
@@ -135,8 +133,11 @@ struct Issue: Item, Announceable, Closeable {
 	}
 
 	func printSummaryLine() {
+		printSummaryLine(closing : false)
+	}
+	func printSummaryLine(closing: Bool) {
         var line = "[!"
-        if state == .closed {
+        if closing && state == .closed {
             line += "[B*CLOSED"
         } else if syncState == .new {
             line += "[R*NEW"
@@ -273,7 +274,6 @@ struct Issue: Item, Announceable, Closeable {
 		Group(name: "labels", fields: [Label.fragment], usePaging: true),
 		Group(name: "assignees", fields: [User.fragment], usePaging: true),
         Group(name: "reactions", fields: [Field(name: "totalCount")]),
-        Group(name: "comments", fields: [Field(name: "totalCount")]),
 		])
 
     static let reactionsFragment = Fragment(name: "IssueReactionFragment", on: "Issue", elements: [
@@ -285,4 +285,10 @@ struct Issue: Item, Announceable, Closeable {
         Field(name: "id"), // not using fragment, no need to re-parse
         Group(name: "comments", fields: [Comment.fragmentForItems], usePaging: true)
         ])
+
+	static var fragmentWithComments: Fragment {
+		var f = fragment
+		f.addField(Group(name: "comments", fields: [Comment.fragmentForItems], usePaging: true))
+		return f
+	}
 }

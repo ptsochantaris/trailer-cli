@@ -244,7 +244,8 @@ extension Actions {
         ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 		if prIdList.count > 0 {
-			let prQueries = Query.batching("PRs", fields: [PullRequest.fragment], idList: Array(prIdList.keys))
+			let fragment = userWantsComments ? PullRequest.fragmentWithComments : PullRequest.fragment
+			let prQueries = Query.batching("PRs", fields: [fragment], idList: Array(prIdList.keys))
 			successOrAbort(prQueries)
 
 			let prsMissingParents = PullRequest.allItems.values.filter { $0.repo == nil }
@@ -263,7 +264,8 @@ extension Actions {
 		}
 
 		if issueIdList.count > 0 {
-			let issueQueries = Query.batching("Issues", fields: [Issue.fragment], idList: Array(issueIdList.keys))
+			let fragment = userWantsComments ? Issue.fragmentWithComments : Issue.fragment
+			let issueQueries = Query.batching("Issues", fields: [fragment], idList: Array(issueIdList.keys))
 			successOrAbort(issueQueries)
 
 			let issuesMissingParents = Issue.allItems.values.filter { $0.repo == nil }
@@ -289,23 +291,22 @@ extension Actions {
 
 			if userWantsPrs {
 				itemIdsWithComments += Review.allItems.values.flatMap { $0.syncState == .none || !$0.syncNeedsComments ? nil : $0.id }
-				itemIdsWithComments += PullRequest.allItems.values.flatMap { $0.syncState == .none || !$0.syncNeedsComments ? nil : $0.id }
 			} else {
 				itemIdsWithComments += Review.allItems.keys
 				itemIdsWithComments += PullRequest.allItems.keys
 			}
 
-			if userWantsIssues {
-				itemIdsWithComments += Issue.allItems.values.flatMap { $0.syncState == .none || !$0.syncNeedsComments ? nil : $0.id }
-			} else {
+			if !userWantsIssues {
 				itemIdsWithComments += Issue.allItems.keys
 			}
 
-			successOrAbort(Query.batching("Comments", fields: [
-				Review.commentsFragment,
-				PullRequest.commentsFragment,
-				Issue.commentsFragment,
-				], idList: itemIdsWithComments))
+			if itemIdsWithComments.count > 0 {
+				successOrAbort(Query.batching("Comments", fields: [
+					Review.commentsFragment,
+					PullRequest.commentsFragment,
+					Issue.commentsFragment,
+					], idList: itemIdsWithComments))
+			}
 
 		} else {
 			log(level: .info, "[*Comments*] (Skipped)")
