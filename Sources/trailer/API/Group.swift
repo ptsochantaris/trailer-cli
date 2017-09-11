@@ -181,7 +181,7 @@ struct Group: Ingesting {
 				return Milestone.parse(parent: parent, elementType: typeName, node: info, level: level)
 			case "Organization":
 				return Org.parse(parent: parent, elementType: typeName, node: info, level: level)
-			case "ReactionConnection", "PullRequestCommit", "Commit", "Status", "Bot":
+			case "ReactionConnection", "PullRequestCommit", "Commit", "Status", "Bot", "PullRequestReviewCommentConnection":
 				return nil
 			default:
 				log(level: .debug, indent: level, "+ Warning: unhandled type '\(typeName)'")

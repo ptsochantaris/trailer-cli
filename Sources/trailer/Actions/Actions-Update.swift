@@ -286,34 +286,28 @@ extension Actions {
 					[]
 			let itemQueries = Query.batching("Item IDs", fields: fields, idList: repoIds, perNodeBlock: itemIdParser)
 			successOrAbort(itemQueries)
+		} else {
+			log(level: .info, "[*Item IDs*] (Skipped)")
 		}
 
-		if userWantsPrs {
-			if filtersRequested { // do not expire items which are not included in this sync
-				for p in PullRequest.allItems.values {
-					if prIdList[p.id] == nil {
-						var updated = p
-						updated.assumeSynced(andChildren: true)
-						PullRequest.allItems[p.id] = updated
-					}
+		if !userWantsPrs || filtersRequested { // do not expire items which are not included in this sync
+			for p in PullRequest.allItems.values {
+				if prIdList[p.id] == nil {
+					var updated = p
+					updated.assumeSynced(andChildren: true)
+					PullRequest.allItems[p.id] = updated
 				}
 			}
-		} else {
-			PullRequest.assumeSynced(andChildren: true)
 		}
 
-		if userWantsIssues {
-			if filtersRequested { // do not expire items which are not included in this sync
-				for i in Issue.allItems.values {
-					if prIdList[i.id] == nil {
-						var updated = i
-						updated.assumeSynced(andChildren: true)
-						Issue.allItems[i.id] = updated
-					}
+		if !userWantsIssues || filtersRequested { // do not expire items which are not included in this sync
+			for i in Issue.allItems.values {
+				if issueIdList[i.id] == nil {
+					var updated = i
+					updated.assumeSynced(andChildren: true)
+					Issue.allItems[i.id] = updated
 				}
 			}
-		} else {
-			Issue.assumeSynced(andChildren: true)
 		}
 
         ///////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -322,6 +316,17 @@ extension Actions {
 			let fragment = userWantsComments ? PullRequest.fragmentWithComments : PullRequest.fragment
 			let prQueries = Query.batching("PRs", fields: [fragment], idList: Array(prIdList.keys))
 			successOrAbort(prQueries)
+
+			if !userWantsRepos { // revitalise links to parent repos for updated items
+				let updatedPrs = PullRequest.allItems.values.filter { $0.syncState == .updated }
+				for pr in updatedPrs {
+					if let repo = pr.repo, let parent = Parent(item: repo, field: "pullRequests") {
+						var newPr = pr
+						newPr.makeChild(of: parent, indent: 1, quiet: true)
+						PullRequest.allItems[pr.id] = newPr
+					}
+				}
+			}
 
 			let prsMissingParents = PullRequest.allItems.values.filter { $0.repo == nil }
 			for pr in prsMissingParents {
@@ -344,6 +349,17 @@ extension Actions {
 			let fragment = userWantsComments ? Issue.fragmentWithComments : Issue.fragment
 			let issueQueries = Query.batching("Issues", fields: [fragment], idList: Array(issueIdList.keys))
 			successOrAbort(issueQueries)
+
+			if !userWantsRepos { // revitalise links to parent repos for updated items
+				let updatedIssues = Issue.allItems.values.filter { $0.syncState == .updated }
+				for issue in updatedIssues {
+					if let repo = issue.repo, let parent = Parent(item: repo, field: "issues") {
+						var newIssue = issue
+						newIssue.makeChild(of: parent, indent: 1, quiet: true)
+						Issue.allItems[issue.id] = newIssue
+					}
+				}
+			}
 
 			let issuesMissingParents = Issue.allItems.values.filter { $0.repo == nil }
 			for issue in issuesMissingParents {

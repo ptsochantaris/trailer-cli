@@ -161,22 +161,22 @@ extension Item {
 		}
 	}
 
-	mutating func makeChild(of parent: Parent, indent level: Int) {
+	mutating func makeChild(of parent: Parent, indent level: Int, quiet: Bool = false) {
 		let relationship = Relationship(to: parent)
 		let storedField = "\(parent.item.typeName):\(parent.field)"
 		if var existingRelationships = parents[storedField] {
 			if let indexOfExisting = existingRelationships.index(where: { $0 == relationship }) {
 				existingRelationships[indexOfExisting] = relationship
 				parents[storedField] = existingRelationships
-				log(level: .debug, indent: level, "Already linked to this parent in relationship '\(parent.field)'")
+				if !quiet { log(level: .debug, indent: level, "Already linked to this parent in relationship '\(parent.field)'") }
 			} else {
 				existingRelationships.append(relationship)
 				parents[storedField] = existingRelationships
-				log(level: .debug, indent: level, "Adding another link to the existing parent(s) in relationship '\(parent.field)'")
+				if !quiet { log(level: .debug, indent: level, "Adding another link to the existing parent(s) in relationship '\(parent.field)'") }
 			}
 		} else {
 			parents[storedField] = [relationship]
-			log(level: .debug, indent: level, "Linking to parent through relationship '\(parent.field)'")
+			if !quiet { log(level: .debug, indent: level, "Linking to parent through relationship '\(parent.field)'") }
 		}
 	}
 

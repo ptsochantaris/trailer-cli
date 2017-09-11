@@ -90,12 +90,8 @@ extension Actions {
 	}
 
 	static private func listItems() {
-		for i in pullRequestsToScan() {
-			i.printSummaryLine()
-		}
-		for i in issuesToScan() {
-			i.printSummaryLine()
-		}
+		listPrs()
+		listIssues()
 	}
 
 	static private func listOrgRepos(_ o: Org?, hideEmpty: Bool, onlyEmpty: Bool) {
