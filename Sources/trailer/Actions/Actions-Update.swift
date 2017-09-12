@@ -291,23 +291,13 @@ extension Actions {
 		}
 
 		if !userWantsPrs || filtersRequested { // do not expire items which are not included in this sync
-			for p in PullRequest.allItems.values {
-				if prIdList[p.id] == nil {
-					var updated = p
-					updated.assumeSynced(andChildren: true)
-					PullRequest.allItems[p.id] = updated
-				}
-			}
+			let limitIds = PullRequest.allItems.keys.filter { issueIdList[$0] == nil }
+			PullRequest.assumeSynced(andChildren: true, limitToIds: limitIds)
 		}
 
 		if !userWantsIssues || filtersRequested { // do not expire items which are not included in this sync
-			for i in Issue.allItems.values {
-				if issueIdList[i.id] == nil {
-					var updated = i
-					updated.assumeSynced(andChildren: true)
-					Issue.allItems[i.id] = updated
-				}
-			}
+			let limitIds = Issue.allItems.keys.filter { issueIdList[$0] == nil }
+			Issue.assumeSynced(andChildren: true, limitToIds: limitIds)
 		}
 
         ///////////////////////////////////////////////////////////////////////////////////////////////////////////

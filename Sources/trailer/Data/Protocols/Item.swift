@@ -22,11 +22,15 @@ protocol Item: Identifiable, Databaseable, Equatable {
 
 extension Item {
 
-	static func assumeSynced(andChildren: Bool) {
-		allItems = allItems.mapValues {
-			var i = $0
-			i.assumeSynced(andChildren: andChildren)
-			return i
+	static func assumeSynced(andChildren: Bool, limitToIds: [String]? = nil) {
+		allItems = allItems.mapValues { item in
+			if let l = limitToIds, !l.contains(item.id) {
+				return item
+			} else {
+				var i = item
+				i.assumeSynced(andChildren: andChildren)
+				return i
+			}
 		}
 	}
 

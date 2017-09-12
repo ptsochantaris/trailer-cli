@@ -232,4 +232,3 @@ func parallelFilter<T>(_ items: [T], filter: (T)->Bool) -> [T] {
 	resultQueue.waitUntilAllOperationsAreFinished()
 	return filtered
 }
-
