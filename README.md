@@ -14,7 +14,7 @@ A version of [Trailer](http://ptsochantaris.github.io/trailer/) that runs on the
 ## Warning: Work In Progress
 Trailer-CLI is quite useable, but it is also new and code/features may be in flux for a while, and may contain potential bugs.
 
-Please refer to the "cookbook" section below for an introduction to various features. There are no binaries (yet) but the project can be easily built from source (see right below).
+Please refer to the "cookbook" section below for an introduction to various features. There are no binaries for Linux (yet) but the project can be easily built from source (see right below).
 
 ## Building & Installing
 **Note: Requires Swift 4.x.** Use the simple *(and perhaps not suitable for all setups)* script `install.sh` to place a built binary in /usr/local/bin, or you can manually build the project by entering `swift build -c release --static-swift-stdlib` and move the `trailer` binary from the `.build` subdirectory to wherever you like.
