@@ -125,7 +125,7 @@ extension Actions {
 		}
 
 		let a = ItemFilterArgs()
-		if !a.filteringApplied {
+		if !a.filteringApplied && number == nil {
 			return allItems
 		}
 
@@ -208,7 +208,7 @@ extension Actions {
 		}
 
 		let a = ItemFilterArgs()
-		if !a.filteringApplied {
+		if !a.filteringApplied && number == nil {
 			return allItems
 		}
 
