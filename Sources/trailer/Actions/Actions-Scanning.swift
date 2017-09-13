@@ -86,14 +86,13 @@ struct ItemFilterArgs {
 extension Actions {
 
 	static var reposToScan: [Repo] {
-		let allItems = Array(Repo.allItems.values)
 
 		let a = RepoFilterArgs()
 		if !a.filteringApplied {
-			return allItems
+			return Array(Repo.allItems.values)
 		}
 
-		return parallelFilter(allItems) { r in
+		return Repo.allItems.values.filter { r in
 
 			if let s = a.searchForOrg {
 				if let on = r.org?.name {
@@ -129,7 +128,7 @@ extension Actions {
 			return allItems
 		}
 
-		return parallelFilter(allItems) { p in
+		return allItems.filter { p in
 
 			if a.red || a.green {
 				let s = p.statuses
@@ -216,7 +215,7 @@ extension Actions {
 			return []
 		}
 
-		return parallelFilter(allItems) { i in
+		return allItems.filter { i in
 
 			if let number = number, i.number != number {
 				return false

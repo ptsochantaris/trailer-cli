@@ -13,7 +13,7 @@ protocol Item: Identifiable, Databaseable, Equatable {
 	static func parse(parent: Parent?, elementType: String, node: [AnyHashable : Any], level: Int) -> Self?
 	static var idField: String { get }
 
-	init?(id: String, type: String, parents: [String: [Relationship]], node: [AnyHashable:Any])
+	init?(id: String, type: String, node: [AnyHashable:Any])
 
 	var parents: [String: [Relationship]] { get set }
 	mutating func apply(_ node: [AnyHashable:Any]) -> Bool
@@ -70,23 +70,25 @@ extension Item {
 		allItems = allItems.mapValues { item in
 			var newItem = item
 			for (relationshipKey, previousRelationships) in item.parents {
-				if let ptn = relationshipKey.split(separator: ":").first {
-					let parentTypeName = String(ptn)
 
-					let relationships = previousRelationships.flatMap { relationship -> Relationship? in
-						if relationship.syncState == .none {
-							log(level: .debug, "Removing stale relationship from \(item.typeName) \(item.id) to parent ID \(relationship.parentId)")
-							return nil
-						} else if checkItemExists(type: parentTypeName, id: relationship.parentId) { // object actually exists
-							var newRelationship = relationship
-							newRelationship.syncState = .none
-							return newRelationship
-						} else {
-							log(level: .debug, "Removing relationship from \(item.typeName) \(item.id) to parent ID \(relationship.parentId) which no longer exists")
-							return nil
-						}
+				let P = relationshipKey.split(separator: ":")
+				let parentTypeName = String(P.first!)
+				let parentField = String(P.last!)
+
+				newItem.parents[relationshipKey] = previousRelationships.flatMap { relationship -> Relationship? in
+					if relationship.syncState == .none {
+						log(level: .debug, "Removing stale relationship from \(item.typeName) \(item.id) to parent ID \(relationship.parentId)")
+						DB.removeChild(id: item.id, from: relationship.parentId, field: parentField)
+						return nil
+					} else if checkItemExists(type: parentTypeName, id: relationship.parentId) { // object actually exists
+						var newRelationship = relationship
+						newRelationship.syncState = .none
+						return newRelationship
+					} else {
+						log(level: .debug, "Removing relationship from \(item.typeName) \(item.id) to parent ID \(relationship.parentId) which no longer exists")
+						DB.removeChild(id: item.id, from: relationship.parentId, field: parentField)
+						return nil
 					}
-					newItem.parents[relationshipKey] = relationships
 				}
 			}
 			return newItem
@@ -175,11 +177,13 @@ extension Item {
 				if !quiet { log(level: .debug, indent: level, "Already linked to this parent in relationship '\(parent.field)'") }
 			} else {
 				existingRelationships.append(relationship)
+				DB.addChild(id: id, to: parent)
 				parents[storedField] = existingRelationships
 				if !quiet { log(level: .debug, indent: level, "Adding another link to the existing parent(s) in relationship '\(parent.field)'") }
 			}
 		} else {
 			parents[storedField] = [relationship]
+			DB.addChild(id: id, to: parent)
 			if !quiet { log(level: .debug, indent: level, "Linking to parent through relationship '\(parent.field)'") }
 		}
 	}
@@ -201,17 +205,11 @@ extension Item {
 			allItems[id] = ret
 			return ret
 		} else {
-			let parents: [String: [Relationship]]
-			if let parent = parent {
-				let relationship = Relationship(to: parent)
-				let storedField = "\(parent.item.typeName):\(parent.field)"
-				parents = [storedField: [relationship]]
-			} else {
-				parents = [String: [Relationship]]()
-			}
-
-			if let new = Self.init(id: id, type: elementType, parents: parents, node: node) {
+			if var new = Self.init(id: id, type: elementType, node: node) {
 				log(level: .debug, indent: level, "+ \(typeName): \(id)")
+				if let parent = parent {
+					new.makeChild(of: parent, indent: level)
+				}
 				allItems[id] = new
 				return new
 			} else {
@@ -226,12 +224,10 @@ extension Item {
 	}
 
 	func children<T: Item>(field: String) -> [T] {
-		let key = "\(typeName):\(field)"
-		return T.allItems.values.filter { c in
-			if let p = c.parents[key] {
-				return p.contains { $0.parentId == id }
-			}
-			return false
+		if let childrenIds = DB.idsForChildren(of: id, field: field) {
+			return childrenIds.flatMap { T.allItems[$0] }
+		} else {
+			return []
 		}
 	}
 

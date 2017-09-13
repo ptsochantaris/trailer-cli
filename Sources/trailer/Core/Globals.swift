@@ -213,22 +213,3 @@ struct GHDateFormatter {
 	}
 #endif
 
-func parallelFilter<T>(_ items: [T], filter: (T)->Bool) -> [T] {
-
-	let resultQueue = OperationQueue()
-	resultQueue.maxConcurrentOperationCount = 1
-	var filtered = [T]()
-	let filterQueue = DispatchQueue.global(qos: .userInteractive)
-	filterQueue.sync {
-		DispatchQueue.concurrentPerform(iterations: items.count) { iteration in
-			let item = items[iteration]
-			if filter(item) {
-				resultQueue.addOperation {
-					filtered.append(item)
-				}
-			}
-		}
-	}
-	resultQueue.waitUntilAllOperationsAreFinished()
-	return filtered
-}

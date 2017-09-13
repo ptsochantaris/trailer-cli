@@ -88,9 +88,9 @@ struct Issue: Item, Announceable, Closeable {
 		return true
 	}
 
-	init?(id: String, type: String, parents: [String: [Relationship]], node: [AnyHashable:Any]) {
+	init?(id: String, type: String, node: [AnyHashable:Any]) {
 		self.id = id
-		self.parents = parents
+		self.parents = [String:[Relationship]]()
 		self.elementType = type
 		syncState = .new
 		if !apply(node) {

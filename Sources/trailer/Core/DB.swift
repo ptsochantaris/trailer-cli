@@ -30,13 +30,40 @@ struct DB {
         User.self,
 	]
 
+	static private var parents2fields2children = [String: [String: [String]]]()
+
+	static func idsForChildren(of itemId: String, field: String) -> [String]? {
+		return parents2fields2children[itemId]?[field]
+	}
+
+	static func addChild(id: String, to parent: Parent) {
+		let fieldName = parent.field
+		let parentId = parent.item.id
+		var field2children = parents2fields2children[parentId] ?? [String: [String]]()
+		var listOfChildren = field2children[fieldName] ?? [String]()
+		listOfChildren.append(id)
+		field2children[fieldName] = listOfChildren
+		parents2fields2children[parentId] = field2children
+	}
+
+	static func removeChild(id: String, from parentId: String, field: String) {
+		var field2children = parents2fields2children[parentId] ?? [String: [String]]()
+		let listOfChildren = field2children[field]?.filter { $0 != id }
+		field2children[field] = (listOfChildren?.count == 0) ? nil : listOfChildren
+		parents2fields2children[parentId] = field2children
+	}
+
 	static func load() {
 		log(level: .debug, "Loading DB...")
 		let loadingQueue = DispatchQueue.global(qos: .userInteractive)
 		loadingQueue.sync {
 			let e = JSONDecoder()
-			DispatchQueue.concurrentPerform(iterations: allTypes.count) { iteration in
-				allTypes[iteration].loadAll(using: e)
+			DispatchQueue.concurrentPerform(iterations: allTypes.count+1) { iteration in
+				if iteration == allTypes.count {
+					loadRelationships(using: e)
+				} else {
+					allTypes[iteration].loadAll(using: e)
+				}
 			}
 		}
 		log(level: .verbose, "Loaded DB")
@@ -62,10 +89,43 @@ struct DB {
 		let savingQueue = DispatchQueue.global(qos: .userInteractive)
 		savingQueue.sync {
 			let e = JSONEncoder()
-			DispatchQueue.concurrentPerform(iterations: allTypes.count) { iteration in
-				allTypes[iteration].saveAll(using: e)
+			DispatchQueue.concurrentPerform(iterations: allTypes.count+1) { iteration in
+				if iteration == allTypes.count {
+					saveRelationships(using: e)
+				} else {
+					allTypes[iteration].saveAll(using: e)
+				}
 			}
 		}
 		log(level: .verbose, "Saved DB to \(config.saveLocation.path)/")
 	}
+
+	static func loadRelationships(using decoder: JSONDecoder) {
+		parents2fields2children.removeAll()
+		let l = relationshipsPath
+		if FileManager.default.fileExists(atPath: l.path) {
+			do {
+				let d = try Data(contentsOf: l)
+				parents2fields2children = try decoder.decode([String: [String:[String]]].self, from: d)
+			} catch {
+				log("Could not load data for relationships")
+			}
+		}
+
+	}
+
+	static var relationshipsPath: URL {
+		return config.saveLocation.appendingPathComponent("relationships.json", isDirectory: false)
+	}
+
+	static func saveRelationships(using encoder: JSONEncoder) {
+		let c = try! encoder.encode(parents2fields2children)
+		let l = relationshipsPath
+		let f = FileManager.default
+		if f.fileExists(atPath: l.path) {
+			try! f.removeItem(at: l)
+		}
+		try! c.write(to: l)
+	}
+
 }
