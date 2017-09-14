@@ -53,6 +53,12 @@ struct DB {
 		parents2fields2children[parentId] = field2children
 	}
 
+	static func removeParent<T: Item>(_ item: T) {
+		let id = item.id
+		type(of: item).allItems[id] = nil
+		parents2fields2children[id] = nil
+	}
+
 	static func load() {
 		log(level: .debug, "Loading DB...")
 		let loadingQueue = DispatchQueue.global(qos: .userInteractive)

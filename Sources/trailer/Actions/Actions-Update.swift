@@ -335,6 +335,32 @@ extension Actions {
 			log(level: .info, "[*PRs*] (Skipped)")
 		}
 
+		///////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+		if userWantsPrs && userWantsComments {
+
+			let reviewIdsWithComments = Review.allItems.values.flatMap { $0.syncState == .none || !$0.syncNeedsComments ? nil : $0.id }
+
+			if reviewIdsWithComments.count > 0 {
+				successOrAbort(Query.batching("PR Review Comments", fields: [
+					Review.commentsFragment,
+					PullRequest.commentsFragment,
+					Issue.commentsFragment,
+					], idList: reviewIdsWithComments))
+			} else {
+				log(level: .info, "[*PR Review Comments*] (Skipped)")
+			}
+
+		} else {
+			log(level: .info, "[*PR Review Comments*] (Skipped)")
+			let reviewCommentIds = Review.allItems.values.reduce([String](), { idList, review -> [String] in
+				return idList + review.comments.map { $0.id }
+			})
+			Comment.assumeSynced(andChildren: true, limitToIds: reviewCommentIds)
+		}
+
+		///////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 		if issueIdList.count > 0 {
 			let fragment = userWantsComments ? Issue.fragmentWithComments : Issue.fragment
 			let issueQueries = Query.batching("Issues", fields: [fragment], idList: Array(issueIdList.keys))
@@ -370,34 +396,20 @@ extension Actions {
 
 		///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-		if userWantsComments {
+		if !userWantsComments {
+			var itemIds = [String]()
 
-			var itemIdsWithComments = [String]()
-
-			if userWantsPrs {
-				itemIdsWithComments += Review.allItems.values.flatMap { $0.syncState == .none || !$0.syncNeedsComments ? nil : $0.id }
-			} else if !filtersRequested {
-				itemIdsWithComments += Review.allItems.keys
-				itemIdsWithComments += PullRequest.allItems.keys
+			for p in PullRequest.allItems.values.filter({ $0.syncState == .updated }) {
+				itemIds += p.comments.map { $0.id }
 			}
 
-			if !userWantsIssues && !filtersRequested {
-				itemIdsWithComments += Issue.allItems.keys
+			for p in Issue.allItems.values.filter({ $0.syncState == .updated }) {
+				itemIds += p.comments.map { $0.id }
 			}
 
-			if itemIdsWithComments.count > 0 {
-				successOrAbort(Query.batching("Comments", fields: [
-					Review.commentsFragment,
-					PullRequest.commentsFragment,
-					Issue.commentsFragment,
-					], idList: itemIdsWithComments))
-			} else {
-				log(level: .info, "[*Comments*] (Skipped)")
+			if itemIds.count > 0 {
+				Comment.assumeSynced(andChildren: true, limitToIds: itemIds)
 			}
-
-		} else {
-			log(level: .info, "[*Comments*] (Skipped)")
-			Comment.assumeSynced(andChildren: true)
 		}
 
 		///////////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -104,12 +104,12 @@ extension Item {
 			if s == .none {
 				log(level: .debug, "\(typeName) \(id) no longer present in server data")
 				purgedItemCount += 1
-				allItems[id] = nil
+				DB.removeParent(item)
             } else if s == .updated, let i = item as? Closeable, i.shouldAnnounceClosure {
                 log(level: .debug, "\(typeName) \(id) is closed or merged, will remove")
                 i.announceClosure()
                 purgedItemCount += 1
-                allItems[id] = nil
+				DB.removeParent(item)
             }
 		}
 

@@ -133,7 +133,7 @@ Deactivate all repos, and enable only repos whose name matches "myrepo". You can
 
 Updates, if you have many items, can take a while and repeated updates with many items can cause the GitHub server to temporarily block you to avoid overload. However, you can reduce the number of things that get synced on a specific update by providing different parameters to the `update` command.
 
-This way you can refresh subsets of things more often, if you want to stay up to date, and refresh everything using the `all` parameter less often.
+This way you can refresh subsets of things more often, and stay up to date, while refreshing everything using the `all` parameter less often.
 
 *Tip: The `-v` parameter will provide you with info on how much API usage you have used on GitHub for the current hourly window.*
 
@@ -143,14 +143,20 @@ trailer update repos
 Only update the repository list
 
 ```
-trailer update comments
+trailer update prs
 ```
-Only update comments for existing PRs and issues.
+Only update and check for new PRs.
 
 ```
-trailer update prs comments
+trailer update issues comments
 ```
-Update only PRs and also comments related to PRs.
+Only update and check for new issues, and also sync comments related to them.
+
+```
+trailer update prs issues
+```
+
+Update and check for new prs and issues, but not repos or comments.
 
 *It's useful to remember that you can also use the filtering parameters (that you use when listing items) to also filter items for updates. This will affect only existing items though, and **not** scan for new ones. For example:*
 
