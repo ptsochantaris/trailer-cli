@@ -48,8 +48,10 @@ extension Actions {
 		printOption(name: "comments", description: "Update comments on items")
 		printOption(name: "reactions", description: "Update reactions for items and comments")
         log()
-        log("[!Notifications!]")
+        log("[!Options!]")
         printOption(name: "-n", description: "List new comments and reviews on items")
+		printOption(name: "-fresh", description: "Only keep what's downloaded in this sync")
+		printOption(name: "", description: "and purge all other types of data")
 		log()
 		log("[!You can also limit updates to specific items using filtering:!]")
 		log()
@@ -132,14 +134,15 @@ extension Actions {
 			}
 		}
 		if updateTypes.count > 0 {
-			update(updateTypes)
+			let onlyKeepNew = commandLineArgument(matching: "-fresh") != nil
+			update(updateTypes, keepOnlyNewItems: onlyKeepNew)
 		} else {
 			log()
 			failUpdate("Need at least one update type. If in doubt, use 'all'.")
 		}
     }
 
-	private static func update(_ typesToSync: [UpdateType]) {
+	private static func update(_ typesToSync: [UpdateType], keepOnlyNewItems: Bool) {
 
 		let repoFilters = RepoFilterArgs()
 		let itemFilters = ItemFilterArgs()
@@ -290,14 +293,16 @@ extension Actions {
 			log(level: .info, "[*Item IDs*] (Skipped)")
 		}
 
-		if !userWantsPrs || filtersRequested { // do not expire items which are not included in this sync
-			let limitIds = PullRequest.allItems.keys.filter { issueIdList[$0] == nil }
-			PullRequest.assumeSynced(andChildren: true, limitToIds: limitIds)
-		}
+		if !keepOnlyNewItems {
+			if !userWantsPrs || filtersRequested { // do not expire items which are not included in this sync
+				let limitIds = PullRequest.allItems.keys.filter { issueIdList[$0] == nil }
+				PullRequest.assumeSynced(andChildren: true, limitToIds: limitIds)
+			}
 
-		if !userWantsIssues || filtersRequested { // do not expire items which are not included in this sync
-			let limitIds = Issue.allItems.keys.filter { issueIdList[$0] == nil }
-			Issue.assumeSynced(andChildren: true, limitToIds: limitIds)
+			if !userWantsIssues || filtersRequested { // do not expire items which are not included in this sync
+				let limitIds = Issue.allItems.keys.filter { issueIdList[$0] == nil }
+				Issue.assumeSynced(andChildren: true, limitToIds: limitIds)
+			}
 		}
 
         ///////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -353,10 +358,12 @@ extension Actions {
 
 		} else {
 			log(level: .info, "[*PR Review Comments*] (Skipped)")
-			let reviewCommentIds = Review.allItems.values.reduce([String](), { idList, review -> [String] in
-				return idList + review.comments.map { $0.id }
-			})
-			Comment.assumeSynced(andChildren: true, limitToIds: reviewCommentIds)
+			if !keepOnlyNewItems {
+				let reviewCommentIds = Review.allItems.values.reduce([String](), { idList, review -> [String] in
+					return idList + review.comments.map { $0.id }
+				})
+				Comment.assumeSynced(andChildren: true, limitToIds: reviewCommentIds)
+			}
 		}
 
 		///////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -396,19 +403,21 @@ extension Actions {
 
 		///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-		if !userWantsComments {
-			var itemIds = [String]()
+		if !keepOnlyNewItems {
+			if !userWantsComments {
+				var itemIds = [String]()
 
-			for p in PullRequest.allItems.values.filter({ $0.syncState == .updated }) {
-				itemIds += p.comments.map { $0.id }
-			}
+				for p in PullRequest.allItems.values.filter({ $0.syncState == .updated }) {
+					itemIds += p.comments.map { $0.id }
+				}
 
-			for p in Issue.allItems.values.filter({ $0.syncState == .updated }) {
-				itemIds += p.comments.map { $0.id }
-			}
+				for p in Issue.allItems.values.filter({ $0.syncState == .updated }) {
+					itemIds += p.comments.map { $0.id }
+				}
 
-			if itemIds.count > 0 {
-				Comment.assumeSynced(andChildren: true, limitToIds: itemIds)
+				if itemIds.count > 0 {
+					Comment.assumeSynced(andChildren: true, limitToIds: itemIds)
+				}
 			}
 		}
 
@@ -445,7 +454,9 @@ extension Actions {
 
 		} else {
 			log(level: .info, "[*Reactions*] (Skipped)")
-			Reaction.assumeSynced(andChildren: true)
+			if !keepOnlyNewItems {
+				Reaction.assumeSynced(andChildren: true)
+			}
 		}
 
 		///////////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -56,6 +56,7 @@ func go() {
 
 	let actionString = commandLineArgument(matching: "reset")
 		?? actionSequence?.first
+		?? commandLineArgument(matching: "stats")
 		?? ""
 
 	let actionDetected = Action(rawValue: actionString)

@@ -30,6 +30,26 @@ struct DB {
         User.self,
 	]
 
+	//////////////////////////////////// Stats
+
+	static func printStats() {
+		DB.load()
+		log("[![*Org*]!]\t\t\(Org.allItems.count)")
+		log("[![*Repo*]!]\t\t\(Repo.allItems.count)")
+		log("[![*Issue*]!]\t\t\(Issue.allItems.count)")
+		log("[![*PullRequest*]!]\t\(PullRequest.allItems.count)")
+		log("[![*Milestone*]!]\t\(Milestone.allItems.count)")
+		log("[![*Status*]!]\t\t\(Status.allItems.count)")
+		log("[![*ReviewRequest*]!]\t\(ReviewRequest.allItems.count)")
+		log("[![*Label*]!]\t\t\(Label.allItems.count)")
+		log("[![*Comment*]!]\t\t\(Comment.allItems.count)")
+		log("[![*Review*]!]\t\t\(Review.allItems.count)")
+		log("[![*Reaction*]!]\t\(Reaction.allItems.count)")
+		log("[![*User*]!]\t\t\(User.allItems.count)")
+	}
+
+	//////////////////////////////////// Child lookup
+
 	static private var parents2fields2children = [String: [String: [String]]]()
 
 	static func idsForChildren(of itemId: String, field: String) -> [String]? {
@@ -59,6 +79,8 @@ struct DB {
 		parents2fields2children[id] = nil
 	}
 
+	///////////////////////////////////// Load
+
 	static func load() {
 		log(level: .debug, "Loading DB...")
 		let loadingQueue = DispatchQueue.global(qos: .userInteractive)
@@ -79,6 +101,26 @@ struct DB {
 			log(level: .verbose, "API user is [*\(config.myLogin)*]")
 		}
 	}
+
+	static var relationshipsPath: URL {
+		return config.saveLocation.appendingPathComponent("relationships.json", isDirectory: false)
+	}
+
+	static func loadRelationships(using decoder: JSONDecoder) {
+		parents2fields2children.removeAll()
+		let l = relationshipsPath
+		if FileManager.default.fileExists(atPath: l.path) {
+			do {
+				let d = try Data(contentsOf: l)
+				parents2fields2children = try decoder.decode([String: [String:[String]]].self, from: d)
+			} catch {
+				log("Could not load data for relationships")
+			}
+		}
+
+	}
+
+	///////////////////////////////////// Save
 
     static func save(purgeUntouchedItems: Bool, notificationMode: NotificationMode) {
 
@@ -104,24 +146,6 @@ struct DB {
 			}
 		}
 		log(level: .verbose, "Saved DB to \(config.saveLocation.path)/")
-	}
-
-	static func loadRelationships(using decoder: JSONDecoder) {
-		parents2fields2children.removeAll()
-		let l = relationshipsPath
-		if FileManager.default.fileExists(atPath: l.path) {
-			do {
-				let d = try Data(contentsOf: l)
-				parents2fields2children = try decoder.decode([String: [String:[String]]].self, from: d)
-			} catch {
-				log("Could not load data for relationships")
-			}
-		}
-
-	}
-
-	static var relationshipsPath: URL {
-		return config.saveLocation.appendingPathComponent("relationships.json", isDirectory: false)
 	}
 
 	static func saveRelationships(using encoder: JSONEncoder) {

@@ -94,6 +94,16 @@ trailer list items -l bug
 ```
 List all items that have a label containing the text "bug".
 
+```
+trailer list items -m 2.0
+```
+List all items that have a milestone containing the text "2.0".
+
+```
+trailer stats
+```
+List totals of items currently in the local cache.
+
 ### Viewing items
 
 ```
@@ -171,6 +181,12 @@ trailer update prs -red
 ``` 
 
 Update only existing PRs which have at least one red CI status.
+
+```
+trailer update prs -fresh
+```
+
+The `-fresh` update flag will delete anything not explicitly specified in the list of types to sync. In this case: Update PRs but don't keep other items, like issues or comments.
 
 ### Advanced: Multiple Servers
 

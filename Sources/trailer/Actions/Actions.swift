@@ -15,6 +15,7 @@ enum Action: String {
 	case show
 	case open
 	case config
+	case stats
 }
 
 struct Actions {
@@ -24,7 +25,7 @@ struct Actions {
         let invalidArguments = CommandLine.arguments.filter({ $0.hasPrefix("-") }).filter { arg in
             switch arg {
             case "-v", "-V", "-server", "-token", "-r", "-o", "-t", "-a", "-l", "-h", "-b", "-c", "-comments", "-body", "-pageSize", "-mine", "-participated", "-mentioned",
-                 "-mergeable", "-conflict", "-red", "-green", "-e", "-before", "-within", "-n", "-purge", "-mono", "-version":
+                 "-mergeable", "-conflict", "-red", "-green", "-e", "-before", "-within", "-n", "-purge", "-mono", "-version", "-fresh", "-m":
                 return false
             default:
                 return true
@@ -91,6 +92,9 @@ struct Actions {
 			if let listSequence = listSequence {
 				Actions.processConfigDirective(listSequence)
 			}
+
+		case .stats:
+			DB.printStats()
 		}
 	}
 
@@ -131,6 +135,7 @@ struct Actions {
 		printOption(name :"-c <text>", description: "Filter for items containing 'text' in commens/reviews")
 		printOption(name :"-a <author>", description: "Filter for a specific author")
 		printOption(name :"-l <label>", description: "Filter for a specific label")
+		printOption(name :"-m <milestone>", description: "Filter for a specific milestone")
 		log()
 		log("[!Filter options affecting PRs (can combine)!]")
 		printOption(name :"-mergeable", description: "Filter for mergeable PRs")

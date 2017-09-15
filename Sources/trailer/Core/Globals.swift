@@ -109,14 +109,7 @@ func reportAndExit(message: String?) -> Never {
     log("\t\t\t\tSpecify 'help' for more info.")
 	log()
 
-	log("[![*\treset*]!]\t\t\tClear all stored data")
-	log()
-
 	log("[![*\tlist*]!]\t\t\tList or search for various items.")
-	log("\t\t\t\tSpecify 'help' for more info.")
-	log()
-
-	log("[![*\tconfig*]!]\t\t\tVisibility options for repositories.")
 	log("\t\t\t\tSpecify 'help' for more info.")
 	log()
 
@@ -127,6 +120,18 @@ func reportAndExit(message: String?) -> Never {
 	log("[![*\topen*]!]\t\t\tOpen the specific item in a web browser.")
 	log("\t\t\t\tIf multiple items match, the first one opens.")
 	log("\t\t\t\tSpecify 'help' for more info.")
+	log()
+
+	log("[![*\tconfig*]!]\t\t\tVisibility options for repositories.")
+	log("\t\t\t\tSpecify 'help' for more info.")
+	log()
+
+	log("[![*\tstats*]!]\t\t\tList stats on stored data.")
+	log()
+
+	log("[![*\treset*]!]\t\t\tClear all stored data, including config/token.")
+	log()
+
 	log()
 	exit(1)
 }

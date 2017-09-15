@@ -19,6 +19,7 @@ extension Actions {
 		printOption(name: "issues", description: "List open Issues")
 		printOption(name: "items", description: "List open PRs and Issues")
 		printOption(name: "labels", description: "List labels currently in use")
+		printOption(name: "milestones", description: "List milestones currently set")
 		log()
 		printFilterOptions()
 	}
@@ -48,6 +49,9 @@ extension Actions {
 		case "labels":
 			DB.load()
 			listLabels()
+		case "milestones":
+			DB.load()
+			listMilestones()
 		case "help":
             log()
 			failList(nil)
@@ -68,6 +72,16 @@ extension Actions {
 		let ids = Array(Set(labels.map({ $0.id }))).sorted(by: { $0 < $1 })
 		for l in ids {
             log("[![*> *]\(l)!]")
+		}
+	}
+
+	static private func listMilestones() {
+
+		let milestoneTitles = pullRequestsToScan().flatMap { $0.milestone?.title }
+			+ issuesToScan().flatMap { $0.milestone?.title }
+
+		for l in milestoneTitles {
+			log("[![*> *]\(l)!]")
 		}
 	}
 

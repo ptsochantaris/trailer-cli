@@ -33,6 +33,7 @@ struct ItemFilterArgs {
 	let body = commandLineValue(for: "-b")
 	let comment = commandLineValue(for: "-c")
 	let label = commandLineValue(for: "-l")
+	let milestone = commandLineValue(for: "-m")
 	let mine = commandLineArgument(matching: "-mine") != nil
 	let participated = commandLineArgument(matching: "-participated") != nil
 	let mentioned = commandLineArgument(matching: "-mentioned") != nil
@@ -49,6 +50,7 @@ struct ItemFilterArgs {
 			|| body != nil
 			|| comment != nil
 			|| label != nil
+			|| milestone != nil
 			|| mine
 			|| participated
 			|| mentioned
@@ -164,6 +166,10 @@ extension Actions {
 				return false
 			}
 
+			if let l = a.milestone, !(p.milestone?.title.localizedCaseInsensitiveContains(l) ?? false) {
+				return false
+			}
+
 			if !a.dateValid(for: p.updatedAt) {
 				return false
 			}
@@ -230,6 +236,10 @@ extension Actions {
 			}
 
 			if let l = a.label, !i.labels.contains(where: { $0.id.localizedCaseInsensitiveContains(l) }) {
+				return false
+			}
+
+			if let l = a.milestone, !(i.milestone?.title.localizedCaseInsensitiveContains(l) ?? false) {
 				return false
 			}
 
