@@ -43,6 +43,7 @@ struct ItemFilterArgs {
 	let green = commandLineArgument(matching: "-green") != nil
 	let olderThan = Int(commandLineValue(for: "-before") ?? "")
 	let youngerThan = Int(commandLineValue(for: "-within") ?? "")
+	let numbers: [Int]?
 
 	var filteringApplied: Bool {
 		return author != nil
@@ -51,6 +52,7 @@ struct ItemFilterArgs {
 			|| comment != nil
 			|| label != nil
 			|| milestone != nil
+			|| numbers != nil
 			|| mine
 			|| participated
 			|| mentioned
@@ -71,6 +73,12 @@ struct ItemFilterArgs {
 			refDate = Date(timeIntervalSinceNow: -24.0*3600.0*TimeInterval(d))
 		} else {
 			refDate = nil
+		}
+
+		if let ns = commandLineValue(for: "-number") {
+			numbers = ns.split(separator: ",").flatMap { Int($0) }
+		} else {
+			numbers = nil
 		}
 	}
 
@@ -154,6 +162,10 @@ extension Actions {
 				return false
 			}
 
+			if let numbers = a.numbers, !numbers.contains(p.number) {
+				return false
+			}
+
 			if let a = a.author, !(p.author?.login.localizedCaseInsensitiveContains(a) ?? false) {
 				return false
 			}
@@ -224,6 +236,10 @@ extension Actions {
 		return allItems.filter { i in
 
 			if let number = number, i.number != number {
+				return false
+			}
+
+			if let numbers = a.numbers, !numbers.contains(i.number) {
 				return false
 			}
 

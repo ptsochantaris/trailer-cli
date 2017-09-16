@@ -171,10 +171,15 @@ Update and check for new prs and issues, but not repos or comments.
 *It's useful to remember that you can also use the filtering parameters (that you use when listing items) to also filter items for updates. This will affect only existing items though, and **not** scan for new ones. For example:*
 
 ```
-trailer update prs comments -t WIP -r swift -n
+trailer update prs comments -number 3 -r myrepo -n
+```
+Only update PR #3 from "MyRepo" and its related comments. `-number` can also be a comma-separated list of numbers. `-n` also lists new comments or reviews.
+
+```
+trailer update prs comments -t WIP -r swift
 ``` 
 
-Update existing PRs whose titles include "WIP" (`-t`) and who belong to repository "swift" (`-r`). Update comments for them too, and when done post notifications for new comments / reviews (`-n`)
+Update existing PRs whose titles include "WIP" (`-t`) and who belong to repository "Swift" (`-r`). Update comments for them too.
 
 ```
 trailer update prs -red

@@ -25,7 +25,7 @@ struct Actions {
         let invalidArguments = CommandLine.arguments.filter({ $0.hasPrefix("-") }).filter { arg in
             switch arg {
             case "-v", "-V", "-server", "-token", "-r", "-o", "-t", "-a", "-l", "-h", "-b", "-c", "-comments", "-body", "-pageSize", "-mine", "-participated", "-mentioned",
-                 "-mergeable", "-conflict", "-red", "-green", "-e", "-before", "-within", "-n", "-purge", "-mono", "-version", "-fresh", "-m":
+                 "-mergeable", "-conflict", "-red", "-green", "-e", "-before", "-within", "-n", "-purge", "-mono", "-version", "-fresh", "-m", "-number":
                 return false
             default:
                 return true
@@ -130,6 +130,8 @@ struct Actions {
 		printOption(name :"-mentioned", description: "Filter for items mentioning me in their body or comments")
         printOption(name :"-before <days>", description: "Filter for items updated before <days>")
         printOption(name :"-within <days>", description: "Filter for items updated within <days>")
+		printOption(name :"-number <num>", description: "Filter for items with this number")
+		printOption(name :"", description: "(Can also be a comma-separated list)")
 		printOption(name :"-t <text>", description: "Filter for a specific title")
 		printOption(name :"-b <text>", description: "Filter for items containing 'text' in their body")
 		printOption(name :"-c <text>", description: "Filter for items containing 'text' in commens/reviews")
