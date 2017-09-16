@@ -54,56 +54,77 @@ Update the local data from the server. `-v` will give more info, or `-V` will pr
 
 ### Listing and filtering
 
+#### Repositories
+```
+trailer list repos -h
+```
+Display the list of repositories. Repositories that are active (see below) will be highlighted in bold. `-h` means hide repos with no PRs or Issues. 
+
+#### PRs and Issues
 ```
 trailer list items -r swift -a bob
 ```
-List all items in repositories containing the letters "swift" and authored by users whose GitHub handle contains the letters "bob"
+List all items in repositories (`-r`) containing the letters "swift" and (`-a`) authored by users whose handle contains the letters "bob".
 
+#### Relevance
 ```
 trailer list items -mine -participated -mentioned
 ```
-List items that are either `mine` (items created or assigned to me), `participated` (i.e. commented on by me) or items where I've been `mentioned` (either in the body or reviews/comments). You can combine these options like above, or use each one by itself. Or for instance, add `-r reponame` to limit this query to repositories whose names match `reponame`, or use `-t` to filter for a certain title, `-a` for an author, and so forth. Check the `help` option for a full list of options.
+List items that are either `-mine` (items created or assigned to me), `-participated` (i.e. commented on by me) or items where I've been `-mentioned` (either in the body or reviews/comments). You can combine these options like above, or use each one by itself. Or for instance, add `-r reponame` to limit this query to repositories whose names match `reponame`, or use `-t` to filter for a certain title, `-a` for an author, and so forth. Check the `help` option for a full list of options.
 
+#### Text search
 ```
 trailer list issues -c "needs update"
 ```
-List only issues that have comments (or reviews) which include the next "needs update". Also, you can use the `-b` option to search for items whose body includes this text instead.
+List only issues that have comments (or reviews) which (`-c`) include the text "needs update". You can also use `-b "needs update"` to search for items whose body includes this text.
 
+#### Status
 ```
 trailer list prs -red
 ```
-List all PRs that have at least one red non-passing CI status. (Or use `-green` to list items that have all-green CI statuses.)
+List all PRs that have at least one `-red` non-passing CI status. (Or use `-green` to list items that have all-green CI statuses.)
 
+#### Mergeability
 ```
 trailer list prs -conflict
 ```
 List all PRs that cannot be merged because of conflicts. (Or use `-mergeable` to only list PRs which are mergeable.)
 
+#### Date
 ```
-trailer list issues -before 1000
+trailer list issues -within 7
 ```
-List all issues which have not been updated in the last 1000 days. Alternatively `-within 7` would, for example, list all issues updated within the past 7 days.
+List all issues which been updated `-within` the last 7 days. Alternatively `-before 7` would, for example, list all issues updated before the past 7 days.
 
+#### Labels
 ```
 trailer list labels -r myrepo
 ```
-List all the labels that are in use currently in repository "MyRepo" (or use `-o` to list them for a specific org)
+List all the labels that (`-r`) are in use currently in repository "MyRepo" (or use `-o` to filter for a specific org)
 
 ```
 trailer list items -l bug
 ```
 List all items that have a label containing the text "bug".
 
+#### Milestones
+```
+trailer list milestones -r myrepo
+```
+List all the milestones available in (`-r`) repository "MyRepo".
+
 ```
 trailer list items -m 2.0
 ```
 List all items that have a milestone containing the text "2.0".
 
+#### Reviews
 ```
 trailer list prs -blocked
 ```
 List all PRs on which (at lest) one reviewer has requested changes. You can also use `-unreviewed` to list items that have pending review requests or `-approved` for items where all reviewers approve.
 
+#### Stats
 ```
 trailer stats
 ```
