@@ -17,7 +17,7 @@ struct Config {
 
 	let versionMajor = 0
 	let versionMinor = 9
-	let versionPatch = 5
+	let versionPatch = 6
 	var versionString: String {
 		return [versionMajor, versionMinor, versionPatch].map { String($0) }.joined(separator: ".")
 	}
@@ -50,6 +50,25 @@ struct Config {
 		}
 
 		return false
+	}
+
+	var httpHeaders: [String: String] {
+		#if DEBUG
+			let variant = "Development"
+		#else
+			let variant = "Release"
+		#endif
+
+		#if os(Linux)
+			let OS = "Linux"
+		#else
+			let OS = "macOS"
+		#endif
+
+		return [
+			"Authorization": "bearer \(token)",
+			"User-Agent": "Trailer-CLI-v\(versionString)-\(OS)-\(variant)"
+		]
 	}
 
 	var myUser: User? {

@@ -15,23 +15,25 @@ extension Actions {
 		printOption(name: "item <number>", description: "Open any item with the specified number")
 		printOption(name: "pr <number>", description: "Open an issue with the specified number")
 		printOption(name: "issue <number>", description: "Open a PR with the specified number")
-		printOption(name: "repo  <name>", description: "Open the first repository matching 'name'")
+		printOption(name: "repo <name>", description: "Open the first repository matching 'name'")
 		log()
 		printFilterOptions()
 	}
 
 	static func processOpenDirective(_ list: [String]) {
-		guard list.count > 1 else {
-			failOpen("Missing arguments")
+		
+		if list.first == "help" {
+			log()
+			failOpen(nil)
+		}
+
+		guard list.count > 2 else {
+			failShow("Missing argument")
 			return
 		}
 
 		let command = list[1]
 		switch command {
-        case "help":
-            log()
-            failOpen(nil)
-
 		case "item":
 			if let number = Int(list[2]) {
 				DB.load()

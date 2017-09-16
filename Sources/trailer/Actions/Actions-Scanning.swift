@@ -34,15 +34,24 @@ struct ItemFilterArgs {
 	let comment = commandLineValue(for: "-c")
 	let label = commandLineValue(for: "-l")
 	let milestone = commandLineValue(for: "-m")
+
 	let mine = commandLineArgument(matching: "-mine") != nil
 	let participated = commandLineArgument(matching: "-participated") != nil
 	let mentioned = commandLineArgument(matching: "-mentioned") != nil
+
 	let mergeable = commandLineArgument(matching: "-mergeable") != nil
 	let conflict = commandLineArgument(matching: "-conflict") != nil
+
 	let red = commandLineArgument(matching: "-red") != nil
 	let green = commandLineArgument(matching: "-green") != nil
+
 	let olderThan = Int(commandLineValue(for: "-before") ?? "")
 	let youngerThan = Int(commandLineValue(for: "-within") ?? "")
+
+	let unReviewed = commandLineArgument(matching: "-unreviewed") != nil
+	let approved = commandLineArgument(matching: "-approved") != nil
+	let blocked = commandLineArgument(matching: "-blocked") != nil
+
 	let numbers: [Int]?
 
 	var filteringApplied: Bool {
@@ -60,6 +69,9 @@ struct ItemFilterArgs {
 			|| conflict
 			|| red
 			|| green
+			|| unReviewed
+			|| approved
+			|| blocked
 			|| olderThan != nil
 			|| youngerThan != nil
 	}
@@ -141,11 +153,10 @@ extension Actions {
 		return allItems.filter { p in
 
 			if a.red || a.green {
-				let s = p.statuses
-				if a.red && !s.contains(where: { $0.state == .error || $0.state == .failure }) {
+				if a.red && !p.isRed {
 					return false
 				}
-				if a.green && s.contains(where: { $0.state != .success }) {
+				if a.green && !p.isGreen {
 					return false
 				}
 			}
@@ -214,6 +225,22 @@ extension Actions {
 				}
 			}
 
+			if a.unReviewed || a.approved || a.blocked {
+				let pending = p.pendingReview
+
+				if a.unReviewed && !pending {
+					return false
+				}
+
+				if a.approved && (pending || !p.allReviewersApprove) {
+					return false
+				}
+
+				if a.blocked && (pending || !p.someReviewersBlock) {
+					return false
+				}
+			}
+
 			return true
 
 		}.sorted { $0.number < $1.number }
@@ -229,7 +256,7 @@ extension Actions {
 			return allItems
 		}
 
-		if a.mergeable || a.conflict || a.red || a.green {
+		if a.mergeable || a.conflict || a.red || a.green || a.approved || a.unReviewed || a.blocked {
 			return []
 		}
 

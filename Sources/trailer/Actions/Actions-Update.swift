@@ -101,6 +101,7 @@ extension Actions {
 	}
 
     static func processUpdateDirective(_ list: [String]) {
+
         guard list.count > 1 else {
 			failUpdate("Need at least one update type. If in doubt, use 'all'.")
             return

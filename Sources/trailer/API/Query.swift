@@ -36,6 +36,7 @@ struct Query {
 		c.httpShouldUsePipelining = true
 		c.urlCache = nil
 		c.requestCachePolicy = .reloadIgnoringLocalAndRemoteCacheData
+		c.httpAdditionalHeaders = config.httpHeaders
 		return URLSession(configuration: c, delegate: nil, delegateQueue: processingQueue)
 	}()
 
@@ -160,7 +161,6 @@ struct Query {
 		log(level: .debug, "[*\(name)*] \(Q)")
 
 		var r = URLRequest(url: config.server)
-		r.setValue("bearer \(config.token)", forHTTPHeaderField: "Authorization")
 		r.httpMethod = "POST"
 		r.httpBody = try! JSONEncoder().encode(["query": Q])
 

@@ -25,10 +25,12 @@ extension Actions {
 	}
 
 	static func processListDirective(_ list: [String]) {
+
 		guard list.count > 1 else {
 			failList("Missing argument")
 			return
 		}
+		
 		let command = list[1]
 		switch command {
 		case "repos":

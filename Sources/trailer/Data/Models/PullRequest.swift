@@ -160,6 +160,14 @@ struct PullRequest: Item, Announceable, Closeable {
 		return false
 	}
 
+	var isRed: Bool {
+		return statuses.contains(where: { $0.state == .error || $0.state == .failure })
+	}
+
+	var isGreen: Bool {
+		return !statuses.contains(where: { $0.state != .success })
+	}
+
 	func printSummaryLine() {
 		printSummaryLine(closing : false)
 	}
@@ -174,7 +182,11 @@ struct PullRequest: Item, Announceable, Closeable {
         } else if hasNewComments {
             line += "[C*COMMENTED"
         } else if hasNewReviews {
-            line += "[C*REVIEWED"
+			line += "[C*REVIEWED"
+		} else if mergeable == .conflicting || isRed {
+			line += "[R*>"
+		} else if isGreen {
+			line += "[G*>"
 		} else {
 			line += "[*>"
 		}
@@ -206,6 +218,35 @@ struct PullRequest: Item, Announceable, Closeable {
             }
         }
     }
+
+	private var latestReviews: [Review] {
+		var author2latestReview = [String: Review]()
+		let revs = reviews.sorted { $0.createdAt < $1.createdAt }
+		for review in revs {
+			if let a = review.author?.login {
+				author2latestReview[a] = review
+			}
+		}
+		return author2latestReview.values.sorted { $0.createdAt < $1.createdAt }
+	}
+
+	var pendingReview: Bool {
+		let requests = reviewRequests
+		if requests.count == 0 { return false }
+
+		let latestReviewResults = latestReviews.filter { $0.state == .approved || $0.state == .changes_requested }.flatMap { $0.author?.login }
+		let waitingFor = requests.flatMap { $0.reviewer?.login }.filter { !latestReviewResults.contains($0) }
+		return waitingFor.count > 0
+	}
+
+	var allReviewersApprove: Bool {
+		let r = latestReviews
+		return r.count > 0 && !(r.contains { $0.state != .approved })
+	}
+
+	var someReviewersBlock: Bool {
+		return latestReviews.contains { $0.state == .changes_requested }
+	}
 
 	func printDetails() {
 		log()
@@ -279,18 +320,11 @@ struct PullRequest: Item, Announceable, Closeable {
             log("!]")
 		}
 
-		let revs = reviews.sorted { $0.createdAt < $1.createdAt }
-		let reviewRqs = reviewRequests
-		if !revs.isEmpty || !reviewRqs.isEmpty {
-			var reviewerToReview = [String: Review]()
-			for review in revs {
-				if (review.state == .changes_requested || review.state == .approved), let a = review.author {
-					reviewerToReview[a.login] = review
-				}
-			}
-			let approvingReviewers = reviewerToReview.values.filter({ $0.state == .approved }).flatMap({ $0.author?.login }).map({ "@"+$0 })
-			let blockingReviewers = reviewerToReview.values.filter({ $0.state == .changes_requested }).flatMap({ $0.author?.login }).map({ "@"+$0 })
-			let pendingReviewers = reviewRqs.flatMap({ $0.reviewer?.login }).map({ "@"+$0 }).filter({ !(approvingReviewers.contains($0) || blockingReviewers.contains($0)) })
+		let latest = latestReviews
+		if !latest.isEmpty {
+			let approvingReviewers = latest.filter { $0.state == .approved }.flatMap { $0.author?.login }.map { "@"+$0 }
+			let blockingReviewers = latest.filter { $0.state == .changes_requested }.flatMap { $0.author?.login }.map { "@"+$0 }
+			let pendingReviewers = reviewRequests.flatMap { $0.reviewer?.login }.map { "@"+$0 }.filter { !(approvingReviewers.contains($0) || blockingReviewers.contains($0)) }
 			if !approvingReviewers.isEmpty || !blockingReviewers.isEmpty || !pendingReviewers.isEmpty {
 				log("[!Reviews")
 				if approvingReviewers.count > 0 {

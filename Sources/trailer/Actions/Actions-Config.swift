@@ -45,17 +45,18 @@ extension Actions {
 	}
 
 	static func processConfigDirective(_ list: [String]) {
+
 		guard list.count > 1 else {
-			failConfig("Missing argument")
+			failShow("Missing argument")
 			return
 		}
 
 		let command = list[1]
 
 		switch command {
-        case "help":
-            log()
-            failConfig(nil)
+		case "help":
+			log()
+			failConfig(nil)
 		case "activate":
 			setOption(visibility: .visible)
 		case "deactivate":

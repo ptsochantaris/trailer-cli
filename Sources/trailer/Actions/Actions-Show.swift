@@ -25,17 +25,19 @@ extension Actions {
 	}
 
 	static func processShowDirective(_ list: [String]) {
-		guard list.count > 1 else {
+
+		if list.first == "help" {
+			log()
+			failShow(nil)
+		}
+
+		guard list.count > 2 else {
 			failShow("Missing argument")
 			return
 		}
 
 		let command = list[1]
 		switch command {
-        case "help":
-            log()
-            failShow(nil)
-
 		case "item":
 			if let number = Int(list[2]) {
 				DB.load()
