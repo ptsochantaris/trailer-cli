@@ -144,6 +144,9 @@ struct Actions {
 		printOption(name :"-conflict", description: "Filter for un-mergeable PRs")
 		printOption(name :"-green", description: "Filter for PRs with only green statuses")
 		printOption(name :"-red", description: "Filter for PRs containing red statuses")
+		printOption(name :"-unreviewed", description: "Filter for PRs with pending reviews")
+		printOption(name :"-blocked", description: "Filter for PRs where reviewers request changes")
+		printOption(name :"-approved", description: "Filter for PRs where all reviewers approve")
 		log()
 	}
 

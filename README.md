@@ -100,6 +100,11 @@ trailer list items -m 2.0
 List all items that have a milestone containing the text "2.0".
 
 ```
+trailer list prs -blocked
+```
+List all PRs on which (at lest) one reviewer has requested changes. You can also use `-unreviewed` to list items that have pending review requests or `-approved` for items where all reviewers approve.
+
+```
 trailer stats
 ```
 List totals of items currently in the local cache.
