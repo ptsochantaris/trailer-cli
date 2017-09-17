@@ -12,7 +12,7 @@ extension Actions {
 
 	static func failList(_ message: String?) {
 		printErrorMesage(message)
-		log("[!Please provide one of the following options for 'list'!]")
+		printOptionHeader("Please provide one of the following options for 'list'")
 		printOption(name: "orgs", description: "List organisations")
 		printOption(name: "repos", description: "List repositories")
 		printOption(name: "prs", description: "List open PRs")
@@ -146,9 +146,9 @@ extension Actions {
 	}
 
 	static private func listOrgs() {
-		let searchForOrg = commandLineValue(for: "-o")
-		let hideEmpty = commandLineArgument(matching: "-h") != nil
-		let onlyEmpty = commandLineArgument(matching: "-e") != nil
+		let searchForOrg = CommandLine.value(for: "-o")
+		let hideEmpty = CommandLine.argument(matching: "-h") != nil
+		let onlyEmpty = CommandLine.argument(matching: "-e") != nil
 		for o in Org.allItems.values.sorted(by: { $0.name < $1.name }) {
 			if let s = searchForOrg, !o.name.localizedCaseInsensitiveContains(s) {
 				continue

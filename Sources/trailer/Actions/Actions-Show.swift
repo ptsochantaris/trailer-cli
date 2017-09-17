@@ -12,12 +12,12 @@ extension Actions {
 
 	static func failShow(_ message: String?) {
 		printErrorMesage(message)
-		log("[!Please provide one of the following options for 'show'!]")
+		printOptionHeader("Please provide one of the following options for 'show'")
 		printOption(name: "item <number>", description: "Show any item with the specified number")
 		printOption(name: "pr <number>", description: "Show an issue with the specified number")
 		printOption(name: "issue <number>", description: "Show a PR with the specified number")
 		log()
-		log("[!Options (can combine)!]")
+		printOptionHeader("Options (can combine)")
 		printOption(name: "-body", description: "Show the body of the item")
 		printOption(name: "-comments", description: "Show the comments on the item")
 		log()

@@ -12,7 +12,7 @@ extension Actions {
 
 	static func failConfig(_ message: String?) {
 		printErrorMesage(message)
-		log("[!Please provide one of the following options for 'config'!]")
+		printOptionHeader("Please provide one of the following options for 'config'")
 		log()
 		printOption(name: "view", description: "Shows current visibility of repos")
 		printOption(name: "activate", description: "Allow trailer to fetch items from repos")

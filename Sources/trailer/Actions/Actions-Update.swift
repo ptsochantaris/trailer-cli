@@ -36,11 +36,11 @@ extension Actions {
 
     static func failUpdate(_ message: String?) {
         printErrorMesage(message)
-        log("[!Please provide one of the following options for 'update'!]")
+        printOptionHeader("Please provide one of the following options for 'update'")
 		printOption(name: "all", description: "Update all items")
 		log()
 		
-		log("[!Instead of 'all' you can combine the following!]")
+		printOptionHeader("Instead of 'all' you can combine the following")
 		printOption(name: "repos", description: "Update repository list")
 		printOption(name: "items", description: "Update PRs and Issues")
 		printOption(name: "prs", description: "Update PRs only")
@@ -48,12 +48,11 @@ extension Actions {
 		printOption(name: "comments", description: "Update comments on items")
 		printOption(name: "reactions", description: "Update reactions for items and comments")
         log()
-        log("[!Options!]")
+        log("[!Updating options!]")
         printOption(name: "-n", description: "List new comments and reviews on items")
-		printOption(name: "-fresh", description: "Only keep what's downloaded in this sync")
-		printOption(name: "", description: "and purge all other types of data")
+		printOption(name: "-fresh", description: "Only keep what's downloaded in this sync and purge all other types of data")
 		log()
-		log("[!You can also limit updates to specific items using filtering:!]")
+		printOptionHeader("You can also limit updates to specific items by filtering:")
 		log()
 		printFilterOptions()
         log()
@@ -135,7 +134,7 @@ extension Actions {
 			}
 		}
 		if updateTypes.count > 0 {
-			let onlyKeepNew = commandLineArgument(matching: "-fresh") != nil
+			let onlyKeepNew = CommandLine.argument(matching: "-fresh") != nil
 			update(updateTypes, keepOnlyNewItems: onlyKeepNew)
 		} else {
 			log()
@@ -464,7 +463,7 @@ extension Actions {
 
 		config.latestSyncDate = Date()
 
-        let n: NotificationMode = (commandLineArgument(matching: "-n") != nil) ? .consoleCommentsAndReviews : .standard
+        let n: NotificationMode = (CommandLine.argument(matching: "-n") != nil) ? .consoleCommentsAndReviews : .standard
 		DB.save(purgeUntouchedItems: true, notificationMode: n)
         Notifications.processQueue()
 		log("Update done.")

@@ -11,7 +11,7 @@ import Foundation
 extension Actions {
 	static func failOpen(_ message: String?) {
 		printErrorMesage(message)
-		log("[!Please provide one of the following options for 'open'!]")
+		printOptionHeader("Please provide one of the following options for 'open'")
 		printOption(name: "item <number>", description: "Open any item with the specified number")
 		printOption(name: "pr <number>", description: "Open an issue with the specified number")
 		printOption(name: "issue <number>", description: "Open a PR with the specified number")

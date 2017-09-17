@@ -17,7 +17,7 @@ struct Config {
 
 	let versionMajor = 0
 	let versionMinor = 9
-	let versionPatch = 6
+	let versionPatch = 7
 	var versionString: String {
 		return [versionMajor, versionMinor, versionPatch].map { String($0) }.joined(separator: ".")
 	}
@@ -59,10 +59,10 @@ struct Config {
 			let variant = "Release"
 		#endif
 
-		#if os(Linux)
-			let OS = "Linux"
-		#else
+		#if os(OSX)
 			let OS = "macOS"
+		#elseif os(Linux)
+			let OS = "Linux"
 		#endif
 
 		return [

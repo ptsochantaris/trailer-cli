@@ -14,10 +14,10 @@ private let atCharacterSet: CharacterSet = {
 }()
 
 struct RepoFilterArgs {
-	let searchForOrg = commandLineValue(for: "-o")
-	let searchForRepo = commandLineValue(for: "-r")
-	let hideEmpty = commandLineArgument(matching: "-h") != nil
-	let onlyEmpty = commandLineArgument(matching: "-e") != nil
+	let searchForOrg = CommandLine.value(for: "-o")
+	let searchForRepo = CommandLine.value(for: "-r")
+	let hideEmpty = CommandLine.argument(matching: "-h") != nil
+	let onlyEmpty = CommandLine.argument(matching: "-e") != nil
 
 	var filteringApplied: Bool {
 		return searchForOrg != nil
@@ -28,29 +28,29 @@ struct RepoFilterArgs {
 }
 
 struct ItemFilterArgs {
-	let author = commandLineValue(for: "-a")?.trimmingCharacters(in: atCharacterSet)
-	let title = commandLineValue(for: "-t")
-	let body = commandLineValue(for: "-b")
-	let comment = commandLineValue(for: "-c")
-	let label = commandLineValue(for: "-l")
-	let milestone = commandLineValue(for: "-m")
+	let author = CommandLine.value(for: "-a")?.trimmingCharacters(in: atCharacterSet)
+	let title = CommandLine.value(for: "-t")
+	let body = CommandLine.value(for: "-b")
+	let comment = CommandLine.value(for: "-c")
+	let label = CommandLine.value(for: "-l")
+	let milestone = CommandLine.value(for: "-m")
 
-	let mine = commandLineArgument(matching: "-mine") != nil
-	let participated = commandLineArgument(matching: "-participated") != nil
-	let mentioned = commandLineArgument(matching: "-mentioned") != nil
+	let mine = CommandLine.argument(matching: "-mine") != nil
+	let participated = CommandLine.argument(matching: "-participated") != nil
+	let mentioned = CommandLine.argument(matching: "-mentioned") != nil
 
-	let mergeable = commandLineArgument(matching: "-mergeable") != nil
-	let conflict = commandLineArgument(matching: "-conflict") != nil
+	let mergeable = CommandLine.argument(matching: "-mergeable") != nil
+	let conflict = CommandLine.argument(matching: "-conflict") != nil
 
-	let red = commandLineArgument(matching: "-red") != nil
-	let green = commandLineArgument(matching: "-green") != nil
+	let red = CommandLine.argument(matching: "-red") != nil
+	let green = CommandLine.argument(matching: "-green") != nil
 
-	let olderThan = Int(commandLineValue(for: "-before") ?? "")
-	let youngerThan = Int(commandLineValue(for: "-within") ?? "")
+	let olderThan = Int(CommandLine.value(for: "-before") ?? "")
+	let youngerThan = Int(CommandLine.value(for: "-within") ?? "")
 
-	let unReviewed = commandLineArgument(matching: "-unreviewed") != nil
-	let approved = commandLineArgument(matching: "-approved") != nil
-	let blocked = commandLineArgument(matching: "-blocked") != nil
+	let unReviewed = CommandLine.argument(matching: "-unreviewed") != nil
+	let approved = CommandLine.argument(matching: "-approved") != nil
+	let blocked = CommandLine.argument(matching: "-blocked") != nil
 
 	let numbers: [Int]?
 
@@ -87,7 +87,7 @@ struct ItemFilterArgs {
 			refDate = nil
 		}
 
-		if let ns = commandLineValue(for: "-number") {
+		if let ns = CommandLine.value(for: "-number") {
 			numbers = ns.split(separator: ",").flatMap { Int($0) }
 		} else {
 			numbers = nil

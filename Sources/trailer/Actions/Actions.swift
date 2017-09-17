@@ -98,10 +98,51 @@ struct Actions {
 		}
 	}
 
+	static var terminalWidth: Int = {
+		var w = winsize()
+		_ = ioctl(STDOUT_FILENO, TIOCGWINSZ, &w)
+		return w.ws_col == 0 ? 80 : Int(w.ws_col)
+	}()
+
+	static func printOptionHeader(_ text: String) {
+		var line = ""
+
+		for word in text.split(separator: " ") {
+			if line.count + word.count + 1 > terminalWidth {
+				log("[!\(line)!]")
+				line = ""
+			}
+			line += (word + " ")
+		}
+		if !line.isEmpty {
+			log("[!\(line)!]")
+		}
+	}
+
 	static func printOption(name: String, description: String) {
-        let count = max(0, 16 - name.count)
-        let spaces = String(repeating: " ", count: count)
-		log("\t[![*\(name)*]!]\(spaces)\(description)")
+		var firstLine = true
+		var line = ""
+
+		func dumpLine() {
+			if firstLine {
+				let firstIndent = max(0, 16 - name.count)
+				log(indent: firstIndent, "[![*\(name)*]!] \(line)")
+				firstLine = false
+			} else {
+				log(indent: 17, line)
+			}
+			line = ""
+		}
+
+		for word in description.split(separator: " ") {
+			if 17 + line.count + word.count + 1 > terminalWidth {
+				dumpLine()
+			}
+			line += (word + " ")
+		}
+		if !line.isEmpty {
+			dumpLine()
+		}
 	}
 
 	static func printErrorMesage(_ message: String?) {
@@ -110,44 +151,6 @@ struct Actions {
 			log("[![R*!! \(message)*]!]")
 			log()
 		}
-	}
-
-	static func printFilterOptions(onlyRepos: Bool = false) {
-		log("[!Filter options (can combine)!]")
-		printOption(name :"-o <org>", description: "Filter for an org name")
-		printOption(name :"-r <repo>", description: "Filter for a repo name")
-		printOption(name :"-h", description: "Exclude repos/orgs without PRs or Issues")
-		printOption(name :"-e", description: "Exclude repos/orgs with PRs or Issues")
-		log()
-
-		if onlyRepos {
-			return
-		}
-
-		log("[!Filter options affecting PRs or Issues (can combine)!]")
-		printOption(name :"-mine", description: "Filter for items authored by me, or assigned to me")
-		printOption(name :"-participated", description: "Filter for items which I have commented on")
-		printOption(name :"-mentioned", description: "Filter for items mentioning me in their body or comments")
-        printOption(name :"-before <days>", description: "Filter for items updated before <days>")
-        printOption(name :"-within <days>", description: "Filter for items updated within <days>")
-		printOption(name :"-number <num>", description: "Filter for items with this number")
-		printOption(name :"", description: "(Can also be a comma-separated list)")
-		printOption(name :"-t <text>", description: "Filter for a specific title")
-		printOption(name :"-b <text>", description: "Filter for items containing 'text' in their body")
-		printOption(name :"-c <text>", description: "Filter for items containing 'text' in commens/reviews")
-		printOption(name :"-a <author>", description: "Filter for a specific author")
-		printOption(name :"-l <label>", description: "Filter for a specific label")
-		printOption(name :"-m <milestone>", description: "Filter for a specific milestone")
-		log()
-		log("[!Filter options affecting PRs (can combine)!]")
-		printOption(name :"-mergeable", description: "Filter for mergeable PRs")
-		printOption(name :"-conflict", description: "Filter for un-mergeable PRs")
-		printOption(name :"-green", description: "Filter for PRs with only green statuses")
-		printOption(name :"-red", description: "Filter for PRs containing red statuses")
-		printOption(name :"-unreviewed", description: "Filter for PRs with pending reviews")
-		printOption(name :"-blocked", description: "Filter for PRs where reviewers request changes")
-		printOption(name :"-approved", description: "Filter for PRs where all reviewers approve")
-		log()
 	}
 
 	static func findItems(number: Int, includePrs: Bool, includeIssues: Bool, warnIfMultiple: Bool) -> [ListableItem]? {
@@ -178,5 +181,79 @@ struct Actions {
 			}
 		}
 		return items
+	}
+
+	static func printFilterOptions(onlyRepos: Bool = false) {
+		printOptionHeader("Filter options (can combine)")
+		printOption(name :"-o <org>", description: "Filter for an org name")
+		printOption(name :"-r <repo>", description: "Filter for a repo name")
+		printOption(name :"-h", description: "Exclude repos/orgs without PRs or Issues")
+		printOption(name :"-e", description: "Exclude repos/orgs with PRs or Issues")
+		log()
+
+		if onlyRepos {
+			return
+		}
+
+		printOptionHeader("Filter options affecting PRs or Issues (can combine)")
+		printOption(name :"-mine", description: "Items authored by me, or assigned to me")
+		printOption(name :"-participated", description: "Items which I have commented on")
+		printOption(name :"-mentioned", description: "Items mentioning me in their body or comments")
+		printOption(name :"-before <days>", description: "Items updated before <days>")
+		printOption(name :"-within <days>", description: "Items updated within <days>")
+		printOption(name :"-number <num>", description: "Items with this number (Can also be a comma-separated list)")
+		printOption(name :"-t <text>", description: "Filter for a specific title")
+		printOption(name :"-b <text>", description: "Items containing 'text' in their body")
+		printOption(name :"-c <text>", description: "Items containing 'text' in commens/reviews")
+		printOption(name :"-a <author>", description: "Items by a specific author")
+		printOption(name :"-l <label>", description: "Items with a specific label")
+		printOption(name :"-m <milestone>", description: "Items with a specific milestone")
+		log()
+		printOptionHeader("Filter options affecting PRs (can combine)")
+		printOption(name :"-mergeable", description: "Mergeable PRs")
+		printOption(name :"-conflict", description: "Un-mergeable PRs")
+		printOption(name :"-green", description: "PRs with only green statuses")
+		printOption(name :"-red", description: "PRs containing red statuses")
+		printOption(name :"-unreviewed", description: "PRs with pending reviews")
+		printOption(name :"-blocked", description: "PRs where reviewers request changes")
+		printOption(name :"-approved", description: "PRs where all reviewers approve")
+		log()
+	}
+
+	static func reportAndExit(message: String?) -> Never {
+		if let message = message {
+			log()
+			log("[![R*!! \(message)*]!]")
+		}
+		log()
+		printOptionHeader("Usage: trailer [*[ACTION]*] [-server <URL>] [-token <token>] [-v/V] [-mono]")
+		log()
+		printOption(name: "-server <URL>", description: "Full URL to the API endpoint of the GitHub server you want to query. Defaults to 'https://api.github.com/graphql'.")
+		log()
+		printOption(name: "-token <token>", description: "Auth API token to use when accessing the default or selected server. The value given here is persisted and doesn't need to be repeated. '-token display' shows the stored token.")
+		log()
+		printOption(name: "-v", description: "Enable verbose output, -V provides a debug trace.")
+		log()
+		printOption(name: "-mono", description: "Generate monochrome text output.")
+		log()
+		
+		printOptionHeader("ACTION can be one of the following - applies to the active server:")
+		log()
+		printOption(name: "update", description: "(Re)load local cache from GitHub. Specify 'help' for more info.")
+		log()
+		printOption(name: "list", description: "List or search for various items. Specify 'help' for more info.")
+		log()
+		printOption(name: "show", description: "Display details of specific items. Specify 'help' for more info.")
+		log()
+		printOption(name: "open", description: "Open the specific item in a web browser. If multiple items match, the first one opens. Specify 'help' for more info.")
+		log()
+		printOption(name: "config", description: "Visibility options for repositories. Specify 'help' for more info.")
+		log()
+		printOption(name: "stats", description: "List stats on stored data.")
+		log()
+		printOption(name: "reset", description: "Clear all stored data, including config/token.")
+		log()
+		
+		exit(1)
 	}
 }
