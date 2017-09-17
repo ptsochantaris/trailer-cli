@@ -254,7 +254,7 @@ struct Actions {
 		log()
 		printOption(name: "-v / -debug", description: "Enable verbose output, -debug provides a debug trace.")
 		log()
-		printOption(name: "-page-size", description: "Manimum count of items fetched on API calls (default: 100). If you get errors about queries failing, reduce this to a lower value. Must be between 10 and 100.")
+		printOption(name: "-page-size", description: "Minimum items fetched per API call (default: 100). If you get errors about queries failing, reduce this to a lower value. Must be between 10 and 100.")
 		log()
 		printOption(name: "-mono", description: "Generate monochrome text output.")
 		log()
