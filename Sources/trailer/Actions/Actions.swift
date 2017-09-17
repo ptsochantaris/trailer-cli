@@ -22,9 +22,9 @@ struct Actions {
 
     private static func checkArguments() -> [String]? {
         // Very rough sanity check to catch typos, should be more fine-grained per action
-        let invalidArguments = CommandLine.arguments.filter({ $0.hasPrefix("-") }).filter { arg in
+		let invalidArguments = CommandLine.arguments.filter({ $0.hasPrefix("-") }).map { $0.lowercased() }.filter { arg in
             switch arg {
-            case "-v", "-V", "-server", "-token", "-r", "-o", "-t", "-a", "-l", "-h", "-b", "-c", "-comments", "-body", "-pageSize", "-mine", "-participated", "-mentioned",
+            case "-v", "-debug", "-server", "-token", "-r", "-o", "-t", "-a", "-l", "-h", "-b", "-c", "-comments", "-body", "-page-size", "-mine", "-participated", "-mentioned",
                  "-mergeable", "-conflict", "-red", "-green", "-e", "-before", "-within", "-n", "-purge", "-mono", "-version", "-fresh", "-m", "-number", "-blocked", "-approved", "-unreviewed":
                 return false
             default:
@@ -226,18 +226,10 @@ struct Actions {
 			log("[![R*!! \(message)*]!]")
 		}
 		log()
-		printOptionHeader("Usage: trailer [*[ACTION]*] [-server <URL>] [-token <token>] [-v/V] [-mono]")
+		printOptionHeader("Usage: trailer [*<ACTION>*] <action options...> <advanced options...>")
 		log()
-		printOption(name: "-server <URL>", description: "Full URL to the API endpoint of the GitHub server you want to query. Defaults to 'https://api.github.com/graphql'.")
-		log()
-		printOption(name: "-token <token>", description: "Auth API token to use when accessing the default or selected server. The value given here is persisted and doesn't need to be repeated. '-token display' shows the stored token.")
-		log()
-		printOption(name: "-v", description: "Enable verbose output, -V provides a debug trace.")
-		log()
-		printOption(name: "-mono", description: "Generate monochrome text output.")
-		log()
-		
-		printOptionHeader("ACTION can be one of the following - applies to the active server:")
+
+		printOptionHeader("ACTION can be one of the following:")
 		log()
 		printOption(name: "update", description: "(Re)load local cache from GitHub. Specify 'help' for more info.")
 		log()
@@ -253,7 +245,20 @@ struct Actions {
 		log()
 		printOption(name: "reset", description: "Clear all stored data, including config/token.")
 		log()
-		
+
+		printOptionHeader("Advanced options:")
+		log()
+		printOption(name: "-server <URL>", description: "Full URL to the API endpoint of the GitHub server you want to query. Defaults to 'https://api.github.com/graphql'.")
+		log()
+		printOption(name: "-token <token>", description: "Auth API token to use when accessing the default or selected server. The value given here is persisted and doesn't need to be repeated. '-token display' shows the stored token.")
+		log()
+		printOption(name: "-v / -debug", description: "Enable verbose output, -debug provides a debug trace.")
+		log()
+		printOption(name: "-page-size", description: "Manimum count of items fetched on API calls (default: 100). If you get errors about queries failing, reduce this to a lower value. Must be between 10 and 100.")
+		log()
+		printOption(name: "-mono", description: "Generate monochrome text output.")
+		log()
+
 		exit(1)
 	}
 }

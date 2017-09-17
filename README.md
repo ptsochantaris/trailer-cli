@@ -50,7 +50,7 @@ Get help on the available commands and filters. Highly recommended. You can type
 ```
 trailer update all
 ```
-Update the local data from the server. `-v` will give more info, or `-V` will provide *very* verbose debug output on the queries performed.
+Update the local data from the server. `-v` will give more info, or `-debug` will provide *very* verbose debug output on the GraphQL queries performed.
 
 ### Listing and filtering
 
@@ -171,7 +171,7 @@ Updates, if you have many items, can take a while and repeated updates with many
 
 This way you can refresh subsets of things more often, and stay up to date, while refreshing everything using the `all` parameter less often.
 
-*Tip: The `-v` parameter will provide you with info on how much API usage you have used on GitHub for the current hourly window.*
+*Tip: The `-v` parameter will also provide you with info on how much API usage you have used on GitHub for the current hourly window.*
 
 ```
 trailer update repos

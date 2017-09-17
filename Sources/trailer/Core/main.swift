@@ -27,7 +27,7 @@ private func go() {
 		Actions.reportAndExit(message: "Provided server URL is invalid")
 	}
 
-	if let p = CommandLine.value(for: "-pageSize") {
+	if let p = CommandLine.value(for: "-page-size") {
 		if let i = Int(p) {
 			if i < 10 || i > 100 {
 				Actions.reportAndExit(message: "Provided page size '\(p)' is invalid, must be from 10 to 100")
@@ -39,7 +39,7 @@ private func go() {
 		}
 	}
 
-	if CommandLine.argument(matching: "-V") != nil {
+	if CommandLine.argument(matching: "-debug") != nil {
 		globalLogLevel = .debug
 		log("Will be verbose [*(debug)*]")
 	} else if CommandLine.argument(matching: "-v") != nil {
