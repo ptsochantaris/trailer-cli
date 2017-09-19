@@ -186,8 +186,8 @@ extension Actions {
 			successOrAbort(repositoryListQuery)
 		} else {
 			log(level: .info, "[*Repos*] (Skipped)")
-			Org.assumeSynced(andChildren: false)
-			Repo.assumeSynced(andChildren: false)
+			Org.setSyncStatus(.updated, andChildren: false)
+			Repo.setSyncStatus(.updated, andChildren: false)
 		}
 
 		///////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -296,12 +296,12 @@ extension Actions {
 		if !keepOnlyNewItems {
 			if !userWantsPrs || filtersRequested { // do not expire items which are not included in this sync
 				let limitIds = PullRequest.allItems.keys.filter { issueIdList[$0] == nil }
-				PullRequest.assumeSynced(andChildren: true, limitToIds: limitIds)
+				PullRequest.setSyncStatus(.updated, andChildren: true, limitToIds: limitIds)
 			}
 
 			if !userWantsIssues || filtersRequested { // do not expire items which are not included in this sync
 				let limitIds = Issue.allItems.keys.filter { issueIdList[$0] == nil }
-				Issue.assumeSynced(andChildren: true, limitToIds: limitIds)
+				Issue.setSyncStatus(.updated, andChildren: true, limitToIds: limitIds)
 			}
 		}
 
@@ -362,7 +362,7 @@ extension Actions {
 				let reviewCommentIds = Review.allItems.values.reduce([String](), { idList, review -> [String] in
 					return idList + review.comments.map { $0.id }
 				})
-				Comment.assumeSynced(andChildren: true, limitToIds: reviewCommentIds)
+				Comment.setSyncStatus(.updated, andChildren: true, limitToIds: reviewCommentIds)
 			}
 		}
 
@@ -416,7 +416,7 @@ extension Actions {
 				}
 
 				if itemIds.count > 0 {
-					Comment.assumeSynced(andChildren: true, limitToIds: itemIds)
+					Comment.setSyncStatus(.updated, andChildren: true, limitToIds: itemIds)
 				}
 			}
 		}
@@ -455,7 +455,7 @@ extension Actions {
 		} else {
 			log(level: .info, "[*Reactions*] (Skipped)")
 			if !keepOnlyNewItems {
-				Reaction.assumeSynced(andChildren: true)
+				Reaction.setSyncStatus(.updated, andChildren: true)
 			}
 		}
 
@@ -476,5 +476,61 @@ extension Actions {
 		if let l = latestVersion {
 			log("[![G*New Trailer version \(l) is available*]!]")
 		}
+	}
+
+	static func singleItemUpdate(for item: ListableItem) -> ListableItem {
+		let userWantsComments = CommandLine.argument(matching: "-comments") != nil
+		if let pr = item.pullRequest {
+
+			let fragment = userWantsComments ? PullRequest.fragmentWithComments : PullRequest.fragment
+			let queries = Query.batching("PR", fields: [fragment], idList: [pr.id])
+			successOrAbort(queries)
+
+			if userWantsComments {
+				let reviewIdsWithComments = pr.reviews.flatMap { $0.syncState == .none || !$0.syncNeedsComments ? nil : $0.id }
+				if reviewIdsWithComments.count > 0 {
+					successOrAbort(Query.batching("PR Review Comments", fields: [
+						Review.commentsFragment,
+						PullRequest.commentsFragment,
+						Issue.commentsFragment,
+						], idList: reviewIdsWithComments))
+				}
+			}
+
+			var itemIdsWithReactions = [pr.id]
+			if userWantsComments {
+				itemIdsWithReactions += pr.comments.flatMap { ($0.syncState == .none || !$0.syncNeedsReactions) ? nil : $0.id }
+				for review in pr.reviews {
+					itemIdsWithReactions.append(contentsOf: review.comments.flatMap({ ($0.syncState == .none || !$0.syncNeedsReactions) ? nil : $0.id }))
+				}
+			}
+			successOrAbort(Query.batching("Reactions", fields: [
+				Comment.pullRequestReviewCommentReactionFragment,
+				PullRequest.reactionsFragment,
+				], idList: itemIdsWithReactions))
+
+			DB.save(purgeUntouchedItems: false, notificationMode: .none)
+			return ListableItem.pullRequest(PullRequest.allItems[pr.id]!)
+
+		} else if let issue = item.issue {
+
+			let fragment = userWantsComments ? Issue.fragmentWithComments : Issue.fragment
+			let queries = Query.batching("Issue", fields: [fragment], idList: [issue.id])
+			successOrAbort(queries)
+
+			var itemIdsWithReactions = [issue.id]
+			if userWantsComments {
+				itemIdsWithReactions += issue.comments.flatMap { ($0.syncState == .none || !$0.syncNeedsReactions) ? nil : $0.id }
+			}
+
+			successOrAbort(Query.batching("Reactions", fields: [
+				Comment.pullRequestReviewCommentReactionFragment,
+				PullRequest.reactionsFragment,
+				], idList: itemIdsWithReactions))
+
+			DB.save(purgeUntouchedItems: false, notificationMode: .none)
+			return ListableItem.issue(Issue.allItems[issue.id]!)
+		}
+		return item
 	}
 }

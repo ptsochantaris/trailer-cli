@@ -251,33 +251,33 @@ struct Issue: Item, Announceable, Closeable {
 		return children(field: "author").first
 	}
 
-	mutating func assumeChildrenSynced() {
+	mutating func setChildrenSyncStatus(_ status: SyncState) {
 		for c in comments {
 			var C = c
-			C.assumeSynced(andChildren: true)
+			C.setSyncStatus(status, andChildren: true)
 			Comment.allItems[c.id] = C
 		}
 		for c in reactions {
 			var C = c
-			C.assumeSynced(andChildren: true)
+			C.setSyncStatus(status, andChildren: true)
 			Reaction.allItems[c.id] = C
 		}
 		for c in labels {
 			var C = c
-			C.assumeSynced(andChildren: true)
+			C.setSyncStatus(status, andChildren: true)
 			Label.allItems[c.id] = C
 		}
 		for c in assignees {
 			var C = c
-			C.assumeSynced(andChildren: true)
+			C.setSyncStatus(status, andChildren: true)
 			User.allItems[c.id] = C
 		}
 		if var c = milestone {
-			c.assumeSynced(andChildren: true)
+			c.setSyncStatus(status, andChildren: true)
 			Milestone.allItems[c.id] = c
 		}
 		if var c = author {
-			c.assumeSynced(andChildren: true)
+			c.setSyncStatus(status, andChildren: true)
 			User.allItems[c.id] = c
 		}
 	}

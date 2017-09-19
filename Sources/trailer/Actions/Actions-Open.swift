@@ -37,7 +37,7 @@ extension Actions {
 		case "item":
 			if let number = Int(list[2]) {
 				DB.load()
-				if !openItemURL(number) {
+				if !openItemURL(number, includePrs: true, includeIssues: true) {
 					log("Item #\(number) not found")
 				}
 			} else {
@@ -47,7 +47,7 @@ extension Actions {
 		case "pr":
 			if let number = Int(list[2]) {
 				DB.load()
-				if !openPrURL(number) {
+				if !openItemURL(number, includePrs: true, includeIssues: false) {
 					log("PR #\(number) not found")
 				}
 			} else {
@@ -57,7 +57,7 @@ extension Actions {
 		case "issue":
 			if let number = Int(list[2]) {
 				DB.load()
-				if !openIssueURL(number) {
+				if !openItemURL(number, includePrs: false, includeIssues: true) {
 					log("Issue #\(number) not found")
 				}
 			} else {
@@ -84,28 +84,8 @@ extension Actions {
 		}
 	}
 
-	static private func openPrURL(_ number: Int) -> Bool {
-		if let items = findItems(number: number, includePrs: true, includeIssues: false, warnIfMultiple: true) {
-			if items.count == 1, let item = items.first {
-				item.openURL()
-			}
-			return items.count > 0
-		}
-		return false
-	}
-
-	static private func openIssueURL(_ number: Int) -> Bool {
-		if let items = findItems(number: number, includePrs: false, includeIssues: true, warnIfMultiple: true) {
-			if items.count == 1, let item = items.first {
-				item.openURL()
-			}
-			return items.count > 0
-		}
-		return false
-	}
-
-	static private func openItemURL(_ number: Int) -> Bool {
-		if let items = findItems(number: number, includePrs: true, includeIssues: true, warnIfMultiple: true) {
+	static private func openItemURL(_ number: Int, includePrs: Bool, includeIssues: Bool) -> Bool {
+		if let items = findItems(number: number, includePrs: includePrs, includeIssues: includeIssues, warnIfMultiple: true) {
 			if items.count == 1, let item = items.first {
 				item.openURL()
 			}

@@ -161,11 +161,11 @@ struct PullRequest: Item, Announceable, Closeable {
 	}
 
 	var isRed: Bool {
-		return statuses.contains(where: { $0.state == .error || $0.state == .failure })
+		return latestStatuses.contains(where: { $0.state == .error || $0.state == .failure })
 	}
 
 	var isGreen: Bool {
-		return !statuses.contains(where: { $0.state != .success })
+		return !latestStatuses.contains(where: { $0.state != .success })
 	}
 
 	func printSummaryLine() {
@@ -302,10 +302,10 @@ struct PullRequest: Item, Announceable, Closeable {
 			log()
 		}
 
-		let s = statuses
-		if !s.isEmpty {
+		let st = latestStatuses
+		if !st.isEmpty {
             log("[!Statuses")
-			for s in statuses {
+			for s in st {
 				let char: String
 				switch s.state {
 				case .error, .failure:
@@ -367,6 +367,14 @@ struct PullRequest: Item, Announceable, Closeable {
 			}
         }
 	}
+
+	var latestStatuses: [Status] {
+		var res = [String:Status]()
+		for s in statuses {
+			res[s.context] = s
+		}
+		return res.values.sorted { $0.createdAt < $1.createdAt }
+	}
 	
 	var reactions: [Reaction] {
 		return children(field: "reactions")
@@ -411,48 +419,48 @@ struct PullRequest: Item, Announceable, Closeable {
 		return children(field: "author").first
 	}
 
-	mutating func assumeChildrenSynced() {
+	mutating func setChildrenSyncStatus(_ status: SyncState) {
 		for c in reviews {
 			var C = c
-			C.assumeSynced(andChildren: true)
+			C.setSyncStatus(status, andChildren: true)
 			Review.allItems[c.id] = C
 		}
 		for c in reviewRequests {
 			var C = c
-			C.assumeSynced(andChildren: true)
+			C.setSyncStatus(status, andChildren: true)
 			ReviewRequest.allItems[c.id] = C
 		}
 		for c in statuses {
 			var C = c
-			C.assumeSynced(andChildren: true)
+			C.setSyncStatus(status, andChildren: true)
 			Status.allItems[c.id] = C
 		}
 		for c in comments {
 			var C = c
-			C.assumeSynced(andChildren: true)
+			C.setSyncStatus(status, andChildren: true)
 			Comment.allItems[c.id] = C
 		}
 		for c in reactions {
 			var C = c
-			C.assumeSynced(andChildren: true)
+			C.setSyncStatus(status, andChildren: true)
 			Reaction.allItems[c.id] = C
 		}
 		for c in labels {
 			var C = c
-			C.assumeSynced(andChildren: true)
+			C.setSyncStatus(status, andChildren: true)
 			Label.allItems[c.id] = C
 		}
 		for c in assignees {
 			var C = c
-			C.assumeSynced(andChildren: true)
+			C.setSyncStatus(status, andChildren: true)
 			User.allItems[c.id] = C
 		}
 		if var c = milestone {
-			c.assumeSynced(andChildren: true)
+			c.setSyncStatus(status, andChildren: true)
 			Milestone.allItems[c.id] = c
 		}
 		if var c = author {
-			c.assumeSynced(andChildren: true)
+			c.setSyncStatus(status, andChildren: true)
 			User.allItems[c.id] = c
 		}
 	}

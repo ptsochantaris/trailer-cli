@@ -29,6 +29,24 @@ enum ListableItem: Equatable {
         }
     }
 
+	var pullRequest: PullRequest? {
+		switch self {
+		case .pullRequest(let p):
+			return p
+		default:
+			return nil
+		}
+	}
+
+	var issue: Issue? {
+		switch self {
+		case .issue(let i):
+			return i
+		default:
+			return nil
+		}
+	}
+
     func printDetails() {
         switch self {
         case .pullRequest(let i):

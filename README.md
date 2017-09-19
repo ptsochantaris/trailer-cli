@@ -142,6 +142,11 @@ trailer open issue 5 -r myrepo
 ```
 Like `show` above, but instead opens the relevant GitHub web page. This, for example, would open issue #5 from "MyRepo" in the default system browser (macOS only for now)
 
+```
+trailer show pr 123 -comments -refresh
+```
+Show PR number 123 and its comments, but first quickly fetch any newer data related to it from GitHub. (If `-comments` is omitted then new comments will not be fetched.)
+
 ### Activating / Deactivating Repositories
 
 Trailer will sync everything in your watchlist and the orgs you belong to, by default. This can be a lot of data that you don't need. You can limit the amount of things that get synced on each update in two ways. The recommended way is to limit the repositories from which you want to load info in the first place. Disabling repositories with many items can greatly improve your API usage and sync speed.

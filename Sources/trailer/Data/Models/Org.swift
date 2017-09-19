@@ -59,10 +59,10 @@ struct Org: Item {
 		}
 	}
 
-	mutating func assumeChildrenSynced() {
+	mutating func setChildrenSyncStatus(_ status: SyncState) {
 		for r in repos {
 			var R = r
-			R.assumeSynced(andChildren: true)
+			R.setSyncStatus(status, andChildren: true)
 			Repo.allItems[r.id] = R
 		}
 	}

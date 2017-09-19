@@ -73,7 +73,7 @@ struct Label: Item {
 		return nil
 	}
 
-	mutating func assumeChildrenSynced() {
+	mutating func setChildrenSyncStatus(_ status: SyncState) {
 	}
 
 	static let fragment = Fragment(name: "labelFields", on: "Label", elements: [

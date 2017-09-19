@@ -175,9 +175,9 @@ struct Comment: Item, Announceable {
 		return children(field: "author").first
 	}
 
-	mutating func assumeChildrenSynced() {
+	mutating func setChildrenSyncStatus(_ status: SyncState) {
 		if var u = author {
-			u.assumeSynced(andChildren: true)
+			u.setSyncStatus(status, andChildren: true)
 			User.allItems[u.id] = u
 		}
 	}

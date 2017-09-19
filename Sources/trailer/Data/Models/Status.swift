@@ -91,7 +91,7 @@ struct Status: Item {
 		return nil
 	}
 
-	mutating func assumeChildrenSynced() {
+	mutating func setChildrenSyncStatus(_ status: SyncState) {
 	}
 
 	init?(id: String, type: String, node: [AnyHashable:Any]) {

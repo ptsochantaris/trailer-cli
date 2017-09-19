@@ -20,6 +20,7 @@ extension Actions {
 		printOptionHeader("Options (can combine)")
 		printOption(name: "-body", description: "Show the body of the item")
 		printOption(name: "-comments", description: "Show the comments on the item")
+		printOption(name: "-refresh", description: "Update item (& comments, if requested) from remote")
 		log()
 		printFilterOptions()
 	}
@@ -36,36 +37,29 @@ extension Actions {
 			return
 		}
 
+		guard let number = Int(list[2]) else {
+			failShow("Invalid number: \(list[2])")
+			return
+		}
+
 		let command = list[1]
 		switch command {
 		case "item":
-			if let number = Int(list[2]) {
-				DB.load()
-				if !showItem(number) {
-					log("[R*Item #\(number) not found*]")
-				}
-			} else {
-				failShow("Invalid number: \(list[2])")
+			DB.load()
+			if !showItem(number, includePrs: true, includeIssues: true) {
+				log("[R*Item #\(number) not found*]")
 			}
 
         case "pr":
-			if let number = Int(list[2]) {
-				DB.load()
-				if !showPr(number) {
-					log("[R*PR #\(number) not found*]")
-				}
-			} else {
-				failShow("Invalid number: \(list[2])")
+			DB.load()
+			if !showItem(number, includePrs: true, includeIssues: false) {
+				log("[R*PR #\(number) not found*]")
 			}
 
         case "issue":
-			if let number = Int(list[2]) {
-				DB.load()
-				if !showIssue(number) {
-					log("[R*Issue #\(number) not found*]")
-				}
-			} else {
-				failShow("Invalid number: \(list[2])")
+			DB.load()
+			if !showItem(number, includePrs: false, includeIssues: true) {
+				log("[R*Issue #\(number) not found*]")
 			}
 
         default:
@@ -73,30 +67,15 @@ extension Actions {
 		}
 	}
 
-	static private func showPr(_ number: Int) -> Bool {
-		if let items = findItems(number: number, includePrs: true, includeIssues: false, warnIfMultiple: true) {
-			if items.count == 1, let item = items.first {
-				item.printDetails()
-			}
-			return items.count > 0
-		}
-		return false
-	}
+	static private func showItem(_ number: Int, includePrs: Bool, includeIssues: Bool) -> Bool {
+		if let items = findItems(number: number, includePrs: includePrs, includeIssues: includeIssues, warnIfMultiple: true) {
+			if items.count == 1, var item = items.first {
 
-	static private func showIssue(_ number: Int) -> Bool {
-		if let items = findItems(number: number, includePrs: false, includeIssues: true, warnIfMultiple: true) {
-			if items.count == 1, let item = items.first {
+				if CommandLine.argument(matching: "-refresh") != nil {
+					item = Actions.singleItemUpdate(for: item)
+				}
 				item.printDetails()
-			}
-			return items.count > 0
-		}
-		return false
-	}
-	
-	static private func showItem(_ number: Int) -> Bool {
-		if let items = findItems(number: number, includePrs: true, includeIssues: true, warnIfMultiple: true) {
-			if items.count == 1, let item = items.first {
-				item.printDetails()
+
 			}
 			return items.count > 0
 		}

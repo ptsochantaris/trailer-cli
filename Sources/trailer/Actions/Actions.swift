@@ -24,7 +24,7 @@ struct Actions {
         // Very rough sanity check to catch typos, should be more fine-grained per action
 		let invalidArguments = CommandLine.arguments.filter({ $0.hasPrefix("-") }).map { $0.lowercased() }.filter { arg in
             switch arg {
-            case "-v", "-debug", "-server", "-token", "-r", "-o", "-t", "-a", "-l", "-h", "-b", "-c", "-comments", "-body", "-page-size", "-mine", "-participated", "-mentioned",
+            case "-v", "-debug", "-server", "-token", "-r", "-o", "-t", "-a", "-l", "-h", "-b", "-c", "-comments", "-refresh", "-body", "-page-size", "-mine", "-participated", "-mentioned",
                  "-mergeable", "-conflict", "-red", "-green", "-e", "-before", "-within", "-n", "-purge", "-mono", "-version", "-fresh", "-m", "-number", "-blocked", "-approved", "-unreviewed":
                 return false
             default:

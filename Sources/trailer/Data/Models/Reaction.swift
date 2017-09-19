@@ -63,9 +63,9 @@ struct Reaction: Item {
 		return children(field: "user").first
 	}
 
-	mutating func assumeChildrenSynced() {
+	mutating func setChildrenSyncStatus(_ status: SyncState) {
 		if var u = user {
-			u.assumeSynced(andChildren: true)
+			u.setSyncStatus(status, andChildren: true)
 			User.allItems[u.id] = u
 		}
 	}

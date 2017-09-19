@@ -52,9 +52,9 @@ struct ReviewRequest: Item {
 		}
 	}
 
-	mutating func assumeChildrenSynced() {
+	mutating func setChildrenSyncStatus(_ status: SyncState) {
 		if var u = reviewer {
-			u.assumeSynced(andChildren: true)
+			u.setSyncStatus(status, andChildren: true)
 			User.allItems[u.id] = u
 		}
 	}

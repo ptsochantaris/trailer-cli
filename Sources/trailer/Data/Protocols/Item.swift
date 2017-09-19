@@ -17,30 +17,30 @@ protocol Item: Identifiable, Databaseable, Equatable {
 
 	var parents: [String: [Relationship]] { get set }
 	mutating func apply(_ node: [AnyHashable:Any]) -> Bool
-	mutating func assumeChildrenSynced()
+	mutating func setChildrenSyncStatus(_ status: SyncState)
 }
 
 extension Item {
 
-	static func assumeSynced(andChildren: Bool, limitToIds: [String]? = nil) {
+	static func setSyncStatus(_ status: SyncState, andChildren: Bool, limitToIds: [String]? = nil) {
 		allItems = allItems.mapValues { item in
 			if let l = limitToIds, !l.contains(item.id) {
 				return item
 			} else {
 				var i = item
-				i.assumeSynced(andChildren: andChildren)
+				i.setSyncStatus(status, andChildren: andChildren)
 				return i
 			}
 		}
 	}
 
-	mutating func assumeSynced(andChildren: Bool) {
-		syncState = .updated
+	mutating func setSyncStatus(_ status: SyncState, andChildren: Bool) {
+		syncState = status
 		parents = parents.mapValues { relationshipsToAType -> [Relationship] in
-			return relationshipsToAType.map { var n = $0; n.syncState = .updated; return n }
+			return relationshipsToAType.map { var n = $0; n.syncState = status; return n }
 		}
 		if andChildren {
-			assumeChildrenSynced()
+			setChildrenSyncStatus(status)
 		}
 	}
 

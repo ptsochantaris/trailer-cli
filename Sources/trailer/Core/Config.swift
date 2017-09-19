@@ -9,7 +9,7 @@
 import Foundation
 
 struct Config {
-	var server: URL = URL(string: "https://api.github.com/graphql")!
+	var server = URL(string: "https://api.github.com/graphql")!
 
 	var pageSize = 100
 
@@ -17,7 +17,7 @@ struct Config {
 
 	let versionMajor = 0
 	let versionMinor = 9
-	let versionPatch = 7
+	let versionPatch = 8
 	var versionString: String {
 		return [versionMajor, versionMinor, versionPatch].map { String($0) }.joined(separator: ".")
 	}

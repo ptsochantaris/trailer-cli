@@ -177,15 +177,15 @@ struct Repo: Item, Announceable {
 		return nil
 	}
 
-	mutating func assumeChildrenSynced() {
+	mutating func setChildrenSyncStatus(_ status: SyncState) {
 		for p in pullRequests {
 			var P = p
-			P.assumeSynced(andChildren: true)
+			P.setSyncStatus(status, andChildren: true)
 			PullRequest.allItems[p.id] = P
 		}
 		for i in issues {
 			var I = i
-			I.assumeSynced(andChildren: true)
+			I.setSyncStatus(status, andChildren: true)
 			Issue.allItems[i.id] = I
 		}
 	}
