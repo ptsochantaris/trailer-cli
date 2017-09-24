@@ -13,13 +13,23 @@ A version of [Trailer](http://ptsochantaris.github.io/trailer/) that runs on the
 - It uses the new GitHub GraphQL-based v4 API, making syncs very quick. Additionally it allows trimming down both the data that is synced (for instance, skipping comments or issues for a certain sync)
 - It's *way* geekier.
 
-## Warning: Work In Progress
-Trailer-CLI is quite useable, but it is also new and code/features may be in flux for a while, and may contain potential bugs.
+## Work In Progress
+Trailer-CLI is good enough to use, but it is also new, code or features may be in flux, and you may encounter some bugs. Don't rely on it for anything mission-critical just yet.
 
 Please refer to the "cookbook" section below for an introduction to various features. There are no binaries for Linux (yet) but the project can be easily built from source (see right below).
 
-## Building & Installing
-**Note: Requires Swift 4.x.** Use the simple *(and perhaps not suitable for all setups)* script `install.sh` to place a built binary in /usr/local/bin, or you can manually build the project by entering `swift build -c release --static-swift-stdlib` and move the `trailer` binary from the `.build` subdirectory to wherever you like.
+## Installing
+
+### macOS
+You can get a pre-built macOS build from the [Releases](/releases) page and put it into `/usr/local/bin`.
+
+### Source
+You can build the project from source using the simple `./install.sh` script. It requires Swift 4.0 or later to be installed.
+
+### Linux Notes
+Swift does not _yet_ support making static stand-alone binaries in Linux, so there are no Linux builds in the Releases page. This will change soon. In the meantime you can build the project from  source.
+
+_Note: Linux builds created with the released Swift 4.0 seem to crash when trying to sync. Builds made using main trunk Swift 4.x distributions work fine._
 
 ## Quickstart
 Run Trailer without any arguments for some help. To get started:
