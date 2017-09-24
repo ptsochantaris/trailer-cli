@@ -47,7 +47,7 @@ extension Actions {
 	static func processConfigDirective(_ list: [String]) {
 
 		guard list.count > 1 else {
-			failShow("Missing argument")
+			failConfig("Missing argument")
 			return
 		}
 

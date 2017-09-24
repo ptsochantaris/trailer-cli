@@ -28,7 +28,7 @@ extension Actions {
 		}
 
 		guard list.count > 2 else {
-			failShow("Missing argument")
+			failOpen("Missing argument")
 			return
 		}
 
