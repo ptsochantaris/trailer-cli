@@ -21,7 +21,7 @@ Please refer to the "cookbook" section below for an introduction to various feat
 ## Installing
 
 ### macOS
-You can get a pre-built macOS build from the [Releases](/releases) page and put it into `/usr/local/bin`.
+You can get a pre-built macOS build from the [Releases](./releases) page and put it into `/usr/local/bin`.
 
 ### Source
 You can build the project from source using the simple `./install.sh` script. It requires Swift 4.0 or later to be installed.
