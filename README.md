@@ -2,7 +2,7 @@
 
 A version of [Trailer](http://ptsochantaris.github.io/trailer/) that runs on the macOS & Linux command-line, can integrate into scripts, be used on remote servers, or simply used because consoles are cool. This version does not aim for feature parity with the mainstream Trailer project although it shares common ideas and concepts.
 
-![Screenshot](/trailer-cli-screenshot.jpeg?raw=true)
+![Screenshot](https://raw.github.com/ptsochantaris/trailer/gh-pages/trailer-cli-screenshot.jpeg?raw=true)
 
 ## What's different from GUI Trailer?
 - The GUI version's main objective is to give you a current view at a glance. This tool is better suited to fetching and displaying itemised lists of what's new, what's been commented, what's been reviewed, and so on, since the last sync. GUI Trailer is "glance at what's happening". CLI Trailer is "list what's changed since I last checked".
