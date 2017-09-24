@@ -183,12 +183,19 @@ struct PullRequest: Item, Announceable, Closeable {
             line += "[C*COMMENTED"
         } else if hasNewReviews {
 			line += "[C*REVIEWED"
-		} else if mergeable == .conflicting || isRed {
-			line += "[R*>"
-		} else if isGreen {
-			line += "[G*>"
 		} else {
-			line += "[*>"
+			if isRed {
+				line += "[R*"
+			} else if isGreen {
+				line += "[G*"
+			} else {
+				line += "[*"
+			}
+			if mergeable == .conflicting {
+				line += "x"
+			} else {
+				line += ">"
+			}
 		}
         line += "*] PR [*\(number)*] \(title)!]"
 		if let r = repo {

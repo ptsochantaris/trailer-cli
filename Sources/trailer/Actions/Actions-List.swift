@@ -64,15 +64,18 @@ extension Actions {
 
 	static private func listLabels() {
 
-		var labels = [Label]()
+		var uniquedIds = Set<String>()
 		for p in pullRequestsToScan() {
-			labels.append(contentsOf: p.labels)
+			for id in p.labels.map({ $0.id }) {
+				uniquedIds.insert(id)
+			}
 		}
 		for i in issuesToScan() {
-			labels.append(contentsOf: i.labels)
+			for id in i.labels.map({ $0.id }) {
+				uniquedIds.insert(id)
+			}
 		}
-		let ids = Array(Set(labels.map({ $0.id }))).sorted(by: { $0 < $1 })
-		for l in ids {
+		for l in uniquedIds.sorted(by: { $0 < $1 }) {
             log("[![*> *]\(l)!]")
 		}
 	}

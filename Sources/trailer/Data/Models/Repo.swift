@@ -96,7 +96,7 @@ struct Repo: Item, Announceable {
         var line = ""
 		if bright { line += "[!" }
         if syncState == .new {
-            line += "[R*NEW *]"
+            line += "[R*NEW *]Repo "
         } else {
             line += "[*> *]"
         }
