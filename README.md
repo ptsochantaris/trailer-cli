@@ -173,7 +173,7 @@ trailer config deactivate -r myrepo
 ```
 Deactivates syncing from "MyRepo". The opposite command, `activate` (re)activates syncing from it.
 
-*Note: You must specify at least one filter for activating or deactivating repos, such as `-r`, `-o` since Trailer needs to know which repository or repositories to apply the changes to.*
+*Note: You must specify at least one filter for activating or deactivating repos, such as `-r`, or `-o` since Trailer needs to know which repository or repositories to apply the changes to.*
 
 ```
 trailer config view -active
