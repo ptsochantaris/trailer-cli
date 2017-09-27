@@ -44,6 +44,14 @@ extension Actions {
 		}
 	}
 
+    static private func checkFiltering() -> Bool {
+        if !RepoFilterArgs().filteringApplied {
+            failConfig("Please supply filters that specify which repos to configure, such as -r")
+            return false
+        }
+        return true
+    }
+
 	static func processConfigDirective(_ list: [String]) {
 
 		guard list.count > 1 else {
@@ -58,13 +66,21 @@ extension Actions {
 			log()
 			failConfig(nil)
 		case "activate":
-			setOption(visibility: .visible)
+            if checkFiltering() {
+                setOption(visibility: .visible)
+            }
 		case "deactivate":
-			setOption(visibility: .hidden)
+            if checkFiltering() {
+                setOption(visibility: .hidden)
+            }
 		case "only-prs":
-			setOption(visibility: .onlyPrs)
+            if checkFiltering() {
+                setOption(visibility: .onlyPrs)
+            }
 		case "only-issues":
-			setOption(visibility: .onlyIssues)
+            if checkFiltering() {
+                setOption(visibility: .onlyIssues)
+            }
 		case "view":
 			setOption(visibility: nil)
 		default:

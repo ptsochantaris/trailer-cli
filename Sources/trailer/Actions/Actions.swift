@@ -24,8 +24,9 @@ struct Actions {
         // Very rough sanity check to catch typos, should be more fine-grained per action
 		let invalidArguments = CommandLine.arguments.filter({ $0.hasPrefix("-") }).map { $0.lowercased() }.filter { arg in
             switch arg {
-            case "-v", "-debug", "-server", "-token", "-r", "-o", "-t", "-a", "-l", "-h", "-b", "-c", "-comments", "-refresh", "-body", "-page-size", "-mine", "-participated", "-mentioned",
-                 "-mergeable", "-conflict", "-red", "-green", "-e", "-before", "-within", "-n", "-purge", "-mono", "-version", "-fresh", "-m", "-number", "-blocked", "-approved", "-unreviewed":
+            case "-v", "-debug", "-server", "-token", "-r", "-o", "-t", "-a", "-l", "-h", "-b", "-c", "-comments", "-refresh", "-body", "-page-size",
+                 "-mine", "-participated", "-mentioned", "-mergeable", "-conflict", "-red", "-green", "-e", "-before", "-within", "-n", "-purge",
+                 "-mono", "-version", "-fresh", "-m", "-number", "-blocked", "-approved", "-unreviewed", "-active", "-inactive":
                 return false
             default:
                 return true
@@ -187,7 +188,9 @@ struct Actions {
 		printOptionHeader("Filter options (can combine)")
 		printOption(name :"-o <org>", description: "Filter for an org name")
 		printOption(name :"-r <repo>", description: "Filter for a repo name")
-		printOption(name :"-h", description: "Exclude repos/orgs without PRs or Issues")
+        printOption(name :"-active", description: "Filter for repos configured for PRs or Issues")
+        printOption(name :"-inactive", description: "Filter for repos configured as hidden")
+		printOption(name :"-h", description: "Filter for repos/orgs with PRs or Issues")
 		printOption(name :"-e", description: "Exclude repos/orgs with PRs or Issues")
 		log()
 

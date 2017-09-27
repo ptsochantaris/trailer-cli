@@ -18,10 +18,14 @@ struct RepoFilterArgs {
 	let searchForRepo = CommandLine.value(for: "-r")
 	let hideEmpty = CommandLine.argument(matching: "-h") != nil
 	let onlyEmpty = CommandLine.argument(matching: "-e") != nil
+    let onlyActive = CommandLine.argument(matching: "-active") != nil
+    let onlyInactive = CommandLine.argument(matching: "-inactive") != nil
 
 	var filteringApplied: Bool {
 		return searchForOrg != nil
 			|| searchForRepo != nil
+            || onlyActive
+            || onlyInactive
 			|| hideEmpty
 			|| onlyEmpty
 	}
@@ -134,6 +138,12 @@ extension Actions {
 			if a.hideEmpty && (r.visibility == .hidden || (r.pullRequests.count == 0 && r.issues.count == 0)) {
 				return false
 			}
+            if a.onlyActive && r.visibility == .hidden {
+                return false
+            }
+            if a.onlyInactive && r.visibility != .hidden {
+                return false
+            }
 
 			return true
 

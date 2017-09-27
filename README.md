@@ -161,32 +161,44 @@ Show PR number 123 and its comments, but first quickly fetch any newer data rela
 
 ### Activating / Deactivating Repositories
 
-Trailer will sync everything in your watchlist and the orgs you belong to, by default. This can be a lot of data that you don't need. You can limit the amount of things that get synced on each update in two ways. The recommended way is to limit the repositories from which you want to load info in the first place. Disabling repositories with many items can greatly improve your API usage and sync speed.
+Trailer will sync everything in your watchlist and the orgs you belong to, by default. This can be a lot of data that you may not need. The best way to reduce this is to configure which repositories you want to load info from. Disabling repositories with many items can greatly improve your API usage and sync speed.
 
 ```
 trailer config view -r myrepo
 ```
-View the activation status of "MyRepo". Bold text means that all items are synced from it. Plain text means the repo is disabled and trailer will not fetch items related to it.
+View the configuration of "MyRepo". Bright text means that at least some types of items are synced from it. Plain text means the repo is disabled and trailer will not fetch items related to it.
 
 ```
 trailer config deactivate -r myrepo
 ```
-Deactivates item syncing from "MyRepo". The opposite command, `activate` activates syncing from it.
+Deactivates syncing from "MyRepo". The opposite command, `activate` (re)activates syncing from it.
 
-**(Note: not specifying a filter with `-r` means that ALL repos will be activated/deactivated, so take care when using this command)**
+*Note: You must specify at least one filter for activating or deactivating repos, such as `-r`, `-o` since Trailer needs to know which repository or repositories to apply the changes to.*
 
 ```
-trailer config deactivate
-trailer config activate -r myrepo
+trailer config view -active
+```
+View all repos that have been configured to either sync PRs, issues, or both.
+
+```
+trailer config view -inactive
+```
+View all repos that have been configured to neither sync PRs nor issues.
+
+```
+trailer config deactivate -active
+trailer config activate -o myorg
 ```
 
-Deactivate all repos, and enable only repos whose name matches "myrepo". You can also set certain repos to sync only PRs or issues using the `only-prs` or `only-issues` command.
+Deactivate all repos that were previously active, and enable only repos from organisation "myorg".
+
+_You can also set repos to specifically sync only PRs or issues using the `only-prs` or `only-issues` command, instead of `activate`._
 
 ### Advanced: Shorter Updates
 
-Updates, if you have many items, can take a while and repeated updates with many items can cause the GitHub server to temporarily block you to avoid overload. However, you can reduce the number of things that get synced on a specific update by providing different parameters to the `update` command.
+Updates, if you have many items, can take a while. Repeated updates with many items can cause the GitHub servers to temporarily block you to avoid overload. However, you can reduce the number of things that get synced on a specific update by providing different parameters to the `update` command.
 
-This way you can refresh subsets of things more often, and stay up to date, while refreshing everything using the `all` parameter less often.
+This way you can refresh subsets of things more often, and stay up to date, and refresh everything using the `all` parameter less often.
 
 *Tip: The `-v` parameter will also provide you with info on how much API usage you have used on GitHub for the current hourly window.*
 
