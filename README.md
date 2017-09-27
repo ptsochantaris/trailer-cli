@@ -183,7 +183,7 @@ View all repos that have been configured to either sync PRs, issues, or both.
 ```
 trailer config view -inactive
 ```
-View all repos that have been configured to neither sync PRs nor issues.
+View all repos that have been configured to sync neither PRs nor issues.
 
 ```
 trailer config deactivate -active
@@ -192,7 +192,7 @@ trailer config activate -o myorg
 
 Deactivate all repos that were previously active, and enable only repos from organisation "myorg".
 
-_You can also set repos to specifically sync only PRs or issues using the `only-prs` or `only-issues` command, instead of `activate`._
+_Instead of `activate` you can also set repos to specifically sync only PRs or issues using the `only-prs` or `only-issues` commands respectively._
 
 ### Advanced: Shorter Updates
 
