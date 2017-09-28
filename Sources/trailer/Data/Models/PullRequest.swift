@@ -34,6 +34,7 @@ struct PullRequest: Item, Announceable, Closeable {
 	var state = ItemState.closed
 	var createdAt = Date.distantPast
 	var updatedAt = Date.distantPast
+	var mergedAt = Date.distantPast
 	var number: Int = 0
 	var title = ""
 	var url = emptyURL
@@ -54,6 +55,7 @@ struct PullRequest: Item, Announceable, Closeable {
 		case title
 		case url
 		case viewerDidAuthor
+		case mergedAt
 	}
 
 	init(from decoder: Decoder) throws {
@@ -66,6 +68,7 @@ struct PullRequest: Item, Announceable, Closeable {
 		state = try c.decode(ItemState.self, forKey: .state)
 		createdAt = try c.decode(Date.self, forKey: .createdAt)
 		updatedAt = try c.decode(Date.self, forKey: .updatedAt)
+		mergedAt = try c.decodeIfPresent(Date.self, forKey: .mergedAt) ?? Date.distantPast
 		number = try c.decode(Int.self, forKey: .number)
 		title = try c.decode(String.self, forKey: .title)
 		url = try c.decode(URL.self, forKey: .url)
@@ -83,6 +86,7 @@ struct PullRequest: Item, Announceable, Closeable {
 		try c.encode(state, forKey: .state)
 		try c.encode(createdAt, forKey: .createdAt)
 		try c.encode(updatedAt, forKey: .updatedAt)
+		try c.encode(mergedAt, forKey: .mergedAt)
 		try c.encode(number, forKey: .number)
 		try c.encode(title, forKey: .title)
 		try c.encode(url, forKey: .url)
@@ -99,6 +103,7 @@ struct PullRequest: Item, Announceable, Closeable {
 		state = ItemState(rawValue: node["state"] as? String ?? "CLOSED") ?? ItemState.closed
 		createdAt = GHDateFormatter.parseGH8601(node["createdAt"] as? String) ?? Date.distantPast
 		updatedAt = GHDateFormatter.parseGH8601(node["updatedAt"] as? String) ?? Date.distantPast
+		mergedAt = GHDateFormatter.parseGH8601(node["mergedAt"] as? String) ?? Date.distantPast
 		number = node["number"] as? Int ?? 0
 		title = node["title"] as? String ?? ""
 		url = URL(string: node["url"] as? String ?? "") ?? emptyURL
@@ -271,18 +276,22 @@ struct PullRequest: Item, Announceable, Closeable {
 		log(agoFormat(prefix: "        [$Created!] ", since: createdAt) + " by @" + (author?.login ?? ""))
 		log(agoFormat(prefix: "        [$Updated!] ", since: updatedAt))
 
-        var mergeLine = "    [$Merge check!] [!"
-		switch mergeable {
-		case .conflicting:
-            mergeLine += "[R*"
-		case .mergeable:
-            mergeLine += "[G*"
-		case .unknown:
-            mergeLine += "[*"
+		if mergedAt == Date.distantPast {
+			var mergeLine = "    [$Merge check!] [!"
+			switch mergeable {
+			case .conflicting:
+				mergeLine += "[R*"
+			case .mergeable:
+				mergeLine += "[G*"
+			case .unknown:
+				mergeLine += "[*"
+			}
+			mergeLine += mergeable.rawValue.capitalized
+			mergeLine += "*]!]"
+			log(mergeLine)
+		} else {
+			log("         [![G*Merged \(agoFormat(prefix: "", since: mergedAt))*]!]")
 		}
-		mergeLine += mergeable.rawValue.capitalized
-        mergeLine += "*]!]"
-        log(mergeLine)
 
 		if let m = milestone {
 			log("      [$Milestone!] \(m.title)")
@@ -476,6 +485,7 @@ struct PullRequest: Item, Announceable, Closeable {
 		Field(name: "id"),
 		Field(name: "updatedAt"),
 		Field(name: "mergeable"),
+		Field(name: "mergedAt"),
 		Field(name: "bodyText"),
 		Field(name: "state"),
 		Field(name: "createdAt"),
