@@ -253,7 +253,7 @@ struct Actions {
 		log()
 		printOption(name: "-server <URL>", description: "Full URL to the API endpoint of the GitHub server you want to query. Defaults to 'https://api.github.com/graphql'.")
 		log()
-		printOption(name: "-token <token>", description: "Auth API token to use when accessing the default or selected server. The value given here is persisted and doesn't need to be repeated. '-token display' shows the stored token.")
+		printOption(name: "-token <token>", description: "Auth API token to use when accessing the default or selected server. The value given here is persisted and doesn't need to be repeated. '-token display' shows the stored token. '-token test' tests the stored token.")
 		log()
 		printOption(name: "-v / -debug", description: "Enable verbose output, -debug provides a debug trace.")
 		log()

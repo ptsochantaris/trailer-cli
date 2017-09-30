@@ -66,7 +66,16 @@ private func go() {
 			if config.token.isEmpty {
 				log("Token for server [*\(config.server.absoluteString)*] isn't set")
 			} else {
-				log("Token for server [*\(config.server.absoluteString)*] is '\(config.token)'")
+				log("Token for server [*\(config.server.absoluteString)*] is [*\(config.token)*]")
+			}
+			if actionDetected == nil {
+				exit(0)
+			}
+		} else if t == "test" {
+			if config.token.isEmpty {
+				log("Token for server [*\(config.server.absoluteString)*] isn't set")
+			} else {
+				Actions.testToken()
 			}
 			if actionDetected == nil {
 				exit(0)

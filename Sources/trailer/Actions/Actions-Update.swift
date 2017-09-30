@@ -142,6 +142,15 @@ extension Actions {
 		}
     }
 
+	static func testToken() {
+		let testQuery = Query(name: "Test", rootElement:
+			Group(name: "viewer", fields: [
+				User.fragment,
+				]))
+		successOrAbort(testQuery)
+		log("Token for server [*\(config.server.absoluteString)*] is valid: Account is [*\(config.myLogin)*]")
+	}
+
 	private static func update(_ typesToSync: [UpdateType], keepOnlyNewItems: Bool) {
 
 		let repoFilters = RepoFilterArgs()

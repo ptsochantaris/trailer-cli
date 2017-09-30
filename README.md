@@ -38,7 +38,10 @@ Run Trailer without any arguments for some help. To get started:
 
 ```
 trailer -token <API access token>
+trailer -token test
 ```
+
+- `-token test` Makes a test request to the server to ensure the token you have specified is valid, or displays any error the server returned. You can also use `-token display` to view the stored token.
 
 - Update your local data cache anytime to get notifications of activity, etc.
 
@@ -47,7 +50,11 @@ trailer update all -v
 ```
 
 - Don't overdo it though, especially if you watch or are a member of many repos, as the API is quite strict on rate limits and may temporarily block you if you update too often.
-- If all goes well, you can then use the `trailer list` command or `trailer show` command to browse and view items, as well as the `trailer config` command to restrict PRs/Issues to specific repositories and reduce clutter, noise, and API usage when updating.
+
+- If all goes well, you can then use the `trailer list` command or `trailer show` command to browse and view items.
+
+- Be sure to check out the `trailer config` command to restrict PRs/Issues to specific repositories and reduce clutter, noise, and API usage when updating.
+
 - See below for some examples of common commands.
 
 ## Cookbook
