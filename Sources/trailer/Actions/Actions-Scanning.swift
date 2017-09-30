@@ -16,10 +16,10 @@ private let atCharacterSet: CharacterSet = {
 struct RepoFilterArgs {
 	let searchForOrg = CommandLine.value(for: "-o")
 	let searchForRepo = CommandLine.value(for: "-r")
-	let hideEmpty = CommandLine.argument(matching: "-h") != nil
-	let onlyEmpty = CommandLine.argument(matching: "-e") != nil
-    let onlyActive = CommandLine.argument(matching: "-active") != nil
-    let onlyInactive = CommandLine.argument(matching: "-inactive") != nil
+	let hideEmpty = CommandLine.argument(exists: "-h")
+	let onlyEmpty = CommandLine.argument(exists: "-e")
+    let onlyActive = CommandLine.argument(exists: "-active")
+    let onlyInactive = CommandLine.argument(exists: "-inactive")
 
 	var filteringApplied: Bool {
 		return searchForOrg != nil
@@ -39,22 +39,22 @@ struct ItemFilterArgs {
 	let label = CommandLine.value(for: "-l")
 	let milestone = CommandLine.value(for: "-m")
 
-	let mine = CommandLine.argument(matching: "-mine") != nil
-	let participated = CommandLine.argument(matching: "-participated") != nil
-	let mentioned = CommandLine.argument(matching: "-mentioned") != nil
+	let mine = CommandLine.argument(exists: "-mine")
+	let participated = CommandLine.argument(exists: "-participated")
+	let mentioned = CommandLine.argument(exists: "-mentioned")
 
-	let mergeable = CommandLine.argument(matching: "-mergeable") != nil
-	let conflict = CommandLine.argument(matching: "-conflict") != nil
+	let mergeable = CommandLine.argument(exists: "-mergeable")
+	let conflict = CommandLine.argument(exists: "-conflict")
 
-	let red = CommandLine.argument(matching: "-red") != nil
-	let green = CommandLine.argument(matching: "-green") != nil
+	let red = CommandLine.argument(exists: "-red")
+	let green = CommandLine.argument(exists: "-green")
 
 	let olderThan = Int(CommandLine.value(for: "-before") ?? "")
 	let youngerThan = Int(CommandLine.value(for: "-within") ?? "")
 
-	let unReviewed = CommandLine.argument(matching: "-unreviewed") != nil
-	let approved = CommandLine.argument(matching: "-approved") != nil
-	let blocked = CommandLine.argument(matching: "-blocked") != nil
+	let unReviewed = CommandLine.argument(exists: "-unreviewed")
+	let approved = CommandLine.argument(exists: "-approved")
+	let blocked = CommandLine.argument(exists: "-blocked")
 
 	let numbers: [Int]?
 

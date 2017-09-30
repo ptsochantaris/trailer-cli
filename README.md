@@ -134,7 +134,7 @@ List all items that have a milestone containing the text "2.0".
 ```
 trailer list prs -blocked
 ```
-List all PRs on which (at lest) one reviewer has requested changes. You can also use `-unreviewed` to list items that have pending review requests or `-approved` for items where all reviewers approve.
+List all PRs on which (at least) one reviewer has requested changes. You can also use `-unreviewed` to list items that have pending review requests or `-approved` for items where all reviewers approve.
 
 #### Stats
 ```
@@ -162,6 +162,8 @@ Show PR number 123 and its comments, but first quickly fetch any newer data rela
 ### Activating / Deactivating Repositories
 
 Trailer will sync everything in your watchlist and the orgs you belong to, by default. This can be a lot of data that you may not need. The best way to reduce this is to configure which repositories you want to load info from. Disabling repositories with many items can greatly improve your API usage and sync speed.
+
+#### Existing Repositories
 
 ```
 trailer config view -r myrepo
@@ -192,7 +194,15 @@ trailer config activate -o myorg
 
 Deactivate all repos that were previously active, and enable only repos from organisation "myorg".
 
-_Instead of `activate` you can also set repos to specifically sync only PRs or issues using the `only-prs` or `only-issues` commands respectively._
+_Instead of `activate` you can also set repos to specifically sync only PRs or issues using the `only-prs` or `only-issues` commands._
+
+#### Future Repositories
+
+```
+trailer config deactivate -set-default
+```
+
+Use the `-set-default` option to tell Trailer how to configure any new repositories that it will detect. In the above example, we want to keep noise down and not sync any items from new repos that may appear, until we chose manually activate them later.
 
 ### Advanced: Shorter Updates
 

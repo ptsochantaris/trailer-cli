@@ -71,7 +71,7 @@ extension Actions {
 		if let items = findItems(number: number, includePrs: includePrs, includeIssues: includeIssues, warnIfMultiple: true) {
 			if items.count == 1, var item = items.first {
 
-				if CommandLine.argument(matching: "-refresh") != nil {
+				if CommandLine.argument(exists: "-refresh") {
 					item = Actions.singleItemUpdate(for: item)
 				}
 				item.printDetails()

@@ -17,7 +17,7 @@ struct Config {
 
 	let versionMajor = 1
 	let versionMinor = 0
-	let versionPatch = 1
+	let versionPatch = 2
 	var versionString: String {
 		return [versionMajor, versionMinor, versionPatch].map { String($0) }.joined(separator: ".")
 	}
@@ -96,10 +96,22 @@ struct Config {
 	}
 
 	private func store(date: Date?, name: String) {
+		var dateTickString: String?
+		if let d = date { dateTickString = String(d.timeIntervalSince1970) }
+		store(string: dateTickString, name: name)
+	}
+
+	private func fetchDate(name: String) -> Date? {
+		if let dateString = fetchString(name: name), let dateTicks = TimeInterval(dateString) {
+			return Date(timeIntervalSince1970: dateTicks)
+		}
+		return nil
+	}
+
+	private func store(string: String?, name: String) {
 		let fileURL = saveLocation.appendingPathComponent(name)
-		if let d = date {
-			let dateTickString = String(d.timeIntervalSince1970)
-			try! dateTickString.data(using: .utf8)?.write(to: fileURL)
+		if let s = string {
+			try! s.data(using: .utf8)?.write(to: fileURL)
 		} else {
 			if FileManager.default.fileExists(atPath: fileURL.path) {
 				try! FileManager.default.removeItem(at: fileURL)
@@ -107,12 +119,9 @@ struct Config {
 		}
 	}
 
-	private func fetchDate(name: String) -> Date? {
-		if let d = try? Data(contentsOf: saveLocation.appendingPathComponent(name)),
-			let dateString = String(data:d, encoding: .utf8),
-			let dateTicks = TimeInterval(dateString) {
-
-			return Date(timeIntervalSince1970: dateTicks)
+	private func fetchString(name: String) -> String? {
+		if let d = try? Data(contentsOf: saveLocation.appendingPathComponent(name)) {
+			return String(data: d, encoding: .utf8)
 		}
 		return nil
 	}
@@ -125,6 +134,16 @@ struct Config {
 	var lastUpdateCheckDate: Date {
 		get { return fetchDate(name: "latest-update-check-date") ?? .distantPast }
 		set { store(date: newValue, name: "latest-update-check-date") }
+	}
+
+	var defaultRepoVisibility: RepoVisibility {
+		get {
+			if let s = fetchString(name: "default-repo-visibility"), let v = RepoVisibility(rawValue: s) {
+				return v
+			}
+			return RepoVisibility.visible
+		}
+		set { store(string: newValue.rawValue, name: "default-repo-visibility") }
 	}
 
 	var totalQueryCosts = 0

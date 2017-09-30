@@ -20,6 +20,9 @@ extension Actions {
 		printOption(name: "only-prs", description: "Only fetch PRs from repos")
 		printOption(name: "only-issues", description: "Only fetch Issues from repos")
 		log()
+		printOptionHeader("New repos become visible by default. To change:")
+		printOption(name: "-set-default", description: "Apply the above automatically to new repos")
+		log()
 		printFilterOptions(onlyRepos: true)
 	}
 
@@ -44,6 +47,16 @@ extension Actions {
 		}
 	}
 
+	static private func checkDefault(visibility: RepoVisibility) -> Bool {
+		if CommandLine.argument(exists: "-set-default") {
+			config.defaultRepoVisibility = visibility
+			log("[!New repositories will now be auto-configured for visibility [*\(visibility.rawValue.uppercased())*]!]")
+			log()
+			return true
+		}
+		return false
+	}
+
     static private func checkFiltering() -> Bool {
         if !RepoFilterArgs().filteringApplied {
             failConfig("Please supply filters that specify which repos to configure, such as -r")
@@ -66,19 +79,19 @@ extension Actions {
 			log()
 			failConfig(nil)
 		case "activate":
-            if checkFiltering() {
+            if !checkDefault(visibility: .visible) && checkFiltering() {
                 setOption(visibility: .visible)
             }
 		case "deactivate":
-            if checkFiltering() {
+			if !checkDefault(visibility: .hidden) && checkFiltering() {
                 setOption(visibility: .hidden)
             }
 		case "only-prs":
-            if checkFiltering() {
+			if !checkDefault(visibility: .onlyPrs) && checkFiltering() {
                 setOption(visibility: .onlyPrs)
             }
 		case "only-issues":
-            if checkFiltering() {
+			if !checkDefault(visibility: .onlyIssues) && checkFiltering() {
                 setOption(visibility: .onlyIssues)
             }
 		case "view":

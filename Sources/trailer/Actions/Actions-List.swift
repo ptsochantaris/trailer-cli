@@ -150,8 +150,8 @@ extension Actions {
 
 	static private func listOrgs() {
 		let searchForOrg = CommandLine.value(for: "-o")
-		let hideEmpty = CommandLine.argument(matching: "-h") != nil
-		let onlyEmpty = CommandLine.argument(matching: "-e") != nil
+		let hideEmpty = CommandLine.argument(exists: "-h")
+		let onlyEmpty = CommandLine.argument(exists: "-e")
 		for o in Org.allItems.values.sorted(by: { $0.name < $1.name }) {
 			if let s = searchForOrg, !o.name.localizedCaseInsensitiveContains(s) {
 				continue

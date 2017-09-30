@@ -364,7 +364,7 @@ struct PullRequest: Item, Announceable, Closeable {
 			}
 		}
 
-		if CommandLine.argument(matching: "-body") != nil {
+		if CommandLine.argument(exists: "-body") {
 			let b = bodyText.trimmingCharacters(in: .whitespacesAndNewlines)
 			if b.count > 0 {
 				log("[!Body!]")
@@ -373,7 +373,7 @@ struct PullRequest: Item, Announceable, Closeable {
 			}
 		}
 
-		if CommandLine.argument(matching: "-comments") != nil {
+		if CommandLine.argument(exists: "-comments") {
 			let co = commentItems.sorted(by: { $0.createdAt < $1.createdAt })
 			if !co.isEmpty {
 				for c in co {

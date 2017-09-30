@@ -134,7 +134,7 @@ extension Actions {
 			}
 		}
 		if updateTypes.count > 0 {
-			let onlyKeepNew = CommandLine.argument(matching: "-fresh") != nil
+			let onlyKeepNew = CommandLine.argument(exists: "-fresh")
 			update(updateTypes, keepOnlyNewItems: onlyKeepNew)
 		} else {
 			log()
@@ -463,7 +463,7 @@ extension Actions {
 
 		config.latestSyncDate = Date()
 
-        let n: NotificationMode = (CommandLine.argument(matching: "-n") != nil) ? .consoleCommentsAndReviews : .standard
+        let n: NotificationMode = CommandLine.argument(exists: "-n") ? .consoleCommentsAndReviews : .standard
 		DB.save(purgeUntouchedItems: true, notificationMode: n)
         Notifications.processQueue()
 		log("Update done.")
@@ -479,7 +479,7 @@ extension Actions {
 	}
 
 	static func singleItemUpdate(for item: ListableItem) -> ListableItem {
-		let userWantsComments = CommandLine.argument(matching: "-comments") != nil
+		let userWantsComments = CommandLine.argument(exists: "-comments")
 		if let pr = item.pullRequest {
 
 			let fragment = userWantsComments ? PullRequest.fragmentWithComments : PullRequest.fragment

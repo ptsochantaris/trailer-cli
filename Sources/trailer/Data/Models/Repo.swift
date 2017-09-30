@@ -85,13 +85,14 @@ struct Repo: Item, Announceable {
 		self.parents = [String:[Relationship]]()
 		self.elementType = type
 		syncState = .new
+		visibility = config.defaultRepoVisibility
 		if !apply(node) {
 			return nil
 		}
 	}
 
     func printSummaryLine() {
-		let bright = visibility != .hidden
+		let bright = visibility != .hidden || syncState == .new
 
         var line = ""
 		if bright { line += "[!" }

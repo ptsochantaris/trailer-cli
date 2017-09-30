@@ -10,11 +10,9 @@ import Foundation
 
 private func go() {
 
-	if CommandLine.argument(matching: "-mono") != nil {
-		config.monochrome = true
-	}
+	config.monochrome = CommandLine.argument(exists: "-mono")
 
-	if CommandLine.argument(matching: "-version") != nil {
+	if CommandLine.argument(exists: "-version") {
 		log("[!Version [*\(config.versionString)*]!]")
 		Actions.checkForUpdatesSynchronously(reportError: true, alwaysCheck: true)
 		log()
@@ -39,10 +37,10 @@ private func go() {
 		}
 	}
 
-	if CommandLine.argument(matching: "-debug") != nil {
+	if CommandLine.argument(exists: "-debug") {
 		globalLogLevel = .debug
 		log("Will be verbose [*(debug)*]")
-	} else if CommandLine.argument(matching: "-v") != nil {
+	} else if CommandLine.argument(exists: "-v") {
 		globalLogLevel = .verbose
 		log("Will be verbose")
 	}
