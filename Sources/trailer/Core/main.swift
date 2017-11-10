@@ -99,7 +99,21 @@ private func go() {
 		Actions.reportAndExit(message: nil)
 	}
 
+	extendStackSizeIfNeeded()
+
 	Actions.performAction(action, listSequence: actionSequence)
+}
+
+// With thanks to: https://stackoverflow.com/questions/2275550/change-stack-size-for-a-c-application-in-linux-during-compilation-with-gnu-com#2284691
+private func extendStackSizeIfNeeded() {
+	let kStackSize: rlim_t = 32 * 1024 * 1024
+	var rl = rlimit()
+	if getrlimit(RLIMIT_STACK, &rl) == 0 {
+		if rl.rlim_cur < kStackSize {
+			rl.rlim_cur = kStackSize
+			setrlimit(RLIMIT_STACK, &rl)
+		}
+	}
 }
 
 go()
