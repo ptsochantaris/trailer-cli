@@ -37,6 +37,7 @@ struct PullRequest: Item, Announceable, Closeable {
 	var mergedAt = Date.distantPast
 	var number: Int = 0
 	var title = ""
+	var headRefName = ""
 	var url = emptyURL
 	var viewerDidAuthor = false
 
@@ -56,6 +57,7 @@ struct PullRequest: Item, Announceable, Closeable {
 		case url
 		case viewerDidAuthor
 		case mergedAt
+		case headRefName
 	}
 
 	init(from decoder: Decoder) throws {
@@ -73,6 +75,7 @@ struct PullRequest: Item, Announceable, Closeable {
 		title = try c.decode(String.self, forKey: .title)
 		url = try c.decode(URL.self, forKey: .url)
 		viewerDidAuthor = try c.decode(Bool.self, forKey: .viewerDidAuthor)
+		headRefName = try c.decodeIfPresent(String.self, forKey: .headRefName) ?? ""
 		syncState = .none
 	}
 
@@ -91,6 +94,7 @@ struct PullRequest: Item, Announceable, Closeable {
 		try c.encode(title, forKey: .title)
 		try c.encode(url, forKey: .url)
 		try c.encode(viewerDidAuthor, forKey: .viewerDidAuthor)
+		try c.encode(headRefName, forKey: .headRefName)
 	}
 
 	mutating func apply(_ node: [AnyHashable:Any]) -> Bool {
@@ -100,6 +104,7 @@ struct PullRequest: Item, Announceable, Closeable {
 
         mergeable = MergeableState(rawValue: node["mergeable"] as? String ?? "UNKNOWN") ?? MergeableState.unknown
 		bodyText = node["bodyText"] as? String ?? ""
+		headRefName = node["headRefName"] as? String ?? ""
 		state = ItemState(rawValue: node["state"] as? String ?? "CLOSED") ?? ItemState.closed
 		createdAt = GHDateFormatter.parseGH8601(node["createdAt"] as? String) ?? Date.distantPast
 		updatedAt = GHDateFormatter.parseGH8601(node["updatedAt"] as? String) ?? Date.distantPast
@@ -271,6 +276,9 @@ struct PullRequest: Item, Announceable, Closeable {
 		log()
 		if let r = repo {
 			log("           [$Repo!] \(r.nameWithOwner)")
+		}
+		if !headRefName.isEmpty {
+			log("         [$Branch!] \(headRefName)")
 		}
 		log("            [$URL!] \(url.absoluteString)")
 		log(agoFormat(prefix: "        [$Created!] ", since: createdAt) + " by @" + (author?.login ?? ""))
@@ -493,6 +501,7 @@ struct PullRequest: Item, Announceable, Closeable {
 		Field(name: "number"),
 		Field(name: "title"),
 		Field(name: "url"),
+		Field(name: "headRefName"),
 		Field(name: "viewerDidAuthor"),
 
 		Group(name: "milestone", fields: [Milestone.fragment]),
