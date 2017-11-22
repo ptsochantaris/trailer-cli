@@ -50,9 +50,10 @@ extension Actions {
         log()
         log("[!Updating options!]")
         printOption(name: "-n", description: "List new comments and reviews on items")
+		printOption(name: "-from <repo>", description: "Only update items from a repo whose name includes this text")
 		printOption(name: "-fresh", description: "Only keep what's downloaded in this sync and purge all other types of data")
 		log()
-		printOptionHeader("You can also limit updates to specific items by filtering:")
+		printOptionHeader("You can also update specific (existing) items by filtering:")
 		log()
 		printFilterOptions()
         log()
@@ -134,8 +135,9 @@ extension Actions {
 			}
 		}
 		if updateTypes.count > 0 {
-			let onlyKeepNew = CommandLine.argument(exists: "-fresh")
-			update(updateTypes, keepOnlyNewItems: onlyKeepNew)
+			update(updateTypes,
+				   limitToRepoNames: CommandLine.value(for: "-from"),
+				   keepOnlyNewItems: CommandLine.argument(exists: "-fresh"))
 		} else {
 			log()
 			failUpdate("Need at least one update type. If in doubt, use 'all'.")
@@ -151,13 +153,13 @@ extension Actions {
 		log("Token for server [*\(config.server.absoluteString)*] is valid: Account is [*\(config.myLogin)*]")
 	}
 
-	private static func update(_ typesToSync: [UpdateType], keepOnlyNewItems: Bool) {
+	private static func update(_ typesToSync: [UpdateType], limitToRepoNames: String?, keepOnlyNewItems: Bool) {
 
 		let repoFilters = RepoFilterArgs()
 		let itemFilters = ItemFilterArgs()
 		let filtersRequested = repoFilters.filteringApplied || itemFilters.filteringApplied
 
-		let userWantsRepos = typesToSync.contains(.repos) && !filtersRequested
+		let userWantsRepos = typesToSync.contains(.repos) && !filtersRequested && limitToRepoNames == nil
 		let userWantsPrs = typesToSync.contains(.prs)
 		let userWantsIssues = typesToSync.contains(.issues)
 		let userWantsComments = typesToSync.contains(.comments)
@@ -205,7 +207,11 @@ extension Actions {
 		if userWantsPrs {
 			for p in pullRequestsToScan() {
 				if let r = p.repo, r.shouldSyncPrs {
-					prIdList[p.id] = r.id
+					if let rf = limitToRepoNames {
+						prIdList[p.id] = r.nameWithOwner.localizedCaseInsensitiveContains(rf) ? r.id : nil
+					} else {
+						prIdList[p.id] = r.id
+					}
 				}
 			}
 		}
@@ -214,7 +220,11 @@ extension Actions {
 		if userWantsIssues {
 			for i in issuesToScan() {
 				if let r = i.repo, r.shouldSyncIssues {
-					issueIdList[i.id] = r.id
+					if let rf = limitToRepoNames {
+						issueIdList[i.id] = r.nameWithOwner.localizedCaseInsensitiveContains(rf) ? r.id : nil
+					} else {
+						issueIdList[i.id] = r.id
+					}
 				}
 			}
 		}
@@ -290,7 +300,12 @@ extension Actions {
 				}
 			}
 
-			let repoIds = Repo.allItems.values.flatMap { return $0.visibility == .hidden ? nil : $0.id }
+			let repoIds: [String]
+			if let rf = limitToRepoNames {
+				repoIds = Repo.allItems.values.flatMap { return ($0.visibility == .hidden || !$0.nameWithOwner.localizedCaseInsensitiveContains(rf)) ? nil : $0.id }
+			} else {
+				repoIds = Repo.allItems.values.flatMap { return $0.visibility == .hidden ? nil : $0.id }
+			}
 			let fields =
 				(userWantsPrs && userWantsIssues) ? [Repo.prAndIssueIdsFragment] :
 					userWantsPrs ? [Repo.prIdsFragment] :
@@ -303,12 +318,12 @@ extension Actions {
 		}
 
 		if !keepOnlyNewItems {
-			if !userWantsPrs || filtersRequested { // do not expire items which are not included in this sync
+			if !userWantsPrs || filtersRequested || limitToRepoNames != nil { // do not expire items which are not included in this sync
 				let limitIds = PullRequest.allItems.keys.filter { issueIdList[$0] == nil }
 				PullRequest.setSyncStatus(.updated, andChildren: true, limitToIds: limitIds)
 			}
 
-			if !userWantsIssues || filtersRequested { // do not expire items which are not included in this sync
+			if !userWantsIssues || filtersRequested || limitToRepoNames != nil { // do not expire items which are not included in this sync
 				let limitIds = Issue.allItems.keys.filter { issueIdList[$0] == nil }
 				Issue.setSyncStatus(.updated, andChildren: true, limitToIds: limitIds)
 			}

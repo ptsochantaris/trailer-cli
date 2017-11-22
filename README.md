@@ -215,9 +215,14 @@ Use the `-set-default` option to tell Trailer how to configure any new repositor
 
 Updates, if you have many items, can take a while. Repeated updates with many items can cause the GitHub servers to temporarily block you to avoid overload. However, you can reduce the number of things that get synced on a specific update by providing different parameters to the `update` command.
 
-This way you can refresh subsets of things more often, and stay up to date, and refresh everything using the `all` parameter less often.
+This way you can refresh subsets of things more often, stay up to date, and refresh the entire set of items less often.
 
 *Tip: The `-v` parameter will also provide you with info on how much API usage you have used on GitHub for the current hourly window.*
+
+```
+trailer update all -from swift
+```
+Update all types of items, but limit checks to activated repositories with `swift` in their name. (This obviously won't check for new repositories.)
 
 ```
 trailer update repos
