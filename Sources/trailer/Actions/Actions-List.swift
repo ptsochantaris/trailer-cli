@@ -21,6 +21,9 @@ extension Actions {
 		printOption(name: "labels", description: "List labels currently in use")
 		printOption(name: "milestones", description: "List milestones currently set")
 		log()
+		printOptionHeader("For lists of PRs or Issues you can specify a custom set of fields")
+		printOption(name: "-fields", description: "Comma-separated list: type,number,title,repo,branch,author,created,updated,url,labels")
+		log()
 		printFilterOptions()
 	}
 

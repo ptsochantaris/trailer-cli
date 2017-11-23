@@ -136,6 +136,7 @@ struct Issue: Item, Announceable, Closeable {
 		printSummaryLine(closing : false)
 	}
 	func printSummaryLine(closing: Bool) {
+		var components = [String]()
         var line = "[!"
         if closing && state == .closed {
             line += "[B*CLOSED"
@@ -146,14 +147,45 @@ struct Issue: Item, Announceable, Closeable {
 		} else {
 			line += "[*>"
 		}
-        line += "*] Issue [![*\(number)*] \(title)!]"
-		if let r = repo {
-			line += " (\(r.nameWithOwner))"
+        line += "*]"
+		components.append(line)
+
+		if listFieldsDefinition.type {
+			components.append("Issue")
 		}
-		if let a = author {
-			line += " (@\(a.login))"
+		if listFieldsDefinition.number {
+			components.append("[*\(number)*]")
 		}
-		log(line)
+		if listFieldsDefinition.title {
+			components.append(title)
+		}
+
+		let x = components.popLast()! + "!]"
+		components.append(x)
+
+		if listFieldsDefinition.labels, !labels.isEmpty {
+			let l = labels.map { $0.id }.joined(separator: "] [")
+			components.append("[\(l)]")
+		}
+		if listFieldsDefinition.repo, let r = repo {
+			components.append("(\(r.nameWithOwner))")
+		}
+		if listFieldsDefinition.author, let a = author {
+			components.append("(@\(a.login))")
+		}
+		if listFieldsDefinition.created {
+			let a = agoFormat(prefix: "", since: createdAt)
+			components.append("(Created \(a))")
+		}
+		if listFieldsDefinition.updated {
+			let a = agoFormat(prefix: "", since: updatedAt)
+			components.append("(Updated \(a))")
+		}
+		if listFieldsDefinition.url {
+			components.append("[C*\(url.absoluteString)*]")
+		}
+
+		log(components.joined(separator: " "))
 	}
 
     func announceIfNeeded(notificationMode: NotificationMode) {

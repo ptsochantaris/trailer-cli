@@ -52,3 +52,22 @@ extension CommandLine {
 		return value
 	}
 }
+
+let listFieldsDefinition = ListFieldsDefinition()
+
+struct ListFieldsDefinition {
+	let type, number, title, repo, branch, author, created, updated, url, labels: Bool
+	init() {
+		let components = CommandLine.value(for: "-fields")?.split(separator: ",")
+		type = components?.contains("type") ?? true
+		number = components?.contains("number") ?? true
+		author = components?.contains("author") ?? true
+		title = components?.contains("title") ?? true
+		repo = components?.contains("repo") ?? true
+		branch = components?.contains("branch") ?? false
+		created = components?.contains("created") ?? false
+		updated = components?.contains("updated") ?? false
+		labels = components?.contains("labels") ?? false
+		url = components?.contains("url") ?? false
+	}
+}

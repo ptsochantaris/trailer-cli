@@ -85,6 +85,14 @@ trailer list items -r swift -a bob
 ```
 List all items in repositories (`-r`) containing the letters "swift" and (`-a`) authored by users whose handle contains the letters "bob".
 
+You can specify which fields to display on an item list by using the `-fields` parameter. It can take as many or as few fields as you'd like to specify. The example below includes all of them:
+
+```
+trailer list items -fields type,number,title,repo,branch,author,created,updated,url,labels
+```
+
+There should be no spaces between the fields specified in this parameter.
+
 #### Relevance
 ```
 trailer list items -mine -participated -mentioned

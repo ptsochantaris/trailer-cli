@@ -26,7 +26,7 @@ struct Actions {
             switch arg {
             case "-v", "-debug", "-server", "-token", "-r", "-o", "-t", "-a", "-l", "-h", "-b", "-c", "-comments", "-refresh", "-body", "-page-size",
                  "-mine", "-participated", "-mentioned", "-mergeable", "-conflict", "-red", "-green", "-e", "-before", "-within", "-n", "-purge", "-from",
-                 "-mono", "-version", "-fresh", "-m", "-number", "-blocked", "-approved", "-unreviewed", "-active", "-inactive", "-set-default":
+                 "-mono", "-version", "-fresh", "-m", "-number", "-blocked", "-approved", "-unreviewed", "-active", "-inactive", "-set-default", "-fields":
                 return false
             default:
                 return true
