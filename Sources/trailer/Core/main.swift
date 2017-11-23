@@ -108,10 +108,15 @@ private func go() {
 private func extendStackSizeIfNeeded() {
 	let kStackSize: rlim_t = 32 * 1024 * 1024
 	var rl = rlimit()
-	if getrlimit(RLIMIT_STACK, &rl) == 0 {
+	#if os(Linux)
+		let s: Int32 = Int32(RLIMIT_STACK.rawValue)
+	#else
+		let s = RLIMIT_STACK
+	#endif
+	if getrlimit(s, &rl) == 0 {
 		if rl.rlim_cur < kStackSize {
 			rl.rlim_cur = kStackSize
-			setrlimit(RLIMIT_STACK, &rl)
+			setrlimit(s, &rl)
 		}
 	}
 }
