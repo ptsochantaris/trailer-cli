@@ -75,7 +75,7 @@ extension Item {
 				let parentTypeName = String(P.first!)
 				let parentField = String(P.last!)
 
-				newItem.parents[relationshipKey] = previousRelationships.flatMap { relationship -> Relationship? in
+				newItem.parents[relationshipKey] = previousRelationships.compactMap { relationship -> Relationship? in
 					if relationship.syncState == .none {
 						log(level: .debug, "Removing stale relationship from \(item.typeName) \(item.id) to parent ID \(relationship.parentId)")
 						DB.removeChild(id: item.id, from: relationship.parentId, field: parentField)
@@ -225,7 +225,7 @@ extension Item {
 
 	func children<T: Item>(field: String) -> [T] {
 		if let childrenIds = DB.idsForChildren(of: id, field: field) {
-			return childrenIds.flatMap { T.allItems[$0] }
+			return childrenIds.compactMap { T.allItems[$0] }
 		} else {
 			return []
 		}

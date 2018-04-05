@@ -85,8 +85,8 @@ extension Actions {
 
 	static private func listMilestones() {
 
-		let milestoneTitles = pullRequestsToScan().flatMap { $0.milestone?.title }
-			+ issuesToScan().flatMap { $0.milestone?.title }
+		let milestoneTitles = pullRequestsToScan().compactMap { $0.milestone?.title }
+			+ issuesToScan().compactMap { $0.milestone?.title }
 
 		for l in milestoneTitles {
 			log("[![*> *]\(l)!]")

@@ -286,8 +286,8 @@ struct PullRequest: Item, Announceable, Closeable {
 		let requests = reviewRequests
 		if requests.count == 0 { return false }
 
-		let latestReviewResults = latestReviews.filter { $0.state == .approved || $0.state == .changes_requested }.flatMap { $0.author?.login }
-		let waitingFor = requests.flatMap { $0.reviewer?.login }.filter { !latestReviewResults.contains($0) }
+		let latestReviewResults = latestReviews.filter { $0.state == .approved || $0.state == .changes_requested }.compactMap { $0.author?.login }
+		let waitingFor = requests.compactMap { $0.reviewer?.login }.filter { !latestReviewResults.contains($0) }
 		return waitingFor.count > 0
 	}
 
@@ -381,9 +381,9 @@ struct PullRequest: Item, Announceable, Closeable {
 
 		let latest = latestReviews
 		if !latest.isEmpty {
-			let approvingReviewers = latest.filter { $0.state == .approved }.flatMap { $0.author?.login }.map { "@"+$0 }
-			let blockingReviewers = latest.filter { $0.state == .changes_requested }.flatMap { $0.author?.login }.map { "@"+$0 }
-			let pendingReviewers = reviewRequests.flatMap { $0.reviewer?.login }.map { "@"+$0 }.filter { !(approvingReviewers.contains($0) || blockingReviewers.contains($0)) }
+			let approvingReviewers = latest.filter { $0.state == .approved }.compactMap { $0.author?.login }.map { "@"+$0 }
+			let blockingReviewers = latest.filter { $0.state == .changes_requested }.compactMap { $0.author?.login }.map { "@"+$0 }
+			let pendingReviewers = reviewRequests.compactMap { $0.reviewer?.login }.map { "@"+$0 }.filter { !(approvingReviewers.contains($0) || blockingReviewers.contains($0)) }
 			if !approvingReviewers.isEmpty || !blockingReviewers.isEmpty || !pendingReviewers.isEmpty {
 				log("[!Reviews")
 				if approvingReviewers.count > 0 {

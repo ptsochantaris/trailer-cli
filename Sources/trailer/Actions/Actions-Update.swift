@@ -302,9 +302,9 @@ extension Actions {
 
 			let repoIds: [String]
 			if let rf = limitToRepoNames {
-				repoIds = Repo.allItems.values.flatMap { return ($0.visibility == .hidden || !$0.nameWithOwner.localizedCaseInsensitiveContains(rf)) ? nil : $0.id }
+				repoIds = Repo.allItems.values.compactMap { return ($0.visibility == .hidden || !$0.nameWithOwner.localizedCaseInsensitiveContains(rf)) ? nil : $0.id }
 			} else {
-				repoIds = Repo.allItems.values.flatMap { return $0.visibility == .hidden ? nil : $0.id }
+				repoIds = Repo.allItems.values.compactMap { return $0.visibility == .hidden ? nil : $0.id }
 			}
 			let fields =
 				(userWantsPrs && userWantsIssues) ? [Repo.prAndIssueIdsFragment] :
@@ -368,7 +368,7 @@ extension Actions {
 
 		if userWantsPrs && userWantsComments {
 
-			let reviewIdsWithComments = Review.allItems.values.flatMap { $0.syncState == .none || !$0.syncNeedsComments ? nil : $0.id }
+			let reviewIdsWithComments = Review.allItems.values.compactMap { $0.syncState == .none || !$0.syncNeedsComments ? nil : $0.id }
 
 			if reviewIdsWithComments.count > 0 {
 				successOrAbort(Query.batching("PR Review Comments", fields: [
@@ -452,19 +452,19 @@ extension Actions {
 			var itemIdsWithReactions = [String]()
 			
 			if userWantsComments {
-				itemIdsWithReactions += Comment.allItems.values.flatMap { ($0.syncState == .none || !$0.syncNeedsReactions) ? nil : $0.id }
+				itemIdsWithReactions += Comment.allItems.values.compactMap { ($0.syncState == .none || !$0.syncNeedsReactions) ? nil : $0.id }
 			} else {
 				itemIdsWithReactions += Comment.allItems.keys
 			}
 
 			if userWantsPrs {
-				itemIdsWithReactions += PullRequest.allItems.values.flatMap { ($0.syncState == .none || !$0.syncNeedsReactions) ? nil : $0.id }
+				itemIdsWithReactions += PullRequest.allItems.values.compactMap { ($0.syncState == .none || !$0.syncNeedsReactions) ? nil : $0.id }
 			} else {
 				itemIdsWithReactions += PullRequest.allItems.keys
 			}
 
 			if userWantsIssues {
-				itemIdsWithReactions += Issue.allItems.values.flatMap { ($0.syncState == .none || !$0.syncNeedsReactions) ? nil : $0.id }
+				itemIdsWithReactions += Issue.allItems.values.compactMap { ($0.syncState == .none || !$0.syncNeedsReactions) ? nil : $0.id }
 			} else {
 				itemIdsWithReactions += Issue.allItems.keys
 			}
@@ -511,7 +511,7 @@ extension Actions {
 			successOrAbort(queries)
 
 			if userWantsComments {
-				let reviewIdsWithComments = pr.reviews.flatMap { $0.syncState == .none || !$0.syncNeedsComments ? nil : $0.id }
+				let reviewIdsWithComments = pr.reviews.compactMap { $0.syncState == .none || !$0.syncNeedsComments ? nil : $0.id }
 				if reviewIdsWithComments.count > 0 {
 					successOrAbort(Query.batching("PR Review Comments", fields: [
 						Review.commentsFragment,
@@ -523,9 +523,9 @@ extension Actions {
 
 			var itemIdsWithReactions = [pr.id]
 			if userWantsComments {
-				itemIdsWithReactions += pr.comments.flatMap { ($0.syncState == .none || !$0.syncNeedsReactions) ? nil : $0.id }
+				itemIdsWithReactions += pr.comments.compactMap { ($0.syncState == .none || !$0.syncNeedsReactions) ? nil : $0.id }
 				for review in pr.reviews {
-					itemIdsWithReactions.append(contentsOf: review.comments.flatMap({ ($0.syncState == .none || !$0.syncNeedsReactions) ? nil : $0.id }))
+					itemIdsWithReactions.append(contentsOf: review.comments.compactMap({ ($0.syncState == .none || !$0.syncNeedsReactions) ? nil : $0.id }))
 				}
 			}
 			successOrAbort(Query.batching("Reactions", fields: [
@@ -544,7 +544,7 @@ extension Actions {
 
 			var itemIdsWithReactions = [issue.id]
 			if userWantsComments {
-				itemIdsWithReactions += issue.comments.flatMap { ($0.syncState == .none || !$0.syncNeedsReactions) ? nil : $0.id }
+				itemIdsWithReactions += issue.comments.compactMap { ($0.syncState == .none || !$0.syncNeedsReactions) ? nil : $0.id }
 			}
 
 			successOrAbort(Query.batching("Reactions", fields: [

@@ -92,7 +92,7 @@ struct ItemFilterArgs {
 		}
 
 		if let ns = CommandLine.value(for: "-number") {
-			numbers = ns.split(separator: ",").flatMap { Int($0) }
+			numbers = ns.split(separator: ",").compactMap { Int($0) }
 		} else {
 			numbers = nil
 		}

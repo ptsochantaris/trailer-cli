@@ -125,7 +125,7 @@ struct Comment: Item, Announceable {
 
 		let react = reactions
 		if !react.isEmpty {
-			let reactionList = react.flatMap {
+			let reactionList: [String] = react.compactMap {
 				if let u = $0.user {
 					return "[\($0.emoji)  @\(u.login)]"
 				}
