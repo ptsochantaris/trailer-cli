@@ -11,13 +11,13 @@ import Foundation
 struct Config {
 	var server = URL(string: "https://api.github.com/graphql")!
 
-	var pageSize = 100
+	var pageSize = 50
 
 	var monochrome = false
 
 	let versionMajor = 1
 	let versionMinor = 0
-	let versionPatch = 5
+	let versionPatch = 6
 	var versionString: String {
 		return [versionMajor, versionMinor, versionPatch].map { String($0) }.joined(separator: ".")
 	}
