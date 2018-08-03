@@ -60,7 +60,7 @@ struct ReviewRequest: Item {
 	}
 
 	var reviewer: User? {
-		return children(field: "reviewer").first
+		return children(field: "requestedReviewer").first
 	}
 
 	var pullRequest: PullRequest? {
@@ -72,6 +72,6 @@ struct ReviewRequest: Item {
 
 	static let fragment = Fragment(name: "reviewRequestFields", on: "ReviewRequest", elements: [
 		Field(name: "id"),
-		Group(name: "reviewer", fields: [User.fragment]),
+		Group(name: "requestedReviewer", fields: [User.fragment]),
 		])
 }
