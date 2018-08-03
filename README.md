@@ -2,21 +2,18 @@
 
 A version of [Trailer](http://ptsochantaris.github.io/trailer/) that runs on the macOS & Linux command-line, can integrate into scripts, be used on remote servers, or simply used because consoles are cool. This version does not aim for feature parity with the mainstream Trailer project although it shares common ideas and concepts.
 
+Please refer to the "cookbook" section below for an introduction to various features.
+
 ![Screenshot](https://raw.github.com/ptsochantaris/trailer/gh-pages/trailer-cli-screenshot.jpeg?raw=true)
 
 ## What's different from GUI Trailer?
 - The GUI version's main objective is to give you a current view at a glance. This tool is better suited to fetching and displaying itemised lists of what's new, what's been commented, what's been reviewed, and so on, since the last sync. GUI Trailer is "glance at what's happening". CLI Trailer is "list what's changed since I last checked".
 - Trailer-CLI can display a full detail view of PRs and Issues, including full bodies of the item, as well as its reviews and comments, with their associated reactions, just like the list you get on a PR or Issue GitHub page. Ideal for archiving PRs or Issues.
 - It stores data in JSON files instead of a database. This way it can act like a sync-only engine for other projects that can read the simple JSON format from `~/.trailer` - and use the info in whatever way they like.
-- It can run on Linux as well as macOS (and hopefully under Windows when Swift 4.0 shows up there).
+- It can run on Linux as well as macOS (and hopefully under Windows when Swift 4.x work well there).
 - It can be used remotely via SSH, or in command-line scripts.
 - It uses the new GitHub GraphQL-based v4 API, making syncs very quick. Additionally it allows trimming down both the data that is synced (for instance, skipping comments or issues for a certain sync)
 - It's *way* geekier.
-
-## Work In Progress
-Trailer-CLI is good enough to use, but it is also new, code or features may be in flux, and you may encounter some bugs. Don't rely on it for anything mission-critical just yet.
-
-Please refer to the "cookbook" section below for an introduction to various features. There are no binaries for Linux (yet) but the project can be easily built from source (see right below).
 
 ## Installing
 
@@ -27,9 +24,7 @@ You can get a pre-built macOS build from the [Releases](../../releases) page and
 You can build the project from source using the simple `./install.sh` script. It requires Swift 4.0 or later to be installed.
 
 ### Linux Notes
-Swift does not _yet_ support making static stand-alone binaries in Linux, so there are no Linux builds in the Releases page. This will change soon. In the meantime you can build the project from  source.
-
-_Note: Linux builds created with the released Swift 4.0 seem to crash when trying to sync. Builds made using main trunk Swift 4.x distributions work fine._
+Swift does not _yet_ support making static stand-alone binaries in Linux, so there are no Linux builds in the Releases page. This will hopefully change soon. In the meantime you can build the project from  source.
 
 ## Quickstart
 Run Trailer without any arguments for some help. To get started:
@@ -49,7 +44,7 @@ trailer -token test
 trailer update all -v
 ```
 
-- Don't overdo it though, especially if you watch or are a member of many repos, as the API is quite strict on rate limits and may temporarily block you if you update too often.
+- Don't overdo it though, especially if you watch (or are a member of) many repos, as the API is quite strict on rate limits and may temporarily block you if you update too often.
 
 - If all goes well, you can then use the `trailer list` command or `trailer show` command to browse and view items.
 
