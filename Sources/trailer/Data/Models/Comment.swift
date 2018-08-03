@@ -180,6 +180,11 @@ struct Comment: Item, Announceable {
 			u.setSyncStatus(status, andChildren: true)
 			User.allItems[u.id] = u
 		}
+		for c in reactions {
+			var C = c
+			C.setSyncStatus(status, andChildren: true)
+			Reaction.allItems[c.id] = C
+		}
 	}
 	
 	static let commentFields: [Element] = [
