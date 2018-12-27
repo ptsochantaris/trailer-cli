@@ -15,7 +15,7 @@ struct ReviewRequest: Item {
 	var elementType: String
 
 	static var allItems = [String:ReviewRequest]()
-	static var idField = "id"
+	static let idField = "id"
 
 	private enum CodingKeys : CodingKey {
 		case id

@@ -29,7 +29,7 @@ struct Status: Item {
 	var elementType: String
 
 	static var allItems = [String:Status]()
-	static var idField = "id"
+	static let idField = "id"
 
 	var context = ""
 	var createdAt = Date.distantPast

@@ -15,7 +15,7 @@ struct Label: Item {
 	var elementType: String
 
 	static var allItems = [String:Label]()
-	static var idField = "name"
+	static let idField = "name"
 
 	var color: String = ""
 

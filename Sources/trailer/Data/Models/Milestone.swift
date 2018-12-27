@@ -16,7 +16,7 @@ struct Milestone: Item {
 	var elementType: String
 
 	static var allItems = [String:Milestone]()
-	static var idField = "id"
+	static let idField = "id"
 
 	var title = ""
 

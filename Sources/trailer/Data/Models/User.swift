@@ -19,7 +19,7 @@ struct User: Item {
 	var isMe = false
 
 	static var allItems = [String:User]()
-	static var idField = "id"
+	static let idField = "id"
 
 	private enum CodingKeys : CodingKey {
 		case id

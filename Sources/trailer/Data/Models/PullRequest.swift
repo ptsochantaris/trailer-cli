@@ -27,7 +27,7 @@ struct PullRequest: Item, Announceable, Closeable {
 	var elementType: String
 
 	static var allItems = [String:PullRequest]()
-	static var idField = "id"
+	static let idField = "id"
 
 	var mergeable = MergeableState.unknown
 	var bodyText = ""

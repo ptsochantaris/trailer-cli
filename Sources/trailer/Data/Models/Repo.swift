@@ -19,7 +19,7 @@ struct Repo: Item, Announceable {
 	var elementType: String
 
 	static var allItems = [String:Repo]()
-	static var idField = "id"
+	static let idField = "id"
 
 	var createdAt = Date.distantPast
 	var updatedAt = Date.distantPast

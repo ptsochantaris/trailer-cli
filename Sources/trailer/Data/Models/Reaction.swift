@@ -15,7 +15,7 @@ struct Reaction: Item {
 	var elementType: String
 
 	var content: String = ""
-	static var idField = "id"
+	static let idField = "id"
 
 	static var allItems = [String:Reaction]()
 

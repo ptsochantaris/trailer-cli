@@ -15,7 +15,7 @@ struct Comment: Item, Announceable {
 	var elementType: String
 
 	static var allItems = [String:Comment]()
-	static var idField = "id"
+	static let idField = "id"
 
 	var syncNeedsReactions = false
 

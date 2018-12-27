@@ -15,7 +15,7 @@ struct Issue: Item, Announceable, Closeable {
 	var elementType: String
 
 	static var allItems = [String:Issue]()
-	static var idField = "id"
+	static let idField = "id"
 
 	var bodyText = ""
 	var createdAt = Date.distantPast
