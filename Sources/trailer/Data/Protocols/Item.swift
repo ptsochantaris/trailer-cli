@@ -171,7 +171,7 @@ extension Item {
 		let relationship = Relationship(to: parent)
 		let storedField = "\(parent.item.typeName):\(parent.field)"
 		if var existingRelationships = parents[storedField] {
-			if let indexOfExisting = existingRelationships.index(where: { $0 == relationship }) {
+			if let indexOfExisting = existingRelationships.firstIndex(where: { $0 == relationship }) {
 				existingRelationships[indexOfExisting] = relationship
 				parents[storedField] = existingRelationships
 				if !quiet { log(level: .debug, indent: level, "Already linked to this parent in relationship '\(parent.field)'") }

@@ -4,11 +4,7 @@ echo "*** Cleaning"
 swift package reset
 
 echo "*** Building"
-if [ `uname -s` = "Linux" ] ; then
-	swift build -c release -Xswiftc -Ounchecked -Xswiftc -whole-module-optimization
-else
-	swift build -c release -Xswiftc -static-stdlib -Xswiftc -Ounchecked -Xswiftc -whole-module-optimization
-fi
+swift build -c release -Xswiftc -Ounchecked -Xswiftc -whole-module-optimization -Xswiftc -enforce-exclusivity=unchecked
 
 if [ $? -eq 0 ]; then
 	SRC="$(swift build -c release --show-bin-path)/trailer"

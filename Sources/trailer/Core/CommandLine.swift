@@ -12,7 +12,7 @@ private let _args = CommandLine.arguments.map { $0.lowercased() }
 extension CommandLine {
 
 	static func value(for argument: String) -> String? {
-		guard let index = _args.index(of: argument) else { return nil }
+		guard let index = _args.firstIndex(of: argument) else { return nil }
 
 		let valueIndex = index + 1
 		if _args.count > valueIndex {
@@ -30,14 +30,14 @@ extension CommandLine {
 	}
 
 	static func argument(matching argument: String) -> String? {
-		if let index = _args.index(of: argument) {
+		if let index = _args.firstIndex(of: argument) {
 			return _args[index]
 		}
 		return nil
 	}
 
 	static func sequence(starting: String) -> [String]? {
-		guard let index = _args.index(of: starting) else { return nil }
+		guard let index = _args.firstIndex(of: starting) else { return nil }
 
 		var valueIndex = index + 1
 		var value = [starting]
