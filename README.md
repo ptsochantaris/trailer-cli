@@ -21,10 +21,10 @@ Please refer to the "cookbook" section below for an introduction to various feat
 You can get a pre-built macOS build from the [Releases](../../releases) page and put it into `/usr/local/bin`.
 
 ### Source
-You can build the project from source using the simple `./install.sh` script. It requires Swift 4.0 or later to be installed.
+You can build the project from source using the simple `./install.sh` script. It requires Swift 5.0 or later to be installed.
 
 ### Linux Notes
-Swift does not _yet_ support making static stand-alone binaries in Linux, so there are no Linux builds in the Releases page. This will hopefully change soon. In the meantime you can build the project from  source.
+It's very hard to maintain builds for various distros, as Swift currently can't produce static binaries, although it's quite simple to install the latest Swift version and run `./install.sh` to create the binary in your favourite distro.
 
 ## Quickstart
 Run Trailer without any arguments for some help. To get started:
@@ -66,7 +66,9 @@ trailer update all
 ```
 Update the local data from the server. `-v` will give more info, or `-debug` will provide *very* verbose debug output on the GraphQL queries performed.
 
-### Listing and filtering
+### Listing, sorting, and filtering
+
+The info below shows simple examples demonstrating each specific function by itself. However please do note that any of the functions can be combined together to perform far more complicated operations if needed.
 
 #### Repositories
 ```
@@ -80,13 +82,23 @@ trailer list items -r swift -a bob
 ```
 List all items in repositories (`-r`) containing the letters "swift" and (`-a`) authored by users whose handle contains the letters "bob".
 
-You can specify which fields to display on an item list by using the `-fields` parameter. It can take as many or as few fields as you'd like to specify. The example below includes all of them:
+#### Sorting
+You can sort results of items by using the `-sort` parameter:
+```
+trailer list items -r swift -a bob -sort author,updated
+```
+Results get sorted by the first field, and if they are the same, they are then sorted by the second one. If that is the same too, then they are sorted by the third, and so on. In the example above items are sorted by their author, and for each author they are sorted by the last time they were updated.
+
+The sorting fields can be: `type` (PR or Issue), `number`, `title`, `repo`, `branch`, `author`, `created`, and `updated`, but there should be no spaces between the fields if multiple fields are specified.
+
+#### Display fields
+Visually, you can specify which fields to display on an item list by using the `-fields` parameter. It can take as many or as few fields as you'd like to specify. The example below includes all of them:
 
 ```
 trailer list items -fields type,number,title,repo,branch,author,created,updated,url,labels
 ```
 
-There should be no spaces between the fields specified in this parameter.
+Just like `-sort`, there should be no spaces between the fields specified in this parameter either.
 
 #### Relevance
 ```
