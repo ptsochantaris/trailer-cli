@@ -20,7 +20,18 @@ enum MergeableState: String, Codable {
 	}
 }
 
-struct PullRequest: Item, Announceable, Closeable {
+protocol Sortable {
+	var title: String { get }
+	var createdAt: Date { get }
+	var updatedAt: Date { get }
+	var headRefName: String { get }
+	var number: Int { get }
+	var repo: Repo? { get }
+	var author: User? { get }
+	var type: Int { get }
+}
+
+struct PullRequest: Item, Announceable, Closeable, Sortable {
 	var id: String
 	var parents: [String: [Relationship]]
 	var syncState: SyncState
@@ -124,6 +135,10 @@ struct PullRequest: Item, Announceable, Closeable {
 		if !apply(node) {
 			return nil
 		}
+	}
+
+	var type: Int {
+		return 0
 	}
 
     var shouldAnnounceClosure: Bool {

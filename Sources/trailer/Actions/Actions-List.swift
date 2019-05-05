@@ -20,9 +20,12 @@ extension Actions {
 		printOption(name: "items", description: "List open PRs and Issues")
 		printOption(name: "labels", description: "List labels currently in use")
 		printOption(name: "milestones", description: "List milestones currently set")
+
 		log()
-		printOptionHeader("For lists of PRs or Issues you can specify a custom set of fields")
-		printOption(name: "-fields", description: "Comma-separated list: type,number,title,repo,branch,author,created,updated,url,labels")
+		printOptionHeader("For lists of PRs or Issues you can display specific fields, and/or sort by them")
+		printOption(name: "-fields", description: "Comma-separated list: type, number, title, repo, branch, author, created, updated, url, labels")
+		printOption(name: "-sort", description: "Comma-separated list: type, number, title, repo, branch, author, created, updated")
+
 		log()
 		printFilterOptions()
 	}
@@ -88,7 +91,7 @@ extension Actions {
 		let milestoneTitles = pullRequestsToScan().compactMap { $0.milestone?.title }
 			+ issuesToScan().compactMap { $0.milestone?.title }
 
-		for l in milestoneTitles {
+		for l in milestoneTitles.sorted() {
 			log("[![*> *]\(l)!]")
 		}
 	}
@@ -100,20 +103,23 @@ extension Actions {
 	}
 
 	static private func listPrs() {
-		for i in pullRequestsToScan() {
+		for i in pullRequestsToScan().sortedByCriteria {
 			i.printSummaryLine()
 		}
 	}
 
 	static private func listIssues() {
-		for i in issuesToScan() {
+		for i in issuesToScan().sortedByCriteria {
 			i.printSummaryLine()
 		}
 	}
 
 	static private func listItems() {
-		listPrs()
-		listIssues()
+		let p = pullRequestsToScan().map { ListableItem.pullRequest($0) }
+		let i = issuesToScan().map { ListableItem.issue($0) }
+		for item in (p + i).sortedByCriteria {
+			item.printSummaryLine()
+		}
 	}
 
 	static private func listOrgRepos(_ o: Org?, hideEmpty: Bool, onlyEmpty: Bool) {

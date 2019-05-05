@@ -25,7 +25,7 @@ struct Actions {
 		let invalidArguments = CommandLine.arguments.filter({ $0.hasPrefix("-") }).map { $0.lowercased() }.filter { arg in
             switch arg {
             case "-v", "-debug", "-server", "-token", "-r", "-o", "-t", "-a", "-l", "-h", "-b", "-c", "-comments", "-refresh", "-body", "-page-size",
-                 "-mine", "-participated", "-mentioned", "-mergeable", "-conflict", "-red", "-green", "-e", "-before", "-within", "-n", "-purge", "-from",
+                 "-mine", "-participated", "-mentioned", "-mergeable", "-conflict", "-red", "-green", "-e", "-before", "-within", "-n", "-purge", "-from", "-sort",
                  "-mono", "-version", "-fresh", "-m", "-number", "-blocked", "-approved", "-unreviewed", "-active", "-inactive", "-set-default", "-fields":
                 return false
             default:
@@ -172,7 +172,7 @@ struct Actions {
 			} else {
 				log("Multiple repositories with an item [*#\(number)*]. Use -r to select a repository. Did you mean...")
 			}
-			for i in items {
+			for i in items.sortedByCriteria {
 				switch i {
 				case .pullRequest(let i):
 					i.printSummaryLine()
@@ -205,7 +205,7 @@ struct Actions {
 		printOption(name :"-before <days>", description: "Items updated before <days>")
 		printOption(name :"-within <days>", description: "Items updated within <days>")
 		printOption(name :"-number <num>", description: "Items with this number (Can also be a comma-separated list)")
-		printOption(name :"-t <text>", description: "Filter for a specific title")
+		printOption(name :"-t <text>", description: "Items containing 'text' in their title")
 		printOption(name :"-b <text>", description: "Items containing 'text' in their body")
 		printOption(name :"-c <text>", description: "Items containing 'text' in commens/reviews")
 		printOption(name :"-a <author>", description: "Items by a specific author")

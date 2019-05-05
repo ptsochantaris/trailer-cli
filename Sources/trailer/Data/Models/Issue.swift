@@ -8,7 +8,7 @@
 
 import Foundation
 
-struct Issue: Item, Announceable, Closeable {
+struct Issue: Item, Announceable, Closeable, Sortable {
 	var id: String
 	var parents: [String: [Relationship]]
 	var syncState: SyncState
@@ -96,6 +96,14 @@ struct Issue: Item, Announceable, Closeable {
 		if !apply(node) {
 			return nil
 		}
+	}
+
+	var type: Int {
+		return 1
+	}
+
+	var headRefName: String {
+		return ""
 	}
 
     var shouldAnnounceClosure: Bool {

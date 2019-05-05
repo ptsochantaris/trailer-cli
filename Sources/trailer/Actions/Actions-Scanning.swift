@@ -156,6 +156,7 @@ extension Actions {
 		}
 
 		let a = ItemFilterArgs()
+		
 		if !a.filteringApplied && number == nil {
 			return allItems
 		}
@@ -252,8 +253,7 @@ extension Actions {
 			}
 
 			return true
-
-		}.sorted { $0.number < $1.number }
+		}
 	}
 
 	static func issuesToScan(number: Int? = nil) -> [Issue] {
@@ -329,7 +329,6 @@ extension Actions {
 			}
 
 			return true
-
-		}.sorted { $0.number < $1.number }
+		}
 	}
 }
