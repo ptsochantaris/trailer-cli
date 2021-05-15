@@ -107,8 +107,7 @@ struct Actions {
         #if os(Windows)
             var csbi: CONSOLE_SCREEN_BUFFER_INFO = CONSOLE_SCREEN_BUFFER_INFO()
             if !GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi) {
-                // GetLastError()
-                return nil
+                return 80
             }
             return Int(csbi.srWindow.Right - csbi.srWindow.Left) + 1
         #else
