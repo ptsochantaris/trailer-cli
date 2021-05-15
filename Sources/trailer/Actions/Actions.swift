@@ -100,9 +100,14 @@ struct Actions {
 	}
 
 	static var terminalWidth: Int = {
-		var w = winsize()
-		_ = ioctl(STDOUT_FILENO, UInt(TIOCGWINSZ), &w)
-		return w.ws_col == 0 ? 80 : Int(w.ws_col)
+        #if os(Windows)
+        // TODO
+            return 80
+        #else
+            var w = winsize()
+            _ = ioctl(STDOUT_FILENO, UInt(TIOCGWINSZ), &w)
+            return w.ws_col == 0 ? 80 : Int(w.ws_col)
+        #endif
 	}()
 
 	static func printOptionHeader(_ text: String) {
