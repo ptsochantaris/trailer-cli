@@ -232,7 +232,7 @@ extension Actions {
 		if (userWantsPrs || userWantsIssues) && !filtersRequested { // detect new items
 
 			let itemIdParser = { (node: [AnyHashable : Any]) in
-
+                
 				guard let repoId = node["id"] as? String else {
 					return
 				}
@@ -256,47 +256,23 @@ extension Actions {
 						break
 					}
 				}
-
-				if syncPrs, let section = node["pullRequests"] as? [AnyHashable : Any] {
-
-					if let itemList = section["edges"] as? [[AnyHashable : Any]] {
-						for p in itemList {
-							let node = p["node"] as! [AnyHashable : Any]
-							if let id = node["id"] as? String {
-								prIdList[id] = repoId
-								log(level: .debug, indent: 1, "Registered PR ID: \(id)")
-							}
-						}
-
-					} else if let itemList = section["nodes"] as? [[AnyHashable : Any]] {
-						for p in itemList {
-							if let id = p["id"] as? String {
-								prIdList[id] = repoId
-								log(level: .debug, indent: 1, "Registered PR ID: \(id)")
-							}
-						}
-					}
+                
+				if syncPrs, let section = node["pullRequests"] as? [AnyHashable : Any], let itemList = section["edges"] as? [[AnyHashable : Any]] {
+                    for p in itemList {
+                        if let node = p["node"] as? [AnyHashable : Any], let id = node["id"] as? String {
+                            prIdList[id] = repoId
+                            log(level: .debug, indent: 1, "Registered PR ID: \(id)")
+                        }
+                    }
 				}
 
-				if syncIssues, let section = node["issues"] as? [AnyHashable : Any] {
-
-					if let itemList = section["edges"] as? [[AnyHashable : Any]] {
-						for p in itemList {
-							let node = p["node"] as! [AnyHashable : Any]
-							if let id = node["id"] as? String {
-								issueIdList[id] = repoId
-								log(level: .debug, indent: 1, "Registered Issue ID: \(id)")
-							}
-						}
-
-					} else if let itemList = section["nodes"] as? [[AnyHashable : Any]] {
-						for p in itemList {
-							if let id = p["id"] as? String {
-								issueIdList[id] = repoId
-								log(level: .debug, indent: 1, "Registered Issue ID: \(id)")
-							}
-						}
-					}
+				if syncIssues, let section = node["issues"] as? [AnyHashable : Any], let itemList = section["edges"] as? [[AnyHashable : Any]] {
+                    for p in itemList {
+                        if let node = p["node"] as? [AnyHashable : Any], let id = node["id"] as? String {
+                            issueIdList[id] = repoId
+                            log(level: .debug, indent: 1, "Registered Issue ID: \(id)")
+                        }
+                    }
 				}
 			}
 

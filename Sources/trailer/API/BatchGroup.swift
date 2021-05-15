@@ -56,7 +56,7 @@ struct BatchGroup: Ingesting {
 
 	func ingest(query: Query, pageData: Any, parent: Parent?, level: Int) -> [Query] {
 		log(level: .debug, indent: level, "Ingesting batch group \(name)")
-		guard let nodes = pageData as? [[AnyHashable : Any]] else { return [] }
+		guard let nodes = pageData as? [Any] else { return [] }
 
 		var extraQueries = [Query]()
 
@@ -68,7 +68,7 @@ struct BatchGroup: Ingesting {
 		}
 
 		for n in nodes {
-			if let id = n["id"] as? String, let group = idsToGroups[id] {
+            if let n = n as? [AnyHashable: Any], let id = n["id"] as? String, let group = idsToGroups[id] {
 				let newQueries = group.ingest(query: query, pageData: n, parent: parent, level: level+1)
 				extraQueries.append(contentsOf: newQueries)
 				perNodeBlock?(n)
