@@ -12,6 +12,23 @@ private func go() {
 
 	config.monochrome = CommandLine.argument(exists: "-mono")
 
+    #if os(Windows)
+    if !config.monochrome {
+        // Enable VT100 interpretation
+        let hOut = GetStdHandle(STD_OUTPUT_HANDLE)
+        var dwMode: DWORD = 0
+        
+        guard hOut != INVALID_HANDLE_VALUE,
+              GetConsoleMode(hOut, &dwMode)
+        else { Actions.reportAndExit(message: "Colour mode not supported in this OS, use -mono") }
+        
+        dwMode |= DWORD(ENABLE_VIRTUAL_TERMINAL_PROCESSING)
+        guard SetConsoleMode(hOut, dwMode) else {
+            Actions.reportAndExit(message: "Colour mode not supported in this OS, use -mono")
+        }
+    }
+    #endif
+    
 	if CommandLine.argument(exists: "-version") {
 		log("[!Version [*\(config.versionString)*]!]")
 		Actions.checkForUpdatesSynchronously(reportError: true, alwaysCheck: true)

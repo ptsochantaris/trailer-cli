@@ -101,8 +101,12 @@ struct Actions {
 
 	static var terminalWidth: Int = {
         #if os(Windows)
-        // TODO
-            return 80
+            var csbi: CONSOLE_SCREEN_BUFFER_INFO = CONSOLE_SCREEN_BUFFER_INFO()
+            if !GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi) {
+                // GetLastError()
+                return nil
+            }
+            return Int(csbi.srWindow.Right - csbi.srWindow.Left) + 1
         #else
             var w = winsize()
             _ = ioctl(STDOUT_FILENO, UInt(TIOCGWINSZ), &w)
