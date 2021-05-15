@@ -93,7 +93,9 @@ struct Config {
 			return ""
 		}
 		set {
-			try! newValue.data(using: .utf8)?.write(to: saveLocation.appendingPathComponent("token"))
+			let tokenFileURL = saveLocation.appendingPathComponent("token")
+			try! newValue.data(using: .utf8)?.write(to: tokenFileURL)
+			try! FileManager.default.setAttributes([.posixPermissions: NSNumber(0o600)], ofItemAtPath: tokenFileURL.path)
 		}
 	}
 
