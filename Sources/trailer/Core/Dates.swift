@@ -21,7 +21,7 @@ struct GHDateFormatter {
 		let t = mktime(&timeData)
 		return Date(timeIntervalSince1970: TimeInterval(t))
 	}
-	#elseif os(Linux)
+	#elseif os(Linux) || os(Windows)
 	private static let formatter: DateFormatter = {
 	let d = DateFormatter()
 	d.timeZone = TimeZone(secondsFromGMT: 0)
@@ -62,7 +62,7 @@ struct GHDateFormatter {
 			return "\(prefix)\(duration) ago"
 		}
 	}
-#elseif os(Linux)
+#elseif os(Linux) || os(Windows)
 	private let agoFormatter: DateFormatter = {
 		let f = DateFormatter()
 		f.timeStyle = .full
