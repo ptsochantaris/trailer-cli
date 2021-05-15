@@ -296,4 +296,4 @@ trailer -s local.server.my.net list items
 The `-s` command switches the context of trailer to another server. For instance, a local GitHub Enterprise server. All commands work identically, but will apply to this context. You can have as many parallel `-s` contexts as you like.
 
 ---
-*Copyright (c) 2017-2019 Paul Tsochantaris. Released under the terms of the MIT licence, see the file LICENCE for details.*
+*Copyright (c) 2017-2020 Paul Tsochantaris. Released under the terms of the MIT licence, see the file LICENCE for details.*
