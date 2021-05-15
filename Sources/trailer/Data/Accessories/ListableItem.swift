@@ -112,8 +112,13 @@ enum ListableItem: Equatable, Sortable {
         }
         log("Opening url: [*\(url)*]")
         let p = Process()
-        p.launchPath = "/usr/bin/open"
         p.arguments = [url.absoluteString]
-        p.launch()
+        #if os(OSX)
+            p.launchPath = "/usr/bin/open"
+            p.launch()
+        #else
+            p.executableURL = URL(fileURLWithPath: "/usr/bin/open")
+            try? p.run()
+        #endif
     }
 }

@@ -7,11 +7,38 @@
 //
 
 import Foundation
+#if os(Windows)
+import WinSDK
+#endif
+
+private func setupConsole() {
+    config.monochrome = CommandLine.argument(exists: "-mono")
+
+    #if os(Windows)
+    if !config.monochrome {
+        let hOut = GetStdHandle(STD_OUTPUT_HANDLE)
+        var dwMode: DWORD = 0
+        
+        guard hOut != INVALID_HANDLE_VALUE,
+              GetConsoleMode(hOut, &dwMode)
+        else {
+            config.monochrome = true
+            return
+        }
+        
+        dwMode |= DWORD(ENABLE_VIRTUAL_TERMINAL_PROCESSING)
+        guard SetConsoleMode(hOut, dwMode) else {
+            config.monochrome = true
+            return
+        }
+    }
+    #endif
+}
 
 private func go() {
 
-	config.monochrome = CommandLine.argument(exists: "-mono")
-
+    setupConsole()
+    
 	if CommandLine.argument(exists: "-version") {
 		log("[!Version [*\(config.versionString)*]!]")
 		Actions.checkForUpdatesSynchronously(reportError: true, alwaysCheck: true)
@@ -106,19 +133,23 @@ private func go() {
 
 // With thanks to: https://stackoverflow.com/questions/2275550/change-stack-size-for-a-c-application-in-linux-during-compilation-with-gnu-com#2284691
 private func extendStackSizeIfNeeded() {
-	let kStackSize: rlim_t = 32 * 1024 * 1024
-	var rl = rlimit()
-	#if os(Linux)
-		let s: Int32 = Int32(RLIMIT_STACK.rawValue)
-	#else
-		let s = RLIMIT_STACK
-	#endif
-	if getrlimit(s, &rl) == 0 {
-		if rl.rlim_cur < kStackSize {
-			rl.rlim_cur = kStackSize
-			setrlimit(s, &rl)
-		}
-	}
+    #if os(Windows)
+        // is done with editbin /stack:24117248
+    #else
+        let kStackSize: rlim_t = 32 * 1024 * 1024
+        var rl = rlimit()
+        #if os(Linux)
+            let s: Int32 = Int32(RLIMIT_STACK.rawValue)
+        #else
+            let s = RLIMIT_STACK
+        #endif
+        if getrlimit(s, &rl) == 0 {
+            if rl.rlim_cur < kStackSize {
+                rl.rlim_cur = kStackSize
+                setrlimit(s, &rl)
+            }
+        }
+    #endif
 }
 
 go()

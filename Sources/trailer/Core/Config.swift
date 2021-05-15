@@ -63,6 +63,8 @@ struct Config {
 			let OS = "macOS"
 		#elseif os(Linux)
 			let OS = "Linux"
+        #elseif os(Windows)
+            let OS = "Linux"
 		#endif
 
 		return [

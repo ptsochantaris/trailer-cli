@@ -7,6 +7,9 @@
 //
 
 import Foundation
+#if os(Windows)
+import WinSDK
+#endif
 
 enum Action: String {
 	case update
@@ -100,9 +103,17 @@ struct Actions {
 	}
 
 	static var terminalWidth: Int = {
-		var w = winsize()
-		_ = ioctl(STDOUT_FILENO, UInt(TIOCGWINSZ), &w)
-		return w.ws_col == 0 ? 80 : Int(w.ws_col)
+        #if os(Windows)
+            var csbi: CONSOLE_SCREEN_BUFFER_INFO = CONSOLE_SCREEN_BUFFER_INFO()
+            if !GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi) {
+                return 80
+            }
+            return Int(csbi.srWindow.Right - csbi.srWindow.Left) + 1
+        #else
+            var w = winsize()
+            _ = ioctl(STDOUT_FILENO, UInt(TIOCGWINSZ), &w)
+            return w.ws_col == 0 ? 80 : Int(w.ws_col)
+        #endif
 	}()
 
 	static func printOptionHeader(_ text: String) {
