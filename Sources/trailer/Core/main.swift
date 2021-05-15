@@ -21,11 +21,15 @@ private func setupConsole() {
         
         guard hOut != INVALID_HANDLE_VALUE,
               GetConsoleMode(hOut, &dwMode)
-        else { config.monochrome = true; return }
+        else {
+            config.monochrome = true
+            return
+        }
         
         dwMode |= DWORD(ENABLE_VIRTUAL_TERMINAL_PROCESSING)
         guard SetConsoleMode(hOut, dwMode) else {
             config.monochrome = true
+            return
         }
     }
     #endif
