@@ -225,7 +225,7 @@ struct Repo: Item, Announceable {
             p.launch()
         #else
             p.executableURL = URL(fileURLWithPath: "/usr/bin/open")
-            p.run()
+            try? p.run()
         #endif
 	}
 }
