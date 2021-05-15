@@ -7,6 +7,10 @@
 //
 
 import Foundation
+#if os(Windows)
+import WinSDK
+import CRT
+#endif
 
 private func go() {
 
