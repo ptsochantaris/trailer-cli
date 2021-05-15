@@ -219,13 +219,14 @@ struct Repo: Item, Announceable {
 	func openURL() {
 		log("Opening url: [*\(url)*]")
 		let p = Process()
+        p.arguments = [url.absoluteString]
         #if os(OSX)
             p.launchPath = "/usr/bin/open"
+            p.launch()
         #else
             p.executableURL = URL(fileURLWithPath: "/usr/bin/open")
+            p.run()
         #endif
-		p.arguments = [url.absoluteString]
-		p.launch()
 	}
 }
 
