@@ -101,7 +101,7 @@ struct Actions {
 
 	static var terminalWidth: Int = {
 		var w = winsize()
-		_ = ioctl(STDOUT_FILENO, UInt(TIOCGWINSZ), UnsafeMutableRawPointer(&w))
+		_ = ioctl(STDOUT_FILENO, UInt(TIOCGWINSZ), &w)
 		return w.ws_col == 0 ? 80 : Int(w.ws_col)
 	}()
 
