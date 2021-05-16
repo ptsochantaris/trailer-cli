@@ -237,7 +237,7 @@ struct Issue: Item, Announceable, Closeable, Sortable {
 		log()
 
 		let react = reactions
-		if !react.isEmpty {
+		if react.hasItems {
 			log("[!Reactions!]")
 			for r in react {
 				if let u = r.user {
@@ -258,7 +258,7 @@ struct Issue: Item, Announceable, Closeable, Sortable {
 
 		if CommandLine.argument(exists: "-comments") {
 			let co = comments.sorted(by: { $0.createdAt < $1.createdAt })
-			if !co.isEmpty {
+			if co.hasItems {
 				for c in co {
 					c.printDetails()
 				}

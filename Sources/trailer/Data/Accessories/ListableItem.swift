@@ -102,23 +102,12 @@ enum ListableItem: Equatable, Sortable {
         }
     }
 
-    func openURL() {
-        let url: URL
+    func openUrl() {
         switch self {
         case .pullRequest(let i):
-            url = i.url
+            open(url: i.url)
         case .issue(let i):
-            url = i.url
+            open(url: i.url)
         }
-        log("Opening url: [*\(url)*]")
-        let p = Process()
-        p.arguments = [url.absoluteString]
-        #if os(OSX)
-            p.launchPath = "/usr/bin/open"
-            p.launch()
-        #else
-            p.executableURL = URL(fileURLWithPath: "/usr/bin/open")
-            try? p.run()
-        #endif
     }
 }

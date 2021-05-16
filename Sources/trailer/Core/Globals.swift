@@ -34,3 +34,22 @@ func log(level: LogLevel = .info, indent: Int = 0, _ message: @autoclosure ()->S
         }
     }
 }
+
+func open(url: URL) {
+    log("Opening url: [*\(url)*]")
+    let p = Process()
+    p.arguments = [url.absoluteString]
+    #if os(OSX)
+        p.launchPath = "/usr/bin/open"
+        p.launch()
+    #else
+        p.executableURL = URL(fileURLWithPath: "/usr/bin/open")
+        try? p.run()
+    #endif
+}
+
+extension Collection {
+    var hasItems: Bool {
+        return !self.isEmpty
+    }
+}

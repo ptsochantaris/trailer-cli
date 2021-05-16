@@ -48,7 +48,7 @@ struct Group: Ingesting {
 			}
 		}
 		
-		if !brackets.isEmpty {
+		if brackets.hasItems {
 			query += "(" + brackets.joined(separator: ", ") + ")"
 		}
 		
@@ -133,7 +133,7 @@ struct Group: Ingesting {
 			}
 		}
 		
-		if !extraQueries.isEmpty {
+		if extraQueries.hasItems {
 			log(level: .debug, indent: level, "\(name) will need further paging")
 		}
 		return extraQueries

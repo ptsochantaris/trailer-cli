@@ -62,7 +62,7 @@ struct BatchGroup: Ingesting {
 
 		let page = pageOfIds
 		let newIds = idsToGroups.keys.filter { !page.contains($0) }
-		if !newIds.isEmpty {
+        if newIds.hasItems {
 			let nextPage = Query(name: query.name, rootElement: BatchGroup(templateGroup: originalTemplate, idList: newIds, startingCount: nextCount, perNodeBlock: perNodeBlock), parent: parent, subQuery: true)
 			extraQueries.append(nextPage)
 		}
@@ -75,7 +75,7 @@ struct BatchGroup: Ingesting {
 			}
 		}
 
-		if !extraQueries.isEmpty {
+		if extraQueries.hasItems {
 			log(level: .debug, indent: level, "\(name) will need further paging")
 		}
 		return extraQueries

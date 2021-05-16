@@ -215,18 +215,5 @@ struct Repo: Item, Announceable {
 		Field(name: "id"),
 		Group(name: "issues", fields: [Field(name: "id")], extraParams: ["states": "OPEN"], usePaging: true),
 		])
-
-	func openURL() {
-		log("Opening url: [*\(url)*]")
-		let p = Process()
-        p.arguments = [url.absoluteString]
-        #if os(OSX)
-            p.launchPath = "/usr/bin/open"
-            p.launch()
-        #else
-            p.executableURL = URL(fileURLWithPath: "/usr/bin/open")
-            try? p.run()
-        #endif
-	}
 }
 

@@ -59,7 +59,7 @@ struct Query {
 	static func batching(_ name: String, fields: [Element], idList: [String], perNodeBlock: BatchGroup.NodeBlock? = nil) -> [Query] {
 		var list = idList
 		var segments = [[String]]()
-		while !list.isEmpty {
+		while list.hasItems {
 			let p = min(config.pageSize, list.count)
 			segments.append(Array(list[0..<p]))
 			list = Array(list[p...])

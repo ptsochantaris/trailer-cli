@@ -239,14 +239,14 @@ struct PullRequest: Item, Announceable, Closeable, Sortable {
 		let x = components.popLast()! + "!]"
 		components.append(x)
 
-		if listFieldsDefinition.labels, !labels.isEmpty {
+		if listFieldsDefinition.labels, labels.hasItems {
 			let l = labels.map { $0.id }.joined(separator: "] [")
 			components.append("[\(l)]")
 		}
 		if listFieldsDefinition.repo, let r = repo {
 			components.append("(\(r.nameWithOwner))")
 		}
-		if listFieldsDefinition.branch, !headRefName.isEmpty {
+		if listFieldsDefinition.branch, headRefName.hasItems {
 			components.append("(\(headRefName))")
 		}
 		if listFieldsDefinition.author, let a = author {
@@ -327,7 +327,7 @@ struct PullRequest: Item, Announceable, Closeable, Sortable {
 		if let r = repo {
 			log("           [$Repo!] \(r.nameWithOwner)")
 		}
-		if !headRefName.isEmpty {
+		if headRefName.hasItems {
 			log("         [$Branch!] \(headRefName)")
 		}
 		log("            [$URL!] \(url.absoluteString)")
@@ -366,7 +366,7 @@ struct PullRequest: Item, Announceable, Closeable, Sortable {
 		log()
 
 		let react = reactions
-		if !react.isEmpty {
+		if react.hasItems {
 			log("[!Reactions!]")
 			for r in react {
 				if let u = r.user {
@@ -377,7 +377,7 @@ struct PullRequest: Item, Announceable, Closeable, Sortable {
 		}
 
 		let st = latestStatuses
-		if !st.isEmpty {
+		if st.hasItems {
             log("[!Statuses")
 			for s in st {
 				let char: String
@@ -395,11 +395,11 @@ struct PullRequest: Item, Announceable, Closeable, Sortable {
 		}
 
 		let latest = latestReviews
-		if !latest.isEmpty {
+		if latest.hasItems {
 			let approvingReviewers = latest.filter { $0.state == .approved }.compactMap { $0.author?.login }.map { "@"+$0 }
 			let blockingReviewers = latest.filter { $0.state == .changes_requested }.compactMap { $0.author?.login }.map { "@"+$0 }
 			let pendingReviewers = reviewRequests.compactMap { $0.reviewer?.login }.map { "@"+$0 }.filter { !(approvingReviewers.contains($0) || blockingReviewers.contains($0)) }
-			if !approvingReviewers.isEmpty || !blockingReviewers.isEmpty || !pendingReviewers.isEmpty {
+			if approvingReviewers.hasItems || blockingReviewers.hasItems || pendingReviewers.hasItems {
 				log("[!Reviews")
 				if approvingReviewers.count > 0 {
 					log("[G*[+] " + approvingReviewers.joined(separator: ", ") + " approved changes")
@@ -433,7 +433,7 @@ struct PullRequest: Item, Announceable, Closeable, Sortable {
 
 		if CommandLine.argument(exists: "-comments") {
 			let co = commentItems.sorted(by: { $0.createdAt < $1.createdAt })
-			if !co.isEmpty {
+			if co.hasItems {
 				for c in co {
 					c.printDetails()
 				}

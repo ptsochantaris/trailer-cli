@@ -114,7 +114,7 @@ struct Review: Item, Announceable {
 				d = "[\(r)] @\(a) reviewed [G*(approving)*]"
 			case .changes_requested:
 				d = "[\(r)] @\(a) reviewed [R*(requesting changes)*]"
-			case .commented where !body.isEmpty:
+			case .commented where body.hasItems:
 				d = "[\(r)] @\(a) reviewed"
 			default:
 				return
@@ -138,7 +138,7 @@ struct Review: Item, Announceable {
 
 	func printDetails() {
 		printHeader()
-		if !body.isEmpty {
+		if body.hasItems {
             log(body.trimmingCharacters(in: .whitespacesAndNewlines), unformatted: true)
 			log()
 		}

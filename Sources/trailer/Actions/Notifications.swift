@@ -24,14 +24,14 @@ struct Notifications {
         }()
 
         func go() {
-            if let title = title, !title.isEmpty {
+            if let title = title, title.hasItems {
                 let d = Notification.formatter.string(from: relatedDate)
                 log("[!\(d) \(title)!]")
             }
-            if let subtitle = subtitle, !subtitle.isEmpty {
+            if let subtitle = subtitle, subtitle.hasItems {
                 log("[*\(subtitle)*]")
             }
-            if let details = details, !details.isEmpty {
+            if let details = details, details.hasItems {
                 log(details)
             }
             log()

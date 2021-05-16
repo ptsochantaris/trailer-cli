@@ -25,7 +25,7 @@ struct Actions {
 
     private static func checkArguments() -> [String]? {
         // Very rough sanity check to catch typos, should be more fine-grained per action
-		let invalidArguments = CommandLine.arguments.filter({ $0.hasPrefix("-") }).map { $0.lowercased() }.filter { arg in
+		let invalidArguments = CommandLine.arguments.filter { $0.hasPrefix("-") }.map { $0.lowercased() }.filter { arg in
             switch arg {
             case "-v", "-debug", "-server", "-token", "-r", "-o", "-t", "-a", "-l", "-h", "-b", "-c", "-comments", "-refresh", "-body", "-page-size",
                  "-mine", "-participated", "-mentioned", "-mergeable", "-conflict", "-red", "-green", "-e", "-before", "-within", "-n", "-purge", "-from", "-sort",
@@ -126,7 +126,7 @@ struct Actions {
 			}
 			line += (word + " ")
 		}
-		if !line.isEmpty {
+		if line.hasItems {
 			log("[!\(line)!]")
 		}
 	}
@@ -152,7 +152,7 @@ struct Actions {
 			}
 			line += (word + " ")
 		}
-		if !line.isEmpty {
+		if line.hasItems {
 			dumpLine()
 		}
 	}

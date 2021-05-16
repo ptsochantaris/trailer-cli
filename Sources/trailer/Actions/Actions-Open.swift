@@ -76,7 +76,7 @@ extension Actions {
                     log("[![*> *]!]\(r.nameWithOwner)")
 				}
 			} else {
-				repos.first!.openURL()
+                open(url: repos.first!.url)
 			}
 			break
 		default:
@@ -87,7 +87,7 @@ extension Actions {
 	static private func openItemURL(_ number: Int, includePrs: Bool, includeIssues: Bool) -> Bool {
 		if let items = findItems(number: number, includePrs: includePrs, includeIssues: includeIssues, warnIfMultiple: true) {
 			if items.count == 1, let item = items.first {
-				item.openURL()
+				item.openUrl()
 			}
 			return items.count > 0
 		}
