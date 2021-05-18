@@ -11,12 +11,12 @@ private let _args = CommandLine.arguments.map { $0.lowercased() }
 
 extension CommandLine {
 
-	static func value(for argument: String) -> String? {
+    static func value(for argument: String, keepCase: Bool = false) -> String? {
 		guard let index = _args.firstIndex(of: argument) else { return nil }
 
 		let valueIndex = index + 1
 		if _args.count > valueIndex {
-			let nextArg = _args[valueIndex]
+            let nextArg = keepCase ? CommandLine.arguments[valueIndex] : _args[valueIndex]
 			if nextArg.hasPrefix("-") {
 				return ""
 			}

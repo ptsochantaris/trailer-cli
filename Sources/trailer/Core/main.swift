@@ -107,9 +107,9 @@ private func go() {
 			if actionDetected == nil {
 				exit(0)
 			}
-		} else {
-			config.token = t
-			log("Token for server [*\(config.server.absoluteString)*] has been set to [*\(t)*]")
+		} else if let token = CommandLine.value(for: "-token", keepCase: true) {
+			config.token = token
+			log("Token for server [*\(config.server.absoluteString)*] has been set to [*\(token)*]")
 			if actionDetected == nil {
 				exit(0)
 			}

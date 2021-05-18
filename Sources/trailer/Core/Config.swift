@@ -17,7 +17,7 @@ struct Config {
 
 	let versionMajor = 1
 	let versionMinor = 1
-	let versionPatch = 1
+	let versionPatch = 2
 	var versionString: String {
 		return [versionMajor, versionMinor, versionPatch].map { String($0) }.joined(separator: ".")
 	}
