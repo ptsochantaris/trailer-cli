@@ -9,20 +9,22 @@
 
 import Foundation
 
+enum PagingStyle {
+    case none, onlyLast, largePage, smallPage
+}
+
 struct Group: Ingesting {
 
 	var name: String
 	var fields: [Element]
-	private let usePaging: Bool
-	private let onlyLast: Bool
+	private let paging: PagingStyle
 	private let extraParams: [String: String]?
 	private var lastCursor: String?
 	
-	init(name: String, fields: [Element], extraParams: [String: String]? = nil, usePaging: Bool = false, onlyLast: Bool = false) {
+    init(name: String, fields: [Element], extraParams: [String: String]? = nil, paging: PagingStyle = .none) {
 		self.name = name
 		self.fields = fields
-		self.usePaging = usePaging
-		self.onlyLast = onlyLast
+		self.paging = paging
 		self.extraParams = extraParams
 	}
 	
@@ -31,18 +33,24 @@ struct Group: Ingesting {
 		var query = name
 		var brackets = [String]()
 		
-		if usePaging {
-			if onlyLast {
-				brackets.append("last: 1")
-			} else {
-				brackets.append("first: 100")
-				if let lastCursor = lastCursor {
-					brackets.append("after: \"\(lastCursor)\"")
-				}
-			}
-		}
-		
-		if let e = extraParams {
+        switch paging {
+        case .none:
+            break
+        case .onlyLast:
+            brackets.append("last: 1")
+        case .largePage:
+            brackets.append("first: 100")
+            if let lastCursor = lastCursor {
+                brackets.append("after: \"\(lastCursor)\"")
+            }
+        case .smallPage:
+            brackets.append("first: 20")
+            if let lastCursor = lastCursor {
+                brackets.append("after: \"\(lastCursor)\"")
+            }
+        }
+
+        if let e = extraParams {
 			for (k, v) in e {
 				brackets.append("\(k): \(v)")
 			}
@@ -54,10 +62,10 @@ struct Group: Ingesting {
 		
 		let fieldsText = "__typename " + fields.map({$0.queryText}).joined(separator: " ")
 		
-		if usePaging {
-			query += " { edges { node { " + fieldsText + " } cursor } pageInfo { hasNextPage } }"
+        if paging == .none {
+            query += " { " + fieldsText + " }"
 		} else {
-			query += " { " + fieldsText + " }"
+            query += " { edges { node { " + fieldsText + " } cursor } pageInfo { hasNextPage } }"
 		}
 		
 		return query
@@ -175,13 +183,13 @@ struct Group: Ingesting {
 				return u
 			case "ReviewRequest":
 				return ReviewRequest.parse(parent: parent, elementType: typeName, node: info, level: level)
-			case "StatusContext":
+			case "StatusContext", "CheckRun":
 				return Status.parse(parent: parent, elementType: typeName, node: info, level: level)
 			case "Milestone":
 				return Milestone.parse(parent: parent, elementType: typeName, node: info, level: level)
 			case "Organization":
 				return Org.parse(parent: parent, elementType: typeName, node: info, level: level)
-			case "ReactionConnection", "PullRequestCommit", "Commit", "Status", "Bot", "PullRequestReviewCommentConnection":
+			case "ReactionConnection", "PullRequestCommit", "Commit", "Status", "Bot", "PullRequestReviewCommentConnection", "CheckSuite":
 				return nil
 			default:
 				log(level: .debug, indent: level, "+ Warning: unhandled type '\(typeName)'")

@@ -71,7 +71,7 @@ struct ReviewRequest: Item {
 	}
 
 	static let fragment = Fragment(name: "reviewRequestFields", on: "ReviewRequest", elements: [
-		Field(name: "id"),
+        Field.id,
 		Group(name: "requestedReviewer", fields: [User.fragment]),
 		])
 }

@@ -192,7 +192,7 @@ struct Repo: Item, Announceable {
 	}
 
 	static let fragment = Fragment(name: "repoFields", on: "Repository", elements: [
-		Field(name: "id"),
+        Field.id,
 		Field(name: "nameWithOwner"),
 		Field(name: "isFork"),
 		Field(name: "url"),
@@ -201,19 +201,19 @@ struct Repo: Item, Announceable {
 		])
 
 	static let prAndIssueIdsFragment = Fragment(name: "repoFields", on: "Repository", elements: [
-		Field(name: "id"),
-		Group(name: "pullRequests", fields: [Field(name: "id")], extraParams: ["states": "OPEN"], usePaging: true),
-		Group(name: "issues", fields: [Field(name: "id")], extraParams: ["states": "OPEN"], usePaging: true),
+        Field.id,
+        Group(name: "pullRequests", fields: [Field.id], extraParams: ["states": "OPEN"], paging: .largePage),
+		Group(name: "issues", fields: [Field.id], extraParams: ["states": "OPEN"], paging: .largePage),
 		])
 
 	static let prIdsFragment = Fragment(name: "repoFields", on: "Repository", elements: [
-		Field(name: "id"),
-		Group(name: "pullRequests", fields: [Field(name: "id")], extraParams: ["states": "OPEN"], usePaging: true),
+        Field.id,
+		Group(name: "pullRequests", fields: [Field.id], extraParams: ["states": "OPEN"], paging: .largePage),
 		])
 
 	static let issueIdsFragment = Fragment(name: "repoFields", on: "Repository", elements: [
-		Field(name: "id"),
-		Group(name: "issues", fields: [Field(name: "id")], extraParams: ["states": "OPEN"], usePaging: true),
+        Field.id,
+		Group(name: "issues", fields: [Field.id], extraParams: ["states": "OPEN"], paging: .largePage),
 		])
 }
 

@@ -299,7 +299,7 @@ struct PullRequest: Item, Announceable, Closeable, Sortable {
 
 	var pendingReview: Bool {
 		let requests = reviewRequests
-		if requests.count == 0 { return false }
+		if requests.isEmpty { return false }
 
 		let latestReviewResults = latestReviews.filter { $0.state == .approved || $0.state == .changes_requested }.compactMap { $0.author?.login }
 		let waitingFor = requests.compactMap { $0.reviewer?.login }.filter { !latestReviewResults.contains($0) }
@@ -367,29 +367,26 @@ struct PullRequest: Item, Announceable, Closeable, Sortable {
 
 		let react = reactions
 		if react.hasItems {
-			log("[!Reactions!]")
-			for r in react {
-				if let u = r.user {
-					log("\(r.emoji)  - @\(u.login)")
-				}
-			}
-			log()
+            log("[!Reactions!]")
+            let line = react.map { "[\($0.emoji) @\($0.user?.login ?? "")]" }.joined(separator: " ")
+            log(line)
+            log()
 		}
 
 		let st = latestStatuses
 		if st.hasItems {
             log("[!Statuses")
 			for s in st {
-				let char: String
 				switch s.state {
-				case .error, .failure:
-					char = "[R*[X]"
-				case .expected, .pending:
-					char = "[*[ ]"
+                case .skipped, .neutral, .empty:
+                    log("\(s.context) - \(s.description)")
+                case .expected, .pending:
+                    log("[*[ ] \(s.context) - \(s.description)*]")
 				case .success:
-					char = "[G*[+]"
+                    log("[G*[+] \(s.context) - \(s.description)*]")
+                default:
+                    log("[R*[X] \(s.context) - \(s.description)*]")
 				}
-				log("\(char) \(s.context) - \(s.description)*]")
 			}
             log("!]")
 		}
@@ -445,7 +442,7 @@ struct PullRequest: Item, Announceable, Closeable, Sortable {
 	var latestStatuses: [Status] {
 		var res = [String:Status]()
 		for s in statuses {
-			res[s.context] = s
+			res[s.id] = s
 		}
 		return res.values.sorted { $0.createdAt < $1.createdAt }
 	}
@@ -463,7 +460,7 @@ struct PullRequest: Item, Announceable, Closeable, Sortable {
 	}
 
 	var statuses: [Status] {
-		return children(field: "contexts")
+		return children(field: "contexts") + children(field: "checkRuns")
 	}
 
 	var reviews: [Review] {
@@ -540,7 +537,7 @@ struct PullRequest: Item, Announceable, Closeable, Sortable {
 	}
 
 	static let fragment = Fragment(name: "prFields", on: "PullRequest", elements: [
-		Field(name: "id"),
+        Field.id,
 		Field(name: "updatedAt"),
 		Field(name: "mergeable"),
 		Field(name: "mergedAt"),
@@ -557,37 +554,43 @@ struct PullRequest: Item, Announceable, Closeable, Sortable {
 		Group(name: "milestone", fields: [Milestone.fragment]),
 		Group(name: "author", fields: [User.fragment]),
 
-		Group(name: "labels", fields: [Label.fragment], usePaging: true),
-		Group(name: "assignees", fields: [User.fragment], usePaging: true),
-		Group(name: "reviews", fields: [Review.fragment], usePaging: true),
-		Group(name: "reviewRequests", fields: [ReviewRequest.fragment], usePaging: true),
+        Group(name: "labels", fields: [Label.fragment], paging: .smallPage),
+		Group(name: "assignees", fields: [User.fragment], paging: .smallPage),
+        Group(name: "reviews", fields: [Review.fragment], paging: .largePage),
+		Group(name: "reviewRequests", fields: [ReviewRequest.fragment], paging: .smallPage),
 
         Group(name: "reactions", fields: [Field(name: "totalCount")]),
 
-		Group(name: "commits", fields: [
-			Group(name: "commit", fields: [
-				Group(name: "status", fields: [
-					Group(name: "contexts", fields: [
-						Status.fragment
-						])
-					])
-				])
-			], usePaging: true, onlyLast: true)
-		])
+        Group(name: "commits", fields: [
+            Group(name: "commit", fields: [
+                
+                Group(name: "status", fields: [
+                    Group(name: "contexts", fields: [
+                        Status.fragmentForStatus
+                    ])
+                ]),
+                Group(name: "checkSuites", fields: [
+                    Group(name: "checkRuns", fields: [
+                        Status.fragmentForCheck
+                    ], paging: .smallPage)
+                ], paging: .smallPage)
+            ])
+        ], paging: .onlyLast)
+    ])
 
 	static var fragmentWithComments: Fragment {
 		var f = fragment
-		f.addField(Group(name: "comments", fields: [Comment.fragmentForItems], usePaging: true))
+		f.addField(Group(name: "comments", fields: [Comment.fragmentForItems], paging: .largePage))
 		return f
 	}
 
     static let reactionsFragment = Fragment(name: "PullRequestReactionFragment", on: "PullRequest", elements: [
-        Field(name: "id"), // not using fragment, no need to re-parse
-        Group(name: "reactions", fields: [Reaction.fragment], usePaging: true)
+        Field.id, // not using fragment, no need to re-parse
+        Group(name: "reactions", fields: [Reaction.fragment], paging: .largePage)
         ])
 
     static let commentsFragment = Fragment(name: "PullRequestCommentsFragment", on: "PullRequest", elements: [
-        Field(name: "id"), // not using fragment, no need to re-parse
-        Group(name: "comments", fields: [Comment.fragmentForItems], usePaging: true)
+        Field.id, // not using fragment, no need to re-parse
+        Group(name: "comments", fields: [Comment.fragmentForItems], paging: .largePage)
         ])
 }

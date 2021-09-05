@@ -78,14 +78,16 @@ struct Reaction: Item {
 		case "HOORAY": return "🎉"
 		case "CONFUSED": return "😕"
 		case "HEART": return "❤️"
-		default: return "?"
+        case "ROCKET": return "🚀"
+		default:
+            return "?"
 		}
 	}
 
 	static let fragment = Fragment(name: "reactions", on: "Reaction", elements: [
-		Field(name: "id"),
+        Field.id,
 		Field(name: "content"),
 		Group(name: "user", fields: [User.fragment])
-		])
+    ])
 }
 

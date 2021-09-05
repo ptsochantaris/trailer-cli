@@ -127,11 +127,11 @@ struct Comment: Item, Announceable {
 		if react.hasItems {
 			let reactionList: [String] = react.compactMap {
 				if let u = $0.user {
-					return "[\($0.emoji)  @\(u.login)]"
+					return "[\($0.emoji) @\(u.login)]"
 				}
 				return nil
 			}
-			log(reactionList.joined(separator: ", "))
+			log(reactionList.joined(separator: " "))
 		}
         log()
 	}
@@ -188,7 +188,7 @@ struct Comment: Item, Announceable {
 	}
 	
 	static let commentFields: [Element] = [
-		Field(name: "id"),
+        Field.id,
 		Field(name: "body"),
 		Field(name: "viewerDidAuthor"),
 		Field(name: "createdAt"),
@@ -201,13 +201,13 @@ struct Comment: Item, Announceable {
     static let fragmentForReviews = Fragment(name: "commentFieldsForReviews", on: "PullRequestReviewComment", elements: commentFields)
 
     static let pullRequestReviewCommentReactionFragment = Fragment(name: "PullRequestReviewCommentReactionFragment", on: "PullRequestReviewComment", elements: [
-        Field(name: "id"), // not using fragment, no need to re-parse
-        Group(name: "reactions", fields: [Reaction.fragment], usePaging: true)
+        Field.id, // not using fragment, no need to re-parse
+        Group(name: "reactions", fields: [Reaction.fragment], paging: .largePage)
         ])
 
     static let issueCommentReactionFragment = Fragment(name: "IssueCommentReactionsFragment", on: "IssueComment", elements: [
-        Field(name: "id"), // not using fragment, no need to re-parse
-        Group(name: "reactions", fields: [Reaction.fragment], usePaging: true)
+        Field.id, // not using fragment, no need to re-parse
+        Group(name: "reactions", fields: [Reaction.fragment], paging: .largePage)
         ])
 
 }

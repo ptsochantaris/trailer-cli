@@ -72,14 +72,14 @@ struct Org: Item {
 	}
 
 	static let fragment = Fragment(name: "orgFields", on: "Organization", elements: [
-		Field(name: "id"),
+        Field.id,
 		Field(name: "name"),
 		])
 
 	static let fragmentWithRepos = Fragment(name: "orgFieldsAndRepos", on: "Organization", elements: [
-		Field(name: "id"),
+        Field.id,
 		Field(name: "name"),
-		Group(name: "repositories", fields: [Repo.fragment], usePaging: true),
+		Group(name: "repositories", fields: [Repo.fragment], paging: .largePage),
 		])
 }
 

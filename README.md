@@ -10,21 +10,24 @@ Please refer to the "cookbook" section below for an introduction to various feat
 - The GUI version's main objective is to give you a current view at a glance. This tool is better suited to fetching and displaying itemised lists of what's new, what's been commented, what's been reviewed, and so on, since the last sync. GUI Trailer is "glance at what's happening". CLI Trailer is "list what's changed since I last checked".
 - Trailer-CLI can display a full detail view of PRs and Issues, including full bodies of the item, as well as its reviews and comments, with their associated reactions, just like the list you get on a PR or Issue GitHub page. Ideal for archiving PRs or Issues.
 - It stores data in JSON files instead of a database. This way it can act like a sync-only engine for other projects that can read the simple JSON format from `~/.trailer` - and use the info in whatever way they like.
-- It can run on Linux as well as macOS (and hopefully under Windows when Swift 4.x work well there).
+- It can run on Linux, Windows as well as macOS.
 - It can be used remotely via SSH, or in command-line scripts.
 - It uses the new GitHub GraphQL-based v4 API, making syncs very quick. Additionally it allows trimming down both the data that is synced (for instance, skipping comments or issues for a certain sync)
-- It's *way* geekier.
+- Far more Geek Cred than a GUI tool.
 
 ## Installing
 
 ### macOS
 You can get a pre-built macOS build from the [Releases](../../releases) page and put it into `/usr/local/bin`.
 
+### Linux
+It's very hard to maintain builds for various distros, as Swift currently can't produce static binaries, although it's quite simple to install the latest Swift version and run `./install.sh` to create the binary in your favourite distro.
+
+### Windows
+An experimental build is available for Windows in the [Releases](../../releases) page. It does seem to require a few DLLs to be in the same directory, which are bundled into the ZIP.
+
 ### Source
 You can build the project from source using the simple `./install.sh` script. It requires Swift 5.0 or later to be installed.
-
-### Linux Notes
-It's very hard to maintain builds for various distros, as Swift currently can't produce static binaries, although it's quite simple to install the latest Swift version and run `./install.sh` to create the binary in your favourite distro.
 
 ## Quickstart
 Run Trailer without any arguments for some help. To get started:
@@ -50,7 +53,7 @@ trailer update all -v
 
 - Be sure to check out the `trailer config` command to restrict PRs/Issues to specific repositories and reduce clutter, noise, and API usage when updating.
 
-- See below for some examples of common commands.
+- See below for some examples of common commands and usage.
 
 ## Cookbook
 
@@ -285,6 +288,12 @@ trailer update prs -fresh
 
 The `-fresh` update flag will delete anything not explicitly specified in the list of types to sync. In this case: Update PRs but don't keep other items, like issues or comments.
 
+```
+trailer update all -dryrun
+```
+
+The `-dryrun` update flag will perform all requested operations, but will not save the result.
+
 ### Advanced: Multiple Servers
 
 ```
@@ -296,4 +305,4 @@ trailer -s local.server.my.net list items
 The `-s` command switches the context of trailer to another server. For instance, a local GitHub Enterprise server. All commands work identically, but will apply to this context. You can have as many parallel `-s` contexts as you like.
 
 ---
-*Copyright (c) 2017-2020 Paul Tsochantaris. Released under the terms of the MIT licence, see the file LICENCE for details.*
+*Copyright (c) 2017-2021 Paul Tsochantaris. Released under the terms of the MIT licence, see the file LICENCE for details.*

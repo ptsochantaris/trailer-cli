@@ -13,7 +13,8 @@ import WinSDK
 
 private func setupConsole() {
     config.monochrome = CommandLine.argument(exists: "-mono")
-
+    config.dryRun = CommandLine.argument(exists: "-dryrun")
+    
     #if os(Windows)
     if !config.monochrome {
         let hOut = GetStdHandle(STD_OUTPUT_HANDLE)

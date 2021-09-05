@@ -185,7 +185,7 @@ struct Review: Item, Announceable {
 	}
 
 	static let fragment = Fragment(name: "reviewFields", on: "PullRequestReview", elements: [
-		Field(name: "id"),
+        Field.id,
 		Field(name: "body"),
 		Field(name: "state"),
 		Field(name: "viewerDidAuthor"),
@@ -196,7 +196,7 @@ struct Review: Item, Announceable {
 		])
 
     static let commentsFragment = Fragment(name: "ReviewCommentsFragment", on: "PullRequestReview", elements: [
-        Field(name: "id"), // not using fragment, no need to re-parse
-        Group(name: "comments", fields: [Comment.fragmentForReviews], usePaging: true)
+        Field.id, // not using fragment, no need to re-parse
+        Group(name: "comments", fields: [Comment.fragmentForReviews], paging: .largePage)
         ])
 }

@@ -9,15 +9,20 @@
 import Foundation
 
 enum StatusState: String, Codable {
-	case expected, error, failure, pending, success
+	case expected, error, failure, pending, success, empty, neutral, actionRequired, cancelled, skipped
 	init?(rawValue: String) {
 		switch rawValue.lowercased() {
-		case "expected": self = StatusState.expected
-		case "error": self = StatusState.error
-		case "failure": self = StatusState.failure
-		case "pending": self = StatusState.pending
-		case "success": self = StatusState.success
-		default: return nil
+		case "expected": self = .expected
+		case "failure": self = .failure
+		case "pending": self = .pending
+		case "success": self = .success
+        case "neutral": self = .neutral
+        case "action_required": self = .actionRequired
+        case "cancelled": self = .cancelled
+        case "skipped": self = .skipped
+        case "": self = .empty
+        default:
+            self = .error
 		}
 	}
 }
@@ -76,11 +81,18 @@ struct Status: Item {
 	mutating func apply(_ node: [AnyHashable:Any]) -> Bool {
 		guard node.keys.count > 6 else { return false }
 
-		context = node["context"] as? String ?? ""
-		createdAt = GHDateFormatter.parseGH8601(node["createdAt"] as? String) ?? Date.distantPast
-		description = node["description"] as? String ?? ""
-		state = StatusState(rawValue: node["state"] as? String ?? "EXPECTED") ?? StatusState.expected
-		targetUrl = URL(string: node["targetUrl"] as? String ?? "") ?? emptyURL
+        createdAt = GHDateFormatter.parseGH8601(node["createdAt"] as? String) ?? .distantPast
+        targetUrl = URL(string: node["targetUrl"] as? String ?? "") ?? emptyURL
+
+        if let nodeContext = node["context"] as? String {
+            context = nodeContext
+            state = StatusState(rawValue: node["state"] as? String ?? "EXPECTED") ?? .expected
+            description = node["description"] as? String ?? ""
+        } else {
+            context = Notifications.Notification.formatter.string(from: createdAt)
+            state = StatusState(rawValue: node["conclusion"] as? String ?? "EXPECTED") ?? .expected
+            description = node["name"] as? String ?? ""
+        }
 		return true
 	}
 
@@ -104,13 +116,22 @@ struct Status: Item {
 		}
 	}
 
-	static var fragment = Fragment(name: "statusFields", on: "StatusContext", elements: [
-		Field(name: "id"),
+	static var fragmentForStatus = Fragment(name: "statusFields", on: "StatusContext", elements: [
+        Field.id,
 		Field(name: "context"),
 		Field(name: "description"),
 		Field(name: "state"),
 		Field(name: "targetUrl"),
-		Field(name: "createdAt"),
-		])
+		Field(name: "createdAt")
+    ])
+    
+    static let fragmentForCheck = Fragment(name: "checkFields", on: "CheckRun", elements: [
+        Field.id,
+        Field(name: "name"),
+        Field(name: "conclusion"),
+        Field(name: "startedAt"),
+        Field(name: "completedAt"),
+        Field(name: "permalink")
+    ])
 }
 

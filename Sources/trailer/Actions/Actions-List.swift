@@ -132,7 +132,7 @@ extension Actions {
 		} else {
 			r = Repo.allItems.values.filter({ $0.org == nil })
 			name = "(No org)"
-			if r.count == 0 {
+			if r.isEmpty {
 				return
 			}
 		}

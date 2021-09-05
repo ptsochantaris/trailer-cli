@@ -239,12 +239,9 @@ struct Issue: Item, Announceable, Closeable, Sortable {
 		let react = reactions
 		if react.hasItems {
 			log("[!Reactions!]")
-			for r in react {
-				if let u = r.user {
-					log("\(r.emoji)  - @\(u.login)")
-				}
-			}
-			log()
+            let line = react.map { "[\($0.emoji) @\($0.user?.login ?? "")]" }.joined(separator: " ")
+			log(line)
+            log()
 		}
 
 		if CommandLine.argument(exists: "-body") {
@@ -330,7 +327,7 @@ struct Issue: Item, Announceable, Closeable, Sortable {
 	}
 	
 	static let fragment = Fragment(name: "issueFields", on: "Issue", elements: [
-		Field(name: "id"),
+        Field.id,
 		Field(name: "bodyText"),
 		Field(name: "createdAt"),
 		Field(name: "updatedAt"),
@@ -342,24 +339,24 @@ struct Issue: Item, Announceable, Closeable, Sortable {
 
 		Group(name: "milestone", fields: [Milestone.fragment]),
 		Group(name: "author", fields: [User.fragment]),
-		Group(name: "labels", fields: [Label.fragment], usePaging: true),
-		Group(name: "assignees", fields: [User.fragment], usePaging: true),
+        Group(name: "labels", fields: [Label.fragment], paging: .smallPage),
+		Group(name: "assignees", fields: [User.fragment], paging: .smallPage),
         Group(name: "reactions", fields: [Field(name: "totalCount")]),
 		])
 
     static let reactionsFragment = Fragment(name: "IssueReactionFragment", on: "Issue", elements: [
-        Field(name: "id"), // not using fragment, no need to re-parse
-        Group(name: "reactions", fields: [Reaction.fragment], usePaging: true)
+        Field.id, // not using fragment, no need to re-parse
+        Group(name: "reactions", fields: [Reaction.fragment], paging: .largePage)
         ])
 
     static let commentsFragment = Fragment(name: "IssueCommentsFragment", on: "Issue", elements: [
-        Field(name: "id"), // not using fragment, no need to re-parse
-        Group(name: "comments", fields: [Comment.fragmentForItems], usePaging: true)
+        Field.id, // not using fragment, no need to re-parse
+        Group(name: "comments", fields: [Comment.fragmentForItems], paging: .largePage)
         ])
 
 	static var fragmentWithComments: Fragment {
 		var f = fragment
-		f.addField(Group(name: "comments", fields: [Comment.fragmentForItems], usePaging: true))
+		f.addField(Group(name: "comments", fields: [Comment.fragmentForItems], paging: .largePage))
 		return f
 	}
 }

@@ -27,7 +27,7 @@ struct Actions {
         // Very rough sanity check to catch typos, should be more fine-grained per action
 		let invalidArguments = CommandLine.arguments.filter { $0.hasPrefix("-") }.map { $0.lowercased() }.filter { arg in
             switch arg {
-            case "-v", "-debug", "-server", "-token", "-r", "-o", "-t", "-a", "-l", "-h", "-b", "-c", "-comments", "-refresh", "-body", "-page-size",
+            case "-v", "-debug", "-server", "-token", "-r", "-o", "-t", "-a", "-l", "-h", "-b", "-c", "-comments", "-refresh", "-body", "-page-size", "-dryrun",
                  "-mine", "-participated", "-mentioned", "-mergeable", "-conflict", "-red", "-green", "-e", "-before", "-within", "-n", "-purge", "-from", "-sort",
                  "-mono", "-version", "-fresh", "-m", "-number", "-blocked", "-approved", "-unreviewed", "-active", "-inactive", "-set-default", "-fields":
                 return false
@@ -177,9 +177,9 @@ struct Actions {
 		}
 		if warnIfMultiple && items.count > 1 {
 			if includePrs && !includeIssues {
-				log("Multiple repositories with issue [*#\(number)*]. Use -r to select a repository. Did you mean...")
+                log("Multiple repositories with a PR [*#\(number)*]. Use -r to select a repository. Did you mean...")
 			} else if includeIssues && !includePrs {
-				log("Multiple repositories with a PR [*#\(number)*]. Use -r to select a repository. Did you mean...")
+                log("Multiple repositories with issue [*#\(number)*]. Use -r to select a repository. Did you mean...")
 			} else {
 				log("Multiple repositories with an item [*#\(number)*]. Use -r to select a repository. Did you mean...")
 			}

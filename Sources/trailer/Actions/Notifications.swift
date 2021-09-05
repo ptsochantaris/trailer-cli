@@ -16,7 +16,7 @@ struct Notifications {
         let details: String?
         let relatedDate: Date
 
-        private static let formatter: DateFormatter = {
+        static let formatter: DateFormatter = {
             let f = DateFormatter()
             f.dateStyle = .short
             f.timeStyle = .short

@@ -12,4 +12,6 @@ struct Field: Element {
 	let name: String
 	var queryText: String { return name }
 	var fragments: [Fragment] { return [] }
+
+    static let id = Field(name: "id")
 }

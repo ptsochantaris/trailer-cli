@@ -61,15 +61,17 @@ struct DB {
 		let parentId = parent.item.id
 		var field2children = parents2fields2children[parentId] ?? [String: [String]]()
 		var listOfChildren = field2children[fieldName] ?? [String]()
-		listOfChildren.append(id)
-		field2children[fieldName] = listOfChildren
-		parents2fields2children[parentId] = field2children
+        if !listOfChildren.contains(id) {
+            listOfChildren.append(id)
+            field2children[fieldName] = listOfChildren
+            parents2fields2children[parentId] = field2children
+        }
 	}
 
 	static func removeChild(id: String, from parentId: String, field: String) {
 		var field2children = parents2fields2children[parentId] ?? [String: [String]]()
-		let listOfChildren = field2children[field]?.filter { $0 != id }
-		field2children[field] = (listOfChildren?.count == 0) ? nil : listOfChildren
+		let listOfChildren = field2children[field]?.filter { $0 != id } ?? []
+		field2children[field] = listOfChildren.isEmpty ? nil : listOfChildren
 		parents2fields2children[parentId] = field2children
 	}
 
@@ -112,7 +114,14 @@ struct DB {
 		if FileManager.default.fileExists(atPath: l.path) {
 			do {
 				let d = try Data(contentsOf: l)
-				parents2fields2children = try decoder.decode([String: [String:[String]]].self, from: d)
+                let temp = try decoder.decode([String: [String:[String]]].self, from: d)
+                for (parent, var fields2children) in temp {
+                    for (field, children) in fields2children {
+                        var ids = Set<String>()
+                        fields2children[field] = children.filter { ids.insert($0).inserted }
+                    }
+                    parents2fields2children[parent] = fields2children
+                }
 			} catch {
 				log("Could not load data for relationships")
 			}
@@ -133,6 +142,11 @@ struct DB {
 			allTypes.forEach { $0.purgeStaleRelationships() }
 		}
 
+        if config.dryRun {
+            log(level: .info, "Dry run requested, updated data not saved")
+            return
+        }
+        
 		log(level: .debug, "Saving DB...")
 		let savingQueue = DispatchQueue.global(qos: .userInteractive)
 		savingQueue.sync {

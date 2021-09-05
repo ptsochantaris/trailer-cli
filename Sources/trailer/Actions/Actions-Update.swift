@@ -51,6 +51,7 @@ extension Actions {
         log("[!Updating options!]")
         printOption(name: "-n", description: "List new comments and reviews on items")
 		printOption(name: "-from <repo>", description: "Only update items from a repo whose name includes this text")
+        printOption(name: "-dryrun", description: "Perform all actions but do not save any of the changes")
 		printOption(name: "-fresh", description: "Only keep what's downloaded in this sync and purge all other types of data")
 		log()
 		printOptionHeader("You can also update specific (existing) items by filtering:")
@@ -190,9 +191,9 @@ extension Actions {
 			let repositoryListQuery = Query(name: "Repos", rootElement:
 				Group(name: "viewer", fields: [
 					User.fragment,
-					Group(name: "organizations", fields: [Org.fragmentWithRepos], usePaging: true),
-					Group(name: "repositories", fields: [Repo.fragment], usePaging: true),
-					Group(name: "watching", fields: [Repo.fragment], usePaging: true)
+					Group(name: "organizations", fields: [Org.fragmentWithRepos], paging: .largePage),
+					Group(name: "repositories", fields: [Repo.fragment], paging: .largePage),
+					Group(name: "watching", fields: [Repo.fragment], paging: .largePage)
 					]))
 			successOrAbort(repositoryListQuery)
 		} else {

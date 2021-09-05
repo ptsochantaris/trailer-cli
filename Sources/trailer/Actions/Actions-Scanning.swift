@@ -135,7 +135,7 @@ extension Actions {
 			if a.onlyEmpty && (r.pullRequests.count > 0 || r.issues.count > 0) {
 				return false
 			}
-			if a.hideEmpty && (r.visibility == .hidden || (r.pullRequests.count == 0 && r.issues.count == 0)) {
+			if a.hideEmpty && (r.visibility == .hidden || (r.pullRequests.isEmpty && r.issues.isEmpty)) {
 				return false
 			}
             if a.onlyActive && r.visibility == .hidden {
@@ -151,9 +151,9 @@ extension Actions {
 	}
 
 	static func pullRequestsToScan(number: Int? = nil) -> [PullRequest] {
-		let allItems = reposToScan.reduce([PullRequest]()) { result, repo -> [PullRequest] in
-			return result + repo.pullRequests
-		}
+        let allItems = reposToScan
+            .filter { $0.visibility == .visible || $0.visibility == .onlyPrs }
+            .reduce([PullRequest]()) { $0 + $1.pullRequests }
 
 		let a = ItemFilterArgs()
 		
@@ -224,16 +224,12 @@ extension Actions {
 				}
 			}
 
-			if let b = a.body {
-				if !p.bodyText.localizedCaseInsensitiveContains(b) {
-					return false
-				}
+			if let b = a.body, !p.bodyText.localizedCaseInsensitiveContains(b) {
+                return false
 			}
 
-			if let c = a.comment {
-				if !p.commentsOrReviewsInclude(text: c) {
-					return false
-				}
+			if let c = a.comment, !p.commentsOrReviewsInclude(text: c) {
+                return false
 			}
 
 			if a.unReviewed || a.approved || a.blocked {
@@ -257,9 +253,9 @@ extension Actions {
 	}
 
 	static func issuesToScan(number: Int? = nil) -> [Issue] {
-		let allItems = reposToScan.reduce([Issue]()) { result, repo -> [Issue] in
-			return result + repo.issues
-		}
+        let allItems = reposToScan
+            .filter { $0.visibility == .visible || $0.visibility == .onlyIssues }
+            .reduce([Issue]()) { $0 + $1.issues }
 
 		let a = ItemFilterArgs()
 		if !a.filteringApplied && number == nil {
