@@ -34,6 +34,7 @@ struct Query {
 	}()
     
     static func getData(for request: URLRequest) async throws -> (Data, URLResponse) {
+        #if os(macOS)
         if #available(macOS 12.0, *) {
             return try await urlSession.data(for: request)
         } else {
@@ -47,6 +48,17 @@ struct Query {
                 }
             }
         }
+        #else
+        return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<(Data, URLResponse), Error>) in
+            _ = urlSession.dataTask(with: request) { data, response, error in
+                if let data = data, let response = response {
+                    continuation.resume(returning: (data, response))
+                } else {
+                    continuation.resume(throwing: error ?? NSError(domain: "build.bru.trailer-cli.network", code: 92, userInfo: [NSLocalizedDescriptionKey: "No data or error from server"]))
+                }
+            }
+        }
+        #endif
     }
     
     static func getData(from url: URL) async throws -> (Data, URLResponse) {
