@@ -7,7 +7,6 @@
 //
 
 import Foundation
-import Dispatch
 
 enum UpdateType {
 	case repos, prs, issues, comments, reactions
@@ -15,23 +14,21 @@ enum UpdateType {
 
 extension Actions {
 
-	static private func successOrAbort(_ query: Query) {
-		successOrAbort([query])
+	static private func successOrAbort(_ query: Query) async {
+		await successOrAbort([query])
 	}
 
-	static private func successOrAbort(_ queries: [Query]) {
-
-		var success = true
-		let group = DispatchGroup()
-		for q in queries {
-			group.enter()
-			q.run { s in
-				if !s { success = false }
-				group.leave()
-			}
-		}
-		group.wait()
-		if !success { exit(1) }
+	static private func successOrAbort(_ queries: [Query]) async {
+        await withTaskGroup(of: Bool.self) { group in
+            for q in queries {
+                group.addTask {
+                    return await q.run()
+                }
+            }
+            if await group.contains(false) {
+                exit(1)
+            }
+        }
 	}
 
     static func failUpdate(_ message: String?) {
@@ -60,48 +57,37 @@ extension Actions {
         log()
     }
 
-	private static func updateCheck(alwaysCheck: Bool, completion: @escaping (String?, Bool)->Void) {
-		DispatchQueue.global(qos: .background).async {
-			var newVersion: String?
-			var success = false
-			if alwaysCheck || config.lastUpdateCheckDate.timeIntervalSinceNow < -3600 {
-				let versionURL = URL(string: "https://api.github.com/repos/ptsochantaris/trailer-cli/releases/latest")!
-				if
-					let data = try? Data(contentsOf: versionURL),
-					let json = (try? JSONSerialization.jsonObject(with: data, options: [])) as? [AnyHashable:Any],
-					let tagName = json["tag_name"] as? String {
+    private static func updateCheck(alwaysCheck: Bool) async -> (String?, Bool) {
+        var newVersion: String?
+        var success = false
+        if alwaysCheck || config.lastUpdateCheckDate.timeIntervalSinceNow < -3600 {
+            let versionURL = URL(string: "https://api.github.com/repos/ptsochantaris/trailer-cli/releases/latest")!
+            if
+                let data = try? await Query.getData(from: versionURL).0,
+                let json = (try? JSONSerialization.jsonObject(with: data, options: [])) as? [AnyHashable:Any],
+                let tagName = json["tag_name"] as? String {
 
-					success = true
-					if config.isNewer(tagName) {
-						newVersion = tagName
-					}
-				}
-			}
-			config.lastUpdateCheckDate = Date()
-			completion(newVersion, success)
-		}
-	}
+                success = true
+                if config.isNewer(tagName) {
+                    newVersion = tagName
+                }
+            }
+        }
+        config.lastUpdateCheckDate = Date()
+        return (newVersion, success)
+    }
 
-	static func checkForUpdatesSynchronously(reportError: Bool, alwaysCheck: Bool) {
+	static func checkForUpdates(reportError: Bool, alwaysCheck: Bool) async {
 
-		let g = DispatchGroup()
-		g.enter()
-		var n: String?
-		var s = false
-		updateCheck(alwaysCheck: alwaysCheck) { newVersion, success in
-			n = newVersion
-			s = success
-			g.leave()
-		}
-		g.wait()
-		if let n = n {
-			log("[![G*New Trailer version \(n) is available*]!]")
-		} else if !s {
+		let (newVersion, success) = await updateCheck(alwaysCheck: alwaysCheck)
+		if let newVersion = newVersion {
+			log("[![G*New Trailer version \(newVersion) is available*]!]")
+		} else if !success {
 			log("[R*(Latest version check failed)*]")
 		}
 	}
 
-    static func processUpdateDirective(_ list: [String]) {
+    static func processUpdateDirective(_ list: [String]) async {
 
         guard list.count > 1 else {
 			failUpdate("Need at least one update type. If in doubt, use 'all'.")
@@ -136,25 +122,25 @@ extension Actions {
 			}
 		}
 		if updateTypes.count > 0 {
-			update(updateTypes,
-				   limitToRepoNames: CommandLine.value(for: "-from"),
-				   keepOnlyNewItems: CommandLine.argument(exists: "-fresh"))
+            await update(updateTypes,
+                         limitToRepoNames: CommandLine.value(for: "-from"),
+                         keepOnlyNewItems: CommandLine.argument(exists: "-fresh"))
 		} else {
 			log()
 			failUpdate("Need at least one update type. If in doubt, use 'all'.")
 		}
     }
 
-	static func testToken() {
+	static func testToken() async {
 		let testQuery = Query(name: "Test", rootElement:
 			Group(name: "viewer", fields: [
 				User.fragment,
 				]))
-		successOrAbort(testQuery)
+		await successOrAbort(testQuery)
 		log("Token for server [*\(config.server.absoluteString)*] is valid: Account is [*\(config.myLogin)*]")
 	}
 
-	private static func update(_ typesToSync: [UpdateType], limitToRepoNames: String?, keepOnlyNewItems: Bool) {
+	private static func update(_ typesToSync: [UpdateType], limitToRepoNames: String?, keepOnlyNewItems: Bool) async {
 
 		let repoFilters = RepoFilterArgs()
 		let itemFilters = ItemFilterArgs()
@@ -173,12 +159,9 @@ extension Actions {
 
 		///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-		var latestVersion: String?
-		updateCheck(alwaysCheck: false) { newVersion, success in
-			latestVersion = newVersion
-		}
+		async let (latestVersion, _) = updateCheck(alwaysCheck: false)
 
-		DB.load()
+        await DB.load()
 		if let d = config.latestSyncDate {
 			log(agoFormat(prefix: "[!Last update was ", since: d) + "!]")
 		}
@@ -195,7 +178,7 @@ extension Actions {
 					Group(name: "repositories", fields: [Repo.fragment], paging: .largePage),
 					Group(name: "watching", fields: [Repo.fragment], paging: .largePage)
 					]))
-			successOrAbort(repositoryListQuery)
+			await successOrAbort(repositoryListQuery)
 		} else {
 			log(level: .info, "[*Repos*] (Skipped)")
 			Org.setSyncStatus(.updated, andChildren: false)
@@ -289,7 +272,7 @@ extension Actions {
 					userWantsIssues ? [Repo.issueIdsFragment] :
 					[]
 			let itemQueries = Query.batching("Item IDs", fields: fields, idList: repoIds, perNodeBlock: itemIdParser)
-			successOrAbort(itemQueries)
+			await successOrAbort(itemQueries)
 		} else {
 			log(level: .info, "[*Item IDs*] (Skipped)")
 		}
@@ -311,7 +294,7 @@ extension Actions {
 		if prIdList.count > 0 {
 			let fragment = userWantsComments ? PullRequest.fragmentWithComments : PullRequest.fragment
 			let prQueries = Query.batching("PRs", fields: [fragment], idList: Array(prIdList.keys))
-			successOrAbort(prQueries)
+            await successOrAbort(prQueries)
 
 			if !userWantsRepos { // revitalise links to parent repos for updated items
 				let updatedPrs = PullRequest.allItems.values.filter { $0.syncState == .updated }
@@ -348,7 +331,7 @@ extension Actions {
 			let reviewIdsWithComments = Review.allItems.values.compactMap { $0.syncState == .none || !$0.syncNeedsComments ? nil : $0.id }
 
 			if reviewIdsWithComments.count > 0 {
-				successOrAbort(Query.batching("PR Review Comments", fields: [
+				await successOrAbort(Query.batching("PR Review Comments", fields: [
 					Review.commentsFragment,
 					PullRequest.commentsFragment,
 					Issue.commentsFragment,
@@ -372,7 +355,7 @@ extension Actions {
 		if issueIdList.count > 0 {
 			let fragment = userWantsComments ? Issue.fragmentWithComments : Issue.fragment
 			let issueQueries = Query.batching("Issues", fields: [fragment], idList: Array(issueIdList.keys))
-			successOrAbort(issueQueries)
+            await successOrAbort(issueQueries)
 
 			if !userWantsRepos { // revitalise links to parent repos for updated items
 				let updatedIssues = Issue.allItems.values.filter { $0.syncState == .updated }
@@ -446,7 +429,7 @@ extension Actions {
 				itemIdsWithReactions += Issue.allItems.keys
 			}
 
-			successOrAbort(Query.batching("Reactions", fields: [
+            await successOrAbort(Query.batching("Reactions", fields: [
 				Comment.pullRequestReviewCommentReactionFragment,
 				Comment.issueCommentReactionFragment,
 				PullRequest.reactionsFragment,
@@ -462,10 +445,12 @@ extension Actions {
 
 		///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-		config.latestSyncDate = Date()
+        if !config.dryRun {
+            config.latestSyncDate = Date()
+        }
 
         let n: NotificationMode = CommandLine.argument(exists: "-n") ? .consoleCommentsAndReviews : .standard
-		DB.save(purgeUntouchedItems: true, notificationMode: n)
+        await DB.save(purgeUntouchedItems: true, notificationMode: n)
         Notifications.processQueue()
 		log("Update done.")
 		if config.totalQueryCosts > 0 {
@@ -474,23 +459,23 @@ extension Actions {
 		if config.totalApiRemaining < Int.max {
 			log(level: .verbose, "Remaining API limit: \(config.totalApiRemaining)")
 		}
-		if let l = latestVersion {
+		if let l = await latestVersion {
 			log("[![G*New Trailer version \(l) is available*]!]")
 		}
 	}
 
-	static func singleItemUpdate(for item: ListableItem) -> ListableItem {
+	static func singleItemUpdate(for item: ListableItem) async -> ListableItem {
 		let userWantsComments = CommandLine.argument(exists: "-comments")
 		if let pr = item.pullRequest {
 
 			let fragment = userWantsComments ? PullRequest.fragmentWithComments : PullRequest.fragment
 			let queries = Query.batching("PR", fields: [fragment], idList: [pr.id])
-			successOrAbort(queries)
+            await successOrAbort(queries)
 
 			if userWantsComments {
 				let reviewIdsWithComments = pr.reviews.compactMap { $0.syncState == .none || !$0.syncNeedsComments ? nil : $0.id }
 				if reviewIdsWithComments.count > 0 {
-					successOrAbort(Query.batching("PR Review Comments", fields: [
+                    await successOrAbort(Query.batching("PR Review Comments", fields: [
 						Review.commentsFragment,
 						PullRequest.commentsFragment,
 						Issue.commentsFragment,
@@ -505,31 +490,31 @@ extension Actions {
 					itemIdsWithReactions.append(contentsOf: review.comments.compactMap({ ($0.syncState == .none || !$0.syncNeedsReactions) ? nil : $0.id }))
 				}
 			}
-			successOrAbort(Query.batching("Reactions", fields: [
+            await successOrAbort(Query.batching("Reactions", fields: [
 				Comment.pullRequestReviewCommentReactionFragment,
 				PullRequest.reactionsFragment,
 				], idList: itemIdsWithReactions))
 
-			DB.save(purgeUntouchedItems: false, notificationMode: .none)
+            await DB.save(purgeUntouchedItems: false, notificationMode: .none)
 			return ListableItem.pullRequest(PullRequest.allItems[pr.id]!)
 
 		} else if let issue = item.issue {
 
 			let fragment = userWantsComments ? Issue.fragmentWithComments : Issue.fragment
 			let queries = Query.batching("Issue", fields: [fragment], idList: [issue.id])
-			successOrAbort(queries)
+            await successOrAbort(queries)
 
 			var itemIdsWithReactions = [issue.id]
 			if userWantsComments {
 				itemIdsWithReactions += issue.comments.compactMap { ($0.syncState == .none || !$0.syncNeedsReactions) ? nil : $0.id }
 			}
 
-			successOrAbort(Query.batching("Reactions", fields: [
+            await successOrAbort(Query.batching("Reactions", fields: [
 				Comment.pullRequestReviewCommentReactionFragment,
 				PullRequest.reactionsFragment,
 				], idList: itemIdsWithReactions))
 
-			DB.save(purgeUntouchedItems: false, notificationMode: .none)
+            await DB.save(purgeUntouchedItems: false, notificationMode: .none)
 			return ListableItem.issue(Issue.allItems[issue.id]!)
 		}
 		return item

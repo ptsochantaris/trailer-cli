@@ -26,8 +26,8 @@ extension Actions {
 		printFilterOptions(onlyRepos: true)
 	}
 
-	static private func setOption(visibility: RepoVisibility?) {
-		DB.load()
+	static private func setOption(visibility: RepoVisibility?) async {
+        await DB.load()
 		var changedCount = 0
 		if let v = visibility {
 			for r in reposToScan {
@@ -43,7 +43,7 @@ extension Actions {
 			r.printDetails()
 		}
 		if changedCount > 0 {
-			DB.save(purgeUntouchedItems: false, notificationMode: .none)
+            await DB.save(purgeUntouchedItems: false, notificationMode: .none)
 		}
 	}
 
@@ -65,7 +65,7 @@ extension Actions {
         return true
     }
 
-	static func processConfigDirective(_ list: [String]) {
+	static func processConfigDirective(_ list: [String]) async {
 
 		guard list.count > 1 else {
 			failConfig("Missing argument")
@@ -80,22 +80,22 @@ extension Actions {
 			failConfig(nil)
 		case "activate":
             if !checkDefault(visibility: .visible) && checkFiltering() {
-                setOption(visibility: .visible)
+                await setOption(visibility: .visible)
             }
 		case "deactivate":
 			if !checkDefault(visibility: .hidden) && checkFiltering() {
-                setOption(visibility: .hidden)
+                await setOption(visibility: .hidden)
             }
 		case "only-prs":
 			if !checkDefault(visibility: .onlyPrs) && checkFiltering() {
-                setOption(visibility: .onlyPrs)
+                await setOption(visibility: .onlyPrs)
             }
 		case "only-issues":
 			if !checkDefault(visibility: .onlyIssues) && checkFiltering() {
-                setOption(visibility: .onlyIssues)
+                await setOption(visibility: .onlyIssues)
             }
 		case "view":
-			setOption(visibility: nil)
+            await setOption(visibility: nil)
 		default:
 			failConfig("Unknown argmument: \(command)")
 		}

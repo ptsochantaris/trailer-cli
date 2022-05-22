@@ -20,7 +20,7 @@ extension Actions {
 		printFilterOptions()
 	}
 
-	static func processOpenDirective(_ list: [String]) {
+	static func processOpenDirective(_ list: [String]) async {
 		
 		if list.first == "help" {
 			log()
@@ -36,7 +36,7 @@ extension Actions {
 		switch command {
 		case "item":
 			if let number = Int(list[2]) {
-				DB.load()
+                await DB.load()
 				if !openItemURL(number, includePrs: true, includeIssues: true) {
 					log("Item #\(number) not found")
 				}
@@ -46,7 +46,7 @@ extension Actions {
 			break
 		case "pr":
 			if let number = Int(list[2]) {
-				DB.load()
+                await DB.load()
 				if !openItemURL(number, includePrs: true, includeIssues: false) {
 					log("PR #\(number) not found")
 				}
@@ -56,7 +56,7 @@ extension Actions {
 			break
 		case "issue":
 			if let number = Int(list[2]) {
-				DB.load()
+                await DB.load()
 				if !openItemURL(number, includePrs: false, includeIssues: true) {
 					log("Issue #\(number) not found")
 				}
@@ -65,7 +65,7 @@ extension Actions {
 			}
 			break
 		case "repo":
-			DB.load()
+            await DB.load()
 			let name = list[2]
 			let repos = Repo.allItems.values.filter { $0.nameWithOwner.localizedCaseInsensitiveContains(name) }
 			if repos.isEmpty {

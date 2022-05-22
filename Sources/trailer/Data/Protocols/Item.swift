@@ -144,27 +144,25 @@ extension Item {
 			log(level: .verbose, "Created \(newItemCount) \(typeName) item(s) after update")
 		}
 
-		let c = try! encoder.encode(allItems)
-		let l = dataURL
-		let f = FileManager.default
-		if f.fileExists(atPath: l.path) {
-			try! f.removeItem(at: l)
-		}
-		try! c.write(to: l)
+        do {
+            let data = try encoder.encode(allItems)
+            try data.write(to: dataURL)
+        } catch {
+            log("Error saving to \(dataURL)")
+        }
 	}
 
 	static func loadAll(using decoder: JSONDecoder) {
 		allItems.removeAll()
-		let l = dataURL
-		if FileManager.default.fileExists(atPath: l.path) {
-			do {
-				let d = try Data(contentsOf: l)
-				allItems = try decoder.decode([String:Self].self, from: d)
-			} catch {
-				log("Could not load data for type [*\(typeName)*]")
-				allItems = [String:Self]()
-			}
-		}
+		guard let d = try? Data(contentsOf: dataURL) else {
+            return
+        }
+        do {
+            allItems = try decoder.decode([String:Self].self, from: d)
+        } catch {
+            log("Could not load data for type [*\(typeName)*]")
+            allItems = [String:Self]()
+        }
 	}
 
 	mutating func makeChild(of parent: Parent, indent level: Int, quiet: Bool = false) {
@@ -188,7 +186,7 @@ extension Item {
 		}
 	}
 
-	static func parse(parent: Parent?, elementType: String, node: [AnyHashable : Any], level: Int) -> Self? {
+	@MainActor static func parse(parent: Parent?, elementType: String, node: [AnyHashable : Any], level: Int) -> Self? {
 		guard let id = node[Self.idField] as? String else { return nil }
 
 		if var ret = existingItem(with: id) {

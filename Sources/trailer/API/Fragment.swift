@@ -40,7 +40,7 @@ struct Fragment: Ingesting {
 		elements.append(extraField)
 	}
 	
-	func ingest(query: Query, pageData: Any, parent: Parent?, level: Int) -> [Query] {
+	func ingest(query: Query, pageData: Any, parent: Parent?, level: Int) async -> [Query] {
 		log(level: .debug, indent: level, "Ingesting fragment \(name)")
 		guard let hash = pageData as? [AnyHashable : Any] else { return [] }
 
@@ -48,7 +48,7 @@ struct Fragment: Ingesting {
 		for element in elements {
 			if let elementData = hash[element.name], let element = element as? Ingesting {
 				let p = Parent(item: parent?.item, field: element.name)
-				let newQueries = element.ingest(query: query, pageData: elementData, parent: p, level: level+1)
+				let newQueries = await element.ingest(query: query, pageData: elementData, parent: p, level: level+1)
 				extraQueries.append(contentsOf: newQueries)
 			}
 		}

@@ -79,10 +79,10 @@ struct Group: Ingesting {
 		return res
 	}
 	
-	private func checkFields(query: Query, hash: [AnyHashable : Any], parent: Parent?, level: Int) -> [Query] {
+	private func checkFields(query: Query, hash: [AnyHashable : Any], parent: Parent?, level: Int) async -> [Query] {
 		
 		let thisObject: Identifiable?
-		if let o = Group.parse(parent: parent, info: hash, level: level) {
+		if let o = await Group.parse(parent: parent, info: hash, level: level) {
 			thisObject = o
 		} else {
 			thisObject = parent?.item
@@ -93,11 +93,11 @@ struct Group: Ingesting {
 		for field in fields {
 			if let field = field as? Fragment {
 				let p = Parent(item: thisObject, field: parent?.field)
-				let newQueries = field.ingest(query: query, pageData: hash, parent: p, level: level+1)
+				let newQueries = await field.ingest(query: query, pageData: hash, parent: p, level: level+1)
 				extraQueries.append(contentsOf: newQueries)
 			} else if let field = field as? Ingesting, let fieldData = hash[field.name] {
 				let p = Parent(item: thisObject, field: field.name)
-				let newQueries = field.ingest(query: query, pageData: fieldData, parent: p, level: level+1)
+				let newQueries = await field.ingest(query: query, pageData: fieldData, parent: p, level: level+1)
 				extraQueries.append(contentsOf: newQueries)
 			}
 		}
@@ -105,7 +105,7 @@ struct Group: Ingesting {
 		return extraQueries
 	}
 	
-	func ingest(query: Query, pageData: Any, parent: Parent?, level: Int) -> [Query] {
+	func ingest(query: Query, pageData: Any, parent: Parent?, level: Int) async -> [Query] {
 
 		var extraQueries = [Query]()
 
@@ -115,7 +115,7 @@ struct Group: Ingesting {
 				var latestCursor: String?
 				for e in edges {
 					if let node = e["node"] as? [AnyHashable : Any] {
-						let newQueries = checkFields(query: query, hash: node, parent: parent, level: level+1)
+						let newQueries = await checkFields(query: query, hash: node, parent: parent, level: level+1)
 						extraQueries.append(contentsOf: newQueries)
 					}
 					latestCursor = e["cursor"] as? String
@@ -129,14 +129,14 @@ struct Group: Ingesting {
 				
 			} else {
 				log(level: .debug, indent: level, "Ingesting group \(name)")
-				let newQueries = checkFields(query: query, hash: hash, parent: parent, level: level+1)
+				let newQueries = await checkFields(query: query, hash: hash, parent: parent, level: level+1)
 				extraQueries.append(contentsOf: newQueries)
 			}
 			
 		} else if let nodes = pageData as? [[AnyHashable : Any]] { // data was an array of dictionaries with no paging info
 			log(level: .debug, indent: level, "Ingesting list of groups \(name)")
 			for node in nodes {
-				let newQueries = checkFields(query: query, hash: node, parent: parent, level: level+1)
+				let newQueries = await checkFields(query: query, hash: node, parent: parent, level: level+1)
 				extraQueries.append(contentsOf: newQueries)
 			}
 		}
@@ -147,7 +147,7 @@ struct Group: Ingesting {
 		return extraQueries
 	}
 
-	static private func parse(parent: Parent?, info: [AnyHashable: Any], level: Int) -> Identifiable? {
+	static private func parse(parent: Parent?, info: [AnyHashable: Any], level: Int) async -> Identifiable? {
 
 		if let typeName = info["__typename"] as? String {
 
@@ -159,21 +159,21 @@ struct Group: Ingesting {
 
 			switch typeName {
 			case "Repository":
-				return Repo.parse(parent: parent, elementType: typeName, node: info, level: level)
+				return await Repo.parse(parent: parent, elementType: typeName, node: info, level: level)
 			case "Label":
-				return Label.parse(parent: parent, elementType: typeName, node: info, level: level)
+				return await Label.parse(parent: parent, elementType: typeName, node: info, level: level)
 			case "PullRequest":
-				return PullRequest.parse(parent: parent, elementType: typeName, node: info, level: level)
+				return await PullRequest.parse(parent: parent, elementType: typeName, node: info, level: level)
 			case "Issue":
-				return Issue.parse(parent: parent, elementType: typeName, node: info, level: level)
+				return await Issue.parse(parent: parent, elementType: typeName, node: info, level: level)
 			case "IssueComment", "PullRequestReviewComment":
-				return Comment.parse(parent: parent, elementType: typeName, node: info, level: level)
+				return await Comment.parse(parent: parent, elementType: typeName, node: info, level: level)
 			case "PullRequestReview":
-				return Review.parse(parent: parent, elementType: typeName, node: info, level: level)
+				return await Review.parse(parent: parent, elementType: typeName, node: info, level: level)
 			case "Reaction":
-				return Reaction.parse(parent: parent, elementType: typeName, node: info, level: level)
+				return await Reaction.parse(parent: parent, elementType: typeName, node: info, level: level)
 			case "User":
-				let u = User.parse(parent: parent, elementType: typeName, node: info, level: level)
+				let u = await User.parse(parent: parent, elementType: typeName, node: info, level: level)
 				if parent == nil, var me = u {
 					me.isMe = true
 					config.myUser = me
@@ -182,13 +182,13 @@ struct Group: Ingesting {
 				}
 				return u
 			case "ReviewRequest":
-				return ReviewRequest.parse(parent: parent, elementType: typeName, node: info, level: level)
+				return await ReviewRequest.parse(parent: parent, elementType: typeName, node: info, level: level)
 			case "StatusContext", "CheckRun":
-				return Status.parse(parent: parent, elementType: typeName, node: info, level: level)
+				return await Status.parse(parent: parent, elementType: typeName, node: info, level: level)
 			case "Milestone":
-				return Milestone.parse(parent: parent, elementType: typeName, node: info, level: level)
+				return await Milestone.parse(parent: parent, elementType: typeName, node: info, level: level)
 			case "Organization":
-				return Org.parse(parent: parent, elementType: typeName, node: info, level: level)
+				return await Org.parse(parent: parent, elementType: typeName, node: info, level: level)
 			case "ReactionConnection", "PullRequestCommit", "Commit", "Status", "Bot", "PullRequestReviewCommentConnection", "CheckSuite":
 				return nil
 			default:

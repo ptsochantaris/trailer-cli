@@ -42,7 +42,7 @@ struct Actions {
         }
     }
 
-	static func performAction(_ action: Action, listSequence: [String]?) {
+	static func performAction(_ action: Action, listSequence: [String]?) async {
 		switch action {
 		case .update:
             if let i = checkArguments() {
@@ -50,7 +50,7 @@ struct Actions {
                 exit(1)
             }
 			if let listSequence = listSequence {
-				Actions.processUpdateDirective(listSequence)
+				await Actions.processUpdateDirective(listSequence)
 			}
 
 		case .reset:
@@ -67,7 +67,7 @@ struct Actions {
                 exit(1)
             }
 			if let listSequence = listSequence {
-				Actions.processListDirective(listSequence)
+                await Actions.processListDirective(listSequence)
 			}
 
 		case .open:
@@ -76,7 +76,7 @@ struct Actions {
                 exit(1)
             }
 			if let listSequence = listSequence {
-				Actions.processOpenDirective(listSequence)
+                await Actions.processOpenDirective(listSequence)
 			}
 
 		case .show:
@@ -85,7 +85,7 @@ struct Actions {
                 exit(1)
             }
 			if let listSequence = listSequence {
-				Actions.processShowDirective(listSequence)
+				await Actions.processShowDirective(listSequence)
 			}
 
 		case .config:
@@ -94,11 +94,11 @@ struct Actions {
                 exit(1)
             }
 			if let listSequence = listSequence {
-				Actions.processConfigDirective(listSequence)
+                await Actions.processConfigDirective(listSequence)
 			}
 
 		case .stats:
-			DB.printStats()
+            await DB.printStats()
 		}
 	}
 

@@ -7,7 +7,6 @@
 //
 
 import Foundation
-import Dispatch
 
 enum NotificationMode {
     case none, standard, consoleCommentsAndReviews
@@ -32,8 +31,8 @@ struct DB {
 
 	//////////////////////////////////// Stats
 
-	static func printStats() {
-		DB.load()
+	static func printStats() async {
+		await DB.load()
 		log("[![*Org*]!]\t\t\(Org.allItems.count)")
 		log("[![*Repo*]!]\t\t\(Repo.allItems.count)")
 		log("[![*Issue*]!]\t\t\(Issue.allItems.count)")
@@ -83,19 +82,17 @@ struct DB {
 
 	///////////////////////////////////// Load
 
-	static func load() {
+	static func load() async {
 		log(level: .debug, "Loading DB...")
-		let loadingQueue = DispatchQueue.global(qos: .userInteractive)
-		loadingQueue.sync {
-			let e = JSONDecoder()
-			DispatchQueue.concurrentPerform(iterations: allTypes.count+1) { iteration in
-				if iteration == allTypes.count {
-					loadRelationships(using: e)
-				} else {
-					allTypes[iteration].loadAll(using: e)
-				}
-			}
-		}
+        await withTaskGroup(of: Void.self) { group in
+            let e = JSONDecoder()
+            for type in allTypes {
+                group.addTask {
+                    type.loadAll(using: e)
+                }
+            }
+            loadRelationships(using: e)
+        }
 		log(level: .verbose, "Loaded DB")
 
 		config.myUser = User.allItems.values.first { $0.isMe }
@@ -131,7 +128,7 @@ struct DB {
 
 	///////////////////////////////////// Save
 
-    static func save(purgeUntouchedItems: Bool, notificationMode: NotificationMode) {
+    static func save(purgeUntouchedItems: Bool, notificationMode: NotificationMode) async {
 
         log(level: .debug, "Processing Announcements...")
         allTypes.forEach { $0.processAnnouncements(notificationMode: notificationMode) }
@@ -148,17 +145,15 @@ struct DB {
         }
         
 		log(level: .debug, "Saving DB...")
-		let savingQueue = DispatchQueue.global(qos: .userInteractive)
-		savingQueue.sync {
-			let e = JSONEncoder()
-			DispatchQueue.concurrentPerform(iterations: allTypes.count+1) { iteration in
-				if iteration == allTypes.count {
-					saveRelationships(using: e)
-				} else {
-					allTypes[iteration].saveAll(using: e)
-				}
-			}
-		}
+        await withTaskGroup(of: Void.self) { group in
+            let e = JSONEncoder()
+            for type in allTypes {
+                group.addTask {
+                    type.saveAll(using: e)
+                }
+            }
+            saveRelationships(using: e)
+        }
 		log(level: .verbose, "Saved DB to \(config.saveLocation.path)/")
 	}
 

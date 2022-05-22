@@ -7,7 +7,6 @@
 //
 
 import Foundation
-import Dispatch
 
 let emptyURL = URL(string: "http://github.com")!
 

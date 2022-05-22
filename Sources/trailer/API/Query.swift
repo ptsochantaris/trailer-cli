@@ -7,7 +7,6 @@
 //
 
 import Foundation
-import Dispatch
 #if canImport(FoundationNetworking)
 	import FoundationNetworking
 #endif
@@ -26,22 +25,34 @@ struct Parent {
 }
 
 struct Query {
-	private static let processingQueue: OperationQueue = {
-		let o = OperationQueue()
-		o.maxConcurrentOperationCount = 1
-		o.qualityOfService = .userInitiated
-		return o
-	}()
-
 	private static let urlSession: URLSession = {
 		let c = URLSessionConfiguration.default
 		c.httpMaximumConnectionsPerHost = 1
 		c.httpShouldUsePipelining = true
-		c.urlCache = nil
-		c.requestCachePolicy = .reloadIgnoringLocalAndRemoteCacheData
 		c.httpAdditionalHeaders = config.httpHeaders
-		return URLSession(configuration: c, delegate: nil, delegateQueue: processingQueue)
+		return URLSession(configuration: c, delegate: nil, delegateQueue: nil)
 	}()
+    
+    static func getData(for request: URLRequest) async throws -> (Data, URLResponse) {
+        if #available(macOS 12.0, *) {
+            return try await urlSession.data(for: request)
+        } else {
+            return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<(Data, URLResponse), Error>) in
+                urlSession.dataTask(with: request) { data, response, error in
+                    if let data = data, let response = response {
+                        continuation.resume(returning: (data, response))
+                    } else {
+                        continuation.resume(throwing: error ?? NSError(domain: "build.bru.trailer-cli.network", code: 92, userInfo: [NSLocalizedDescriptionKey: "No data or error from server"]))
+                    }
+                }
+            }
+        }
+    }
+    
+    static func getData(from url: URL) async throws -> (Data, URLResponse) {
+        let req = URLRequest(url: url)
+        return try await getData(for: req)
+    }
 
 	let name: String
 
@@ -92,50 +103,19 @@ struct Query {
 		}
 		return text + "{ " + rootQuery + " rateLimit { limit cost remaining resetAt nodeCount } }"
 	}
-	func runAndWait() -> Bool {
-		let g = DispatchGroup()
-		g.enter()
-		var s = false
-		run { success in
-			s = success
-			g.leave()
-		}
-		g.wait()
-		return s
-	}
 
     private static let RETRY_COUNT = 3
 
-	func run(shouldRetry: Int = Query.RETRY_COUNT, completion: @escaping (Bool)->Void) {
+	func run(shouldRetry: Int = Query.RETRY_COUNT) async -> Bool {
 
-		func errorCompletion(_ message: String) {
+		func errorCompletion(_ message: String) async -> Bool {
 			if shouldRetry > 1 {
 				log(level: .verbose, "[*\(name)*] \(message)")
 				log(level: .verbose, "[*\(name)*] Retrying")
-				run(shouldRetry: shouldRetry-1, completion: completion)
+				return await run(shouldRetry: shouldRetry-1)
 			} else {
 				log("[*\(name)*] \(message)")
-				completion(false)
-			}
-		}
-
-		func branchCompletion(_ extraQueries: [Query]) {
-			if extraQueries.count > 0 {
-				log(level: .debug, "[*\(name)*] Needs more page data")
-				let group = DispatchGroup()
-				var success = true
-				for e in extraQueries {
-					group.enter()
-					e.run { s in
-						if !s { success = false }
-						group.leave()
-					}
-				}
-				group.notify(queue: DispatchQueue.global(), execute: {
-					completion(success)
-				})
-			} else {
-				completion(true)
+				return false
 			}
 		}
 
@@ -163,49 +143,57 @@ struct Query {
 		let Q = queryText
 		log(level: .debug, "[*\(name)*] \(Q)")
 
-		var r = URLRequest(url: config.server)
-		r.httpMethod = "POST"
-		r.httpBody = try! JSONEncoder().encode(["query": Q])
+		var req = URLRequest(url: config.server)
+        req.httpMethod = "POST"
+        req.httpBody = try! JSONEncoder().encode(["query": Q])
 
-		Query.urlSession.dataTask(with: r) { info, response, error in
-			if let info = info, let json = (try? JSONSerialization.jsonObject(with: info, options: [])) as? [AnyHashable : Any] {
-
-				if let data = extractNodeData(from: json) {
-
-					if let rateLimit = extractRateLimit(from: json), let cost = rateLimit["cost"] as? Int, let remaining = rateLimit["remaining"] as? Int, let nodeCount = rateLimit["nodeCount"] as? Int {
-						config.totalQueryCosts += cost
-						config.totalApiRemaining = min(config.totalApiRemaining, remaining)
-						log(level: .verbose, "[*\(self.name)*] Processed page (Cost: [!\(cost)!], Remaining: [!\(remaining)!] - Node Count: [!\(nodeCount)!])")
-					} else {
-						log(level: .verbose, "[*\(self.name)*] Processed page")
-					}
-
-					let r = self.rootElement
-					if let topData = data[r.name] {
-						let extraQueries = r.ingest(query: self, pageData: topData, parent: self.parent, level: 0)
-						branchCompletion(extraQueries)
-					} else {
-						errorCompletion("No data in JSON")
-					}
-
-				} else {
-					if let errors = json["errors"] as? [[AnyHashable:Any]] {
-						let msg = errors.first?["message"] as? String ?? "Unspecified server error: \(json)"
-						errorCompletion("Failed with error: '\(msg)'")
-					} else {
-						let msg = json["message"] as? String ?? "Unspecified server error: \(json)"
-						errorCompletion("Failed with error: '\(msg)'")
-					}
-				}
-
-			} else {
-
-				if let error = error {
-					errorCompletion("Network error: \(error.localizedDescription)")
-				} else {
-					errorCompletion("No JSON in response")
-				}
-			}
-		}.resume()
+        let info: Data
+        do {
+            (info, _) = try await Query.getData(for: req)
+        } catch {
+            return await errorCompletion("Network error: \(error.localizedDescription)")
+        }
+        
+        guard let json = (try? JSONSerialization.jsonObject(with: info, options: [])) as? [AnyHashable : Any] else {
+            return await errorCompletion("No JSON in response")
+        }
+        
+        guard let data = extractNodeData(from: json) else {
+            if let errors = json["errors"] as? [[AnyHashable:Any]] {
+                let msg = errors.first?["message"] as? String ?? "Unspecified server error: \(json)"
+                return await errorCompletion("Failed with error: '\(msg)'")
+            } else {
+                let msg = json["message"] as? String ?? "Unspecified server error: \(json)"
+                return await errorCompletion("Failed with error: '\(msg)'")
+            }
+        }
+        
+        if let rateLimit = extractRateLimit(from: json), let cost = rateLimit["cost"] as? Int, let remaining = rateLimit["remaining"] as? Int, let nodeCount = rateLimit["nodeCount"] as? Int {
+            config.totalQueryCosts += cost
+            config.totalApiRemaining = min(config.totalApiRemaining, remaining)
+            log(level: .verbose, "[*\(self.name)*] Processed page (Cost: [!\(cost)!], Remaining: [!\(remaining)!] - Node Count: [!\(nodeCount)!])")
+        } else {
+            log(level: .verbose, "[*\(self.name)*] Processed page")
+        }
+        
+        let root = self.rootElement
+        guard let topData = data[root.name] else {
+            return await errorCompletion("No data in JSON")
+        }
+        
+        let extraQueries = await root.ingest(query: self, pageData: topData, parent: self.parent, level: 0)
+        if extraQueries.isEmpty {
+            return true
+        }
+        
+        log(level: .debug, "[*\(name)*] Needs more page data")
+        return await withTaskGroup(of: Bool.self, returning: Bool.self) { group in
+            for e in extraQueries {
+                group.addTask {
+                    return await e.run()
+                }
+            }
+            return !(await group.contains(false))
+        }
 	}
 }

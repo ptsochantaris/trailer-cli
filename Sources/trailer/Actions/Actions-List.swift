@@ -30,7 +30,7 @@ extension Actions {
 		printFilterOptions()
 	}
 
-	static func processListDirective(_ list: [String]) {
+	static func processListDirective(_ list: [String]) async {
 
 		guard list.count > 1 else {
 			failList("Missing argument")
@@ -40,25 +40,25 @@ extension Actions {
 		let command = list[1]
 		switch command {
 		case "repos":
-			DB.load()
+            await DB.load()
 			listRepos()
 		case "prs":
-			DB.load()
+            await DB.load()
 			listPrs()
 		case "issues":
-			DB.load()
+            await DB.load()
 			listIssues()
 		case "items":
-			DB.load()
+            await DB.load()
 			listItems()
 		case "orgs":
-			DB.load()
+            await DB.load()
 			listOrgs()
 		case "labels":
-			DB.load()
+            await DB.load()
 			listLabels()
 		case "milestones":
-			DB.load()
+            await DB.load()
 			listMilestones()
 		case "help":
             log()
