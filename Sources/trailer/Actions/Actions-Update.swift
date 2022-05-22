@@ -14,23 +14,6 @@ enum UpdateType {
 
 extension Actions {
 
-	static private func successOrAbort(_ query: Query) async {
-		await successOrAbort([query])
-	}
-
-	static private func successOrAbort(_ queries: [Query]) async {
-        await withTaskGroup(of: Bool.self) { group in
-            for q in queries {
-                group.addTask {
-                    return await q.run()
-                }
-            }
-            if await group.contains(false) {
-                exit(1)
-            }
-        }
-	}
-
     static func failUpdate(_ message: String?) {
         printErrorMesage(message)
         printOptionHeader("Please provide one of the following options for 'update'")
@@ -87,7 +70,7 @@ extension Actions {
 		}
 	}
 
-    static func processUpdateDirective(_ list: [String]) async {
+    static func processUpdateDirective(_ list: [String]) async throws {
 
         guard list.count > 1 else {
 			failUpdate("Need at least one update type. If in doubt, use 'all'.")
@@ -122,7 +105,7 @@ extension Actions {
 			}
 		}
 		if updateTypes.count > 0 {
-            await update(updateTypes,
+            try await update(updateTypes,
                          limitToRepoNames: CommandLine.value(for: "-from"),
                          keepOnlyNewItems: CommandLine.argument(exists: "-fresh"))
 		} else {
@@ -131,16 +114,16 @@ extension Actions {
 		}
     }
 
-	static func testToken() async {
+	static func testToken() async throws {
 		let testQuery = Query(name: "Test", rootElement:
 			Group(name: "viewer", fields: [
 				User.fragment,
 				]))
-		await successOrAbort(testQuery)
+        try await testQuery.run()
 		log("Token for server [*\(config.server.absoluteString)*] is valid: Account is [*\(config.myLogin)*]")
 	}
 
-	private static func update(_ typesToSync: [UpdateType], limitToRepoNames: String?, keepOnlyNewItems: Bool) async {
+	private static func update(_ typesToSync: [UpdateType], limitToRepoNames: String?, keepOnlyNewItems: Bool) async throws {
 
 		let repoFilters = RepoFilterArgs()
 		let itemFilters = ItemFilterArgs()
@@ -178,7 +161,7 @@ extension Actions {
 					Group(name: "repositories", fields: [Repo.fragment], paging: .largePage),
 					Group(name: "watching", fields: [Repo.fragment], paging: .largePage)
 					]))
-			await successOrAbort(repositoryListQuery)
+            try await repositoryListQuery.run()
 		} else {
 			log(level: .info, "[*Repos*] (Skipped)")
 			Org.setSyncStatus(.updated, andChildren: false)
@@ -272,7 +255,7 @@ extension Actions {
 					userWantsIssues ? [Repo.issueIdsFragment] :
 					[]
 			let itemQueries = Query.batching("Item IDs", fields: fields, idList: repoIds, perNodeBlock: itemIdParser)
-			await successOrAbort(itemQueries)
+            try await Query.attempt(itemQueries)
 		} else {
 			log(level: .info, "[*Item IDs*] (Skipped)")
 		}
@@ -294,7 +277,7 @@ extension Actions {
 		if prIdList.count > 0 {
 			let fragment = userWantsComments ? PullRequest.fragmentWithComments : PullRequest.fragment
 			let prQueries = Query.batching("PRs", fields: [fragment], idList: Array(prIdList.keys))
-            await successOrAbort(prQueries)
+            try await Query.attempt(prQueries)
 
 			if !userWantsRepos { // revitalise links to parent repos for updated items
 				let updatedPrs = PullRequest.allItems.values.filter { $0.syncState == .updated }
@@ -331,7 +314,7 @@ extension Actions {
 			let reviewIdsWithComments = Review.allItems.values.compactMap { $0.syncState == .none || !$0.syncNeedsComments ? nil : $0.id }
 
 			if reviewIdsWithComments.count > 0 {
-				await successOrAbort(Query.batching("PR Review Comments", fields: [
+                try await Query.attempt(Query.batching("PR Review Comments", fields: [
 					Review.commentsFragment,
 					PullRequest.commentsFragment,
 					Issue.commentsFragment,
@@ -355,7 +338,7 @@ extension Actions {
 		if issueIdList.count > 0 {
 			let fragment = userWantsComments ? Issue.fragmentWithComments : Issue.fragment
 			let issueQueries = Query.batching("Issues", fields: [fragment], idList: Array(issueIdList.keys))
-            await successOrAbort(issueQueries)
+            try await Query.attempt(issueQueries)
 
 			if !userWantsRepos { // revitalise links to parent repos for updated items
 				let updatedIssues = Issue.allItems.values.filter { $0.syncState == .updated }
@@ -429,7 +412,7 @@ extension Actions {
 				itemIdsWithReactions += Issue.allItems.keys
 			}
 
-            await successOrAbort(Query.batching("Reactions", fields: [
+            try await Query.attempt(Query.batching("Reactions", fields: [
 				Comment.pullRequestReviewCommentReactionFragment,
 				Comment.issueCommentReactionFragment,
 				PullRequest.reactionsFragment,
@@ -464,18 +447,18 @@ extension Actions {
 		}
 	}
 
-	static func singleItemUpdate(for item: ListableItem) async -> ListableItem {
+	static func singleItemUpdate(for item: ListableItem) async throws -> ListableItem {
 		let userWantsComments = CommandLine.argument(exists: "-comments")
 		if let pr = item.pullRequest {
 
 			let fragment = userWantsComments ? PullRequest.fragmentWithComments : PullRequest.fragment
 			let queries = Query.batching("PR", fields: [fragment], idList: [pr.id])
-            await successOrAbort(queries)
+            try await Query.attempt(queries)
 
 			if userWantsComments {
 				let reviewIdsWithComments = pr.reviews.compactMap { $0.syncState == .none || !$0.syncNeedsComments ? nil : $0.id }
 				if reviewIdsWithComments.count > 0 {
-                    await successOrAbort(Query.batching("PR Review Comments", fields: [
+                    try await Query.attempt(Query.batching("PR Review Comments", fields: [
 						Review.commentsFragment,
 						PullRequest.commentsFragment,
 						Issue.commentsFragment,
@@ -490,7 +473,7 @@ extension Actions {
 					itemIdsWithReactions.append(contentsOf: review.comments.compactMap({ ($0.syncState == .none || !$0.syncNeedsReactions) ? nil : $0.id }))
 				}
 			}
-            await successOrAbort(Query.batching("Reactions", fields: [
+            try await Query.attempt(Query.batching("Reactions", fields: [
 				Comment.pullRequestReviewCommentReactionFragment,
 				PullRequest.reactionsFragment,
 				], idList: itemIdsWithReactions))
@@ -502,14 +485,14 @@ extension Actions {
 
 			let fragment = userWantsComments ? Issue.fragmentWithComments : Issue.fragment
 			let queries = Query.batching("Issue", fields: [fragment], idList: [issue.id])
-            await successOrAbort(queries)
+            try await Query.attempt(queries)
 
 			var itemIdsWithReactions = [issue.id]
 			if userWantsComments {
 				itemIdsWithReactions += issue.comments.compactMap { ($0.syncState == .none || !$0.syncNeedsReactions) ? nil : $0.id }
 			}
 
-            await successOrAbort(Query.batching("Reactions", fields: [
+            try await Query.attempt(Query.batching("Reactions", fields: [
 				Comment.pullRequestReviewCommentReactionFragment,
 				PullRequest.reactionsFragment,
 				], idList: itemIdsWithReactions))

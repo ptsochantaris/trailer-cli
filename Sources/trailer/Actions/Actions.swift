@@ -42,7 +42,7 @@ struct Actions {
         }
     }
 
-	static func performAction(_ action: Action, listSequence: [String]?) async {
+	static func performAction(_ action: Action, listSequence: [String]?) async throws {
 		switch action {
 		case .update:
             if let i = checkArguments() {
@@ -50,7 +50,7 @@ struct Actions {
                 exit(1)
             }
 			if let listSequence = listSequence {
-				await Actions.processUpdateDirective(listSequence)
+				try await Actions.processUpdateDirective(listSequence)
 			}
 
 		case .reset:
@@ -85,7 +85,7 @@ struct Actions {
                 exit(1)
             }
 			if let listSequence = listSequence {
-				await Actions.processShowDirective(listSequence)
+				try await Actions.processShowDirective(listSequence)
 			}
 
 		case .config:

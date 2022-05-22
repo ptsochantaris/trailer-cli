@@ -25,7 +25,7 @@ extension Actions {
 		printFilterOptions()
 	}
 
-	static func processShowDirective(_ list: [String]) async {
+	static func processShowDirective(_ list: [String]) async throws {
 
 		if list.first == "help" {
 			log()
@@ -46,19 +46,19 @@ extension Actions {
 		switch command {
 		case "item":
 			await DB.load()
-			if !(await showItem(number, includePrs: true, includeIssues: true)) {
+			if !(try await showItem(number, includePrs: true, includeIssues: true)) {
 				log("[R*Item #\(number) not found*]")
 			}
 
         case "pr":
             await DB.load()
-			if !(await showItem(number, includePrs: true, includeIssues: false)) {
+			if !(try await showItem(number, includePrs: true, includeIssues: false)) {
 				log("[R*PR #\(number) not found*]")
 			}
 
         case "issue":
             await DB.load()
-			if !(await showItem(number, includePrs: false, includeIssues: true)) {
+			if !(try await showItem(number, includePrs: false, includeIssues: true)) {
 				log("[R*Issue #\(number) not found*]")
 			}
 
@@ -67,12 +67,12 @@ extension Actions {
 		}
 	}
 
-	static private func showItem(_ number: Int, includePrs: Bool, includeIssues: Bool) async -> Bool {
+	static private func showItem(_ number: Int, includePrs: Bool, includeIssues: Bool) async throws -> Bool {
 		if let items = findItems(number: number, includePrs: includePrs, includeIssues: includeIssues, warnIfMultiple: true) {
 			if items.count == 1, var item = items.first {
 
 				if CommandLine.argument(exists: "-refresh") {
-					item = await Actions.singleItemUpdate(for: item)
+					item = try await Actions.singleItemUpdate(for: item)
 				}
 				item.printDetails()
 

@@ -106,16 +106,16 @@ struct Query {
 
     private static let RETRY_COUNT = 3
 
-	func run(shouldRetry: Int = Query.RETRY_COUNT) async -> Bool {
+	func run(shouldRetry: Int = Query.RETRY_COUNT) async throws {
 
-		func errorCompletion(_ message: String) async -> Bool {
+		func retryOrFail(_ message: String) async throws {
 			if shouldRetry > 1 {
 				log(level: .verbose, "[*\(name)*] \(message)")
 				log(level: .verbose, "[*\(name)*] Retrying")
-				return await run(shouldRetry: shouldRetry-1)
+				try await run(shouldRetry: shouldRetry-1)
 			} else {
 				log("[*\(name)*] \(message)")
-				return false
+                throw NSError(domain: "build.bru.trailer-cli.quert", code: 1, userInfo: [NSLocalizedDescriptionKey: message])
 			}
 		}
 
@@ -151,21 +151,24 @@ struct Query {
         do {
             (info, _) = try await Query.getData(for: req)
         } catch {
-            return await errorCompletion("Network error: \(error.localizedDescription)")
+            try await retryOrFail("Network error: \(error.localizedDescription)")
+            return
         }
         
         guard let json = (try? JSONSerialization.jsonObject(with: info, options: [])) as? [AnyHashable : Any] else {
-            return await errorCompletion("No JSON in response")
+            try await retryOrFail("No JSON in response")
+            return
         }
         
         guard let data = extractNodeData(from: json) else {
+            let msg: String
             if let errors = json["errors"] as? [[AnyHashable:Any]] {
-                let msg = errors.first?["message"] as? String ?? "Unspecified server error: \(json)"
-                return await errorCompletion("Failed with error: '\(msg)'")
+                msg = errors.first?["message"] as? String ?? "Unspecified server error: \(json)"
             } else {
-                let msg = json["message"] as? String ?? "Unspecified server error: \(json)"
-                return await errorCompletion("Failed with error: '\(msg)'")
+                msg = json["message"] as? String ?? "Unspecified server error: \(json)"
             }
+            try await retryOrFail("Failed with error: '\(msg)'")
+            return
         }
         
         if let rateLimit = extractRateLimit(from: json), let cost = rateLimit["cost"] as? Int, let remaining = rateLimit["remaining"] as? Int, let nodeCount = rateLimit["nodeCount"] as? Int {
@@ -178,22 +181,27 @@ struct Query {
         
         let root = self.rootElement
         guard let topData = data[root.name] else {
-            return await errorCompletion("No data in JSON")
+            try await retryOrFail("No data in JSON")
+            return
         }
         
         let extraQueries = await root.ingest(query: self, pageData: topData, parent: self.parent, level: 0)
         if extraQueries.isEmpty {
-            return true
+            return
         }
         
         log(level: .debug, "[*\(name)*] Needs more page data")
-        return await withTaskGroup(of: Bool.self, returning: Bool.self) { group in
-            for e in extraQueries {
+        try await Query.attempt(extraQueries)
+	}
+    
+    static func attempt(_ queries: [Query]) async throws {
+        try await withThrowingTaskGroup(of: Void.self) { group in
+            for q in queries {
                 group.addTask {
-                    return await e.run()
+                    try await q.run()
                 }
             }
-            return !(await group.contains(false))
+            try await group.waitForAll()
         }
-	}
+    }
 }

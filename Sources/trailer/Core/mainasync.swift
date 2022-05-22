@@ -15,7 +15,7 @@ import WinSDK
 struct MainApp {
     static func main() async {
         let app = MainApp()
-        await app.go()
+        try? await app.go()
     }
     
     private func setupConsole() {
@@ -43,7 +43,7 @@ struct MainApp {
         #endif
     }
 
-    private func go() async {
+    private func go() async throws {
 
         setupConsole()
         
@@ -110,7 +110,7 @@ struct MainApp {
                 if config.token.isEmpty {
                     log("Token for server [*\(config.server.absoluteString)*] isn't set")
                 } else {
-                    await Actions.testToken()
+                    try await Actions.testToken()
                 }
                 if actionDetected == nil {
                     exit(0)
@@ -136,7 +136,7 @@ struct MainApp {
 
         extendStackSizeIfNeeded()
 
-        await Actions.performAction(action, listSequence: actionSequence)
+        try await Actions.performAction(action, listSequence: actionSequence)
     }
 
     // With thanks to: https://stackoverflow.com/questions/2275550/change-stack-size-for-a-c-application-in-linux-during-compilation-with-gnu-com#2284691
