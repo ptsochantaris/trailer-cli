@@ -9,9 +9,9 @@
 import Foundation
 
 struct Field: Element {
-	let name: String
-	var queryText: String { return name }
-	var fragments: [Fragment] { return [] }
+    let name: String
+    var queryText: String { name }
+    var fragments: [Fragment] { [] }
 
     static let id = Field(name: "id")
 }

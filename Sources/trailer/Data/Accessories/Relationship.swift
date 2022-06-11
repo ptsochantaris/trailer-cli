@@ -12,7 +12,7 @@ struct Relationship: Codable, Equatable {
     let parentId: String
     var syncState: SyncState
 
-    private enum CodingKeys : CodingKey {
+    private enum CodingKeys: CodingKey {
         case parentId
     }
 
@@ -23,7 +23,7 @@ struct Relationship: Codable, Equatable {
     }
 
     init(to parent: Parent) {
-        self.parentId = parent.item.id
+        parentId = parent.item.id
         syncState = .new
     }
 
@@ -32,7 +32,7 @@ struct Relationship: Codable, Equatable {
         try c.encode(parentId, forKey: .parentId)
     }
 
-    static func ==(lhs: Relationship, rhs: Relationship) -> Bool {
-        return lhs.parentId == rhs.parentId
+    static func == (lhs: Relationship, rhs: Relationship) -> Bool {
+        lhs.parentId == rhs.parentId
     }
 }

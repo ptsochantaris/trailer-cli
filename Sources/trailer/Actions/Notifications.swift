@@ -9,7 +9,6 @@
 import Foundation
 
 struct Notifications {
-
     struct Notification {
         let title: String?
         let subtitle: String?

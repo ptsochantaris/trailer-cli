@@ -9,7 +9,7 @@
 import Foundation
 
 protocol Element {
-	var name: String { get }
-	var queryText: String { get }
-	var fragments: [Fragment] { get }
+    var name: String { get }
+    var queryText: String { get }
+    var fragments: [Fragment] { get }
 }

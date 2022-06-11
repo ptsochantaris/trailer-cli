@@ -11,13 +11,13 @@ import Foundation
 let emptyURL = URL(string: "http://github.com")!
 
 enum LogLevel: Int {
-	case debug = 0, verbose = 1, info = 2
+    case debug = 0, verbose = 1, info = 2
 }
 
 var globalLogLevel = LogLevel.info
 
-func log(level: LogLevel = .info, indent: Int = 0, _ message: @autoclosure ()->String = "", unformatted: Bool = false) {
-	if globalLogLevel.rawValue > level.rawValue { return }
+func log(level: LogLevel = .info, indent: Int = 0, _ message: @autoclosure () -> String = "", unformatted: Bool = false) {
+    if globalLogLevel.rawValue > level.rawValue { return }
     if indent > 0 {
         let spaces = String(repeating: " ", count: indent)
         print(spaces, terminator: "")
@@ -49,6 +49,6 @@ func open(url: URL) {
 
 extension Collection {
     var hasItems: Bool {
-        return !self.isEmpty
+        !isEmpty
     }
 }

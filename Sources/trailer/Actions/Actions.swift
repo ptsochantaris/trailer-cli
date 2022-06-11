@@ -8,28 +8,27 @@
 
 import Foundation
 #if os(Windows)
-import WinSDK
+    import WinSDK
 #endif
 
 enum Action: String {
-	case update
-	case reset
-	case list
-	case show
-	case open
-	case config
-	case stats
+    case update
+    case reset
+    case list
+    case show
+    case open
+    case config
+    case stats
 }
 
-struct Actions {
-
+enum Actions {
     private static func checkArguments() -> [String]? {
         // Very rough sanity check to catch typos, should be more fine-grained per action
-		let invalidArguments = CommandLine.arguments.filter { $0.hasPrefix("-") }.map { $0.lowercased() }.filter { arg in
+        let invalidArguments = CommandLine.arguments.filter { $0.hasPrefix("-") }.map { $0.lowercased() }.filter { arg in
             switch arg {
-            case "-v", "-debug", "-server", "-token", "-r", "-o", "-t", "-a", "-l", "-h", "-b", "-c", "-comments", "-refresh", "-body", "-page-size", "-dryrun",
-                 "-mine", "-participated", "-mentioned", "-mergeable", "-conflict", "-red", "-green", "-e", "-before", "-within", "-n", "-purge", "-from", "-sort",
-                 "-mono", "-version", "-fresh", "-m", "-number", "-blocked", "-approved", "-unreviewed", "-active", "-inactive", "-set-default", "-fields":
+            case "-a", "-active", "-approved", "-b", "-before", "-blocked", "-body", "-c", "-comments", "-conflict", "-debug", "-dryrun", "-e", "-fields", "-fresh", "-from", "-green",
+                 "-h", "-inactive", "-l", "-m", "-mentioned", "-mergeable", "-mine", "-mono", "-n", "-number", "-o", "-page-size", "-participated", "-purge",
+                 "-r", "-red", "-refresh", "-server", "-set-default", "-sort", "-t", "-token", "-unreviewed", "-v", "-version", "-within":
                 return false
             default:
                 return true
@@ -42,69 +41,69 @@ struct Actions {
         }
     }
 
-	static func performAction(_ action: Action, listSequence: [String]?) async throws {
-		switch action {
-		case .update:
+    static func performAction(_ action: Action, listSequence: [String]?) async throws {
+        switch action {
+        case .update:
             if let i = checkArguments() {
                 Actions.failUpdate("Unknown argument(s): \(i.joined(separator: ", "))")
                 exit(1)
             }
-			if let listSequence = listSequence {
-				try await Actions.processUpdateDirective(listSequence)
-			}
+            if let listSequence = listSequence {
+                try await Actions.processUpdateDirective(listSequence)
+            }
 
-		case .reset:
-			log("[!Will delete token and data for '\(config.server)' in 5 seconds[R*")
-			log("[&Press CTRL-C to abort*]&]!]")
-			log()
-			Thread.sleep(until: Date(timeIntervalSinceNow: 5))
-			try! FileManager.default.removeItem(at: config.saveLocation)
-			log("All data for [*\(config.server)*] has been removed")
+        case .reset:
+            log("[!Will delete token and data for '\(config.server)' in 5 seconds[R*")
+            log("[&Press CTRL-C to abort*]&]!]")
+            log()
+            Thread.sleep(until: Date(timeIntervalSinceNow: 5))
+            try! FileManager.default.removeItem(at: config.saveLocation)
+            log("All data for [*\(config.server)*] has been removed")
 
-		case .list:
+        case .list:
             if let i = checkArguments() {
                 Actions.failList("Unknown argument(s): \(i.joined(separator: ", "))")
                 exit(1)
             }
-			if let listSequence = listSequence {
+            if let listSequence = listSequence {
                 await Actions.processListDirective(listSequence)
-			}
+            }
 
-		case .open:
+        case .open:
             if let i = checkArguments() {
                 Actions.failOpen("Unknown argument(s): \(i.joined(separator: ", "))")
                 exit(1)
             }
-			if let listSequence = listSequence {
+            if let listSequence = listSequence {
                 await Actions.processOpenDirective(listSequence)
-			}
+            }
 
-		case .show:
+        case .show:
             if let i = checkArguments() {
                 Actions.failShow("Unknown argument(s): \(i.joined(separator: ", "))")
                 exit(1)
             }
-			if let listSequence = listSequence {
-				try await Actions.processShowDirective(listSequence)
-			}
+            if let listSequence = listSequence {
+                try await Actions.processShowDirective(listSequence)
+            }
 
-		case .config:
+        case .config:
             if let i = checkArguments() {
                 Actions.failConfig("Unknown argument(s): \(i.joined(separator: ", "))")
                 exit(1)
             }
-			if let listSequence = listSequence {
+            if let listSequence = listSequence {
                 await Actions.processConfigDirective(listSequence)
-			}
+            }
 
-		case .stats:
+        case .stats:
             await DB.printStats()
-		}
-	}
+        }
+    }
 
-	static var terminalWidth: Int = {
+    static var terminalWidth: Int = {
         #if os(Windows)
-            var csbi: CONSOLE_SCREEN_BUFFER_INFO = CONSOLE_SCREEN_BUFFER_INFO()
+            var csbi = CONSOLE_SCREEN_BUFFER_INFO()
             if !GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi) {
                 return 80
             }
@@ -114,155 +113,155 @@ struct Actions {
             _ = ioctl(STDOUT_FILENO, UInt(TIOCGWINSZ), &w)
             return w.ws_col == 0 ? 80 : Int(w.ws_col)
         #endif
-	}()
+    }()
 
-	static func printOptionHeader(_ text: String) {
-		var line = ""
+    static func printOptionHeader(_ text: String) {
+        var line = ""
 
-		for word in text.split(separator: " ") {
-			if line.count + word.count + 1 > terminalWidth {
-				log("[!\(line)!]")
-				line = ""
-			}
-			line += (word + " ")
-		}
-		if line.hasItems {
-			log("[!\(line)!]")
-		}
-	}
+        for word in text.split(separator: " ") {
+            if line.count + word.count + 1 > terminalWidth {
+                log("[!\(line)!]")
+                line = ""
+            }
+            line += (word + " ")
+        }
+        if line.hasItems {
+            log("[!\(line)!]")
+        }
+    }
 
-	static func printOption(name: String, description: String) {
-		var firstLine = true
-		var line = ""
+    static func printOption(name: String, description: String) {
+        var firstLine = true
+        var line = ""
 
-		func dumpLine() {
-			if firstLine {
-				let firstIndent = max(0, 16 - name.count)
-				log(indent: firstIndent, "[![*\(name)*]!] \(line)")
-				firstLine = false
-			} else {
-				log(indent: 17, line)
-			}
-			line = ""
-		}
+        func dumpLine() {
+            if firstLine {
+                let firstIndent = max(0, 16 - name.count)
+                log(indent: firstIndent, "[![*\(name)*]!] \(line)")
+                firstLine = false
+            } else {
+                log(indent: 17, line)
+            }
+            line = ""
+        }
 
-		for word in description.split(separator: " ") {
-			if 17 + line.count + word.count + 1 > terminalWidth {
-				dumpLine()
-			}
-			line += (word + " ")
-		}
-		if line.hasItems {
-			dumpLine()
-		}
-	}
+        for word in description.split(separator: " ") {
+            if 17 + line.count + word.count + 1 > terminalWidth {
+                dumpLine()
+            }
+            line += (word + " ")
+        }
+        if line.hasItems {
+            dumpLine()
+        }
+    }
 
-	static func printErrorMesage(_ message: String?) {
-		if let message = message {
-			log()
-			log("[![R*!! \(message)*]!]")
-			log()
-		}
-	}
+    static func printErrorMesage(_ message: String?) {
+        if let message = message {
+            log()
+            log("[![R*!! \(message)*]!]")
+            log()
+        }
+    }
 
-	static func findItems(number: Int, includePrs: Bool, includeIssues: Bool, warnIfMultiple: Bool) -> [ListableItem]? {
-		var items = [ListableItem]()
-		if includePrs {
-			let prs = Actions.pullRequestsToScan(number: number).map { ListableItem.pullRequest($0) }
-			items.append(contentsOf: prs)
-		}
-		if includeIssues {
-			let issues = Actions.issuesToScan(number: number).map { ListableItem.issue($0) }
-			items.append(contentsOf: issues)
-		}
-		if warnIfMultiple && items.count > 1 {
-			if includePrs && !includeIssues {
+    static func findItems(number: Int, includePrs: Bool, includeIssues: Bool, warnIfMultiple: Bool) -> [ListableItem]? {
+        var items = [ListableItem]()
+        if includePrs {
+            let prs = Actions.pullRequestsToScan(number: number).map { ListableItem.pullRequest($0) }
+            items.append(contentsOf: prs)
+        }
+        if includeIssues {
+            let issues = Actions.issuesToScan(number: number).map { ListableItem.issue($0) }
+            items.append(contentsOf: issues)
+        }
+        if warnIfMultiple, items.count > 1 {
+            if includePrs, !includeIssues {
                 log("Multiple repositories with a PR [*#\(number)*]. Use -r to select a repository. Did you mean...")
-			} else if includeIssues && !includePrs {
+            } else if includeIssues, !includePrs {
                 log("Multiple repositories with issue [*#\(number)*]. Use -r to select a repository. Did you mean...")
-			} else {
-				log("Multiple repositories with an item [*#\(number)*]. Use -r to select a repository. Did you mean...")
-			}
-			for i in items.sortedByCriteria {
-				switch i {
-				case .pullRequest(let i):
-					i.printSummaryLine()
-				case .issue(let i):
-					i.printSummaryLine()
-				}
-			}
-		}
-		return items
-	}
+            } else {
+                log("Multiple repositories with an item [*#\(number)*]. Use -r to select a repository. Did you mean...")
+            }
+            for i in items.sortedByCriteria {
+                switch i {
+                case let .pullRequest(i):
+                    i.printSummaryLine()
+                case let .issue(i):
+                    i.printSummaryLine()
+                }
+            }
+        }
+        return items
+    }
 
-	static func printFilterOptions(onlyRepos: Bool = false) {
-		printOptionHeader("Filter options (can combine)")
-		printOption(name :"-o <org>", description: "Filter for an org name")
-		printOption(name :"-r <repo>", description: "Filter for a repo name")
-        printOption(name :"-active", description: "Filter for repos configured for PRs or Issues")
-        printOption(name :"-inactive", description: "Filter for repos configured as hidden")
-		printOption(name :"-h", description: "Filter for repos/orgs with PRs or Issues")
-		printOption(name :"-e", description: "Exclude repos/orgs with PRs or Issues")
-		log()
+    static func printFilterOptions(onlyRepos: Bool = false) {
+        printOptionHeader("Filter options (can combine)")
+        printOption(name: "-o <org>", description: "Filter for an org name")
+        printOption(name: "-r <repo>", description: "Filter for a repo name")
+        printOption(name: "-active", description: "Filter for repos configured for PRs or Issues")
+        printOption(name: "-inactive", description: "Filter for repos configured as hidden")
+        printOption(name: "-h", description: "Filter for repos/orgs with PRs or Issues")
+        printOption(name: "-e", description: "Exclude repos/orgs with PRs or Issues")
+        log()
 
-		if onlyRepos {
-			return
-		}
+        if onlyRepos {
+            return
+        }
 
-		printOptionHeader("Filter options affecting PRs or Issues (can combine)")
-		printOption(name :"-mine", description: "Items authored by me, or assigned to me")
-		printOption(name :"-participated", description: "Items which I have commented on")
-		printOption(name :"-mentioned", description: "Items mentioning me in their body or comments")
-		printOption(name :"-before <days>", description: "Items updated before <days>")
-		printOption(name :"-within <days>", description: "Items updated within <days>")
-		printOption(name :"-number <num>", description: "Items with this number (Can also be a comma-separated list)")
-		printOption(name :"-t <text>", description: "Items containing 'text' in their title")
-		printOption(name :"-b <text>", description: "Items containing 'text' in their body")
-		printOption(name :"-c <text>", description: "Items containing 'text' in commens/reviews")
-		printOption(name :"-a <author>", description: "Items by a specific author")
-		printOption(name :"-l <label>", description: "Items with a specific label")
-		printOption(name :"-m <milestone>", description: "Items with a specific milestone")
-		log()
-		printOptionHeader("Filter options affecting PRs (can combine)")
-		printOption(name :"-mergeable", description: "Mergeable PRs")
-		printOption(name :"-conflict", description: "Un-mergeable PRs")
-		printOption(name :"-green", description: "PRs with only green statuses")
-		printOption(name :"-red", description: "PRs containing red statuses")
-		printOption(name :"-unreviewed", description: "PRs with pending reviews")
-		printOption(name :"-blocked", description: "PRs where reviewers request changes")
-		printOption(name :"-approved", description: "PRs where all reviewers approve")
-		log()
-	}
+        printOptionHeader("Filter options affecting PRs or Issues (can combine)")
+        printOption(name: "-mine", description: "Items authored by me, or assigned to me")
+        printOption(name: "-participated", description: "Items which I have commented on")
+        printOption(name: "-mentioned", description: "Items mentioning me in their body or comments")
+        printOption(name: "-before <days>", description: "Items updated before <days>")
+        printOption(name: "-within <days>", description: "Items updated within <days>")
+        printOption(name: "-number <num>", description: "Items with this number (Can also be a comma-separated list)")
+        printOption(name: "-t <text>", description: "Items containing 'text' in their title")
+        printOption(name: "-b <text>", description: "Items containing 'text' in their body")
+        printOption(name: "-c <text>", description: "Items containing 'text' in commens/reviews")
+        printOption(name: "-a <author>", description: "Items by a specific author")
+        printOption(name: "-l <label>", description: "Items with a specific label")
+        printOption(name: "-m <milestone>", description: "Items with a specific milestone")
+        log()
+        printOptionHeader("Filter options affecting PRs (can combine)")
+        printOption(name: "-mergeable", description: "Mergeable PRs")
+        printOption(name: "-conflict", description: "Un-mergeable PRs")
+        printOption(name: "-green", description: "PRs with only green statuses")
+        printOption(name: "-red", description: "PRs containing red statuses")
+        printOption(name: "-unreviewed", description: "PRs with pending reviews")
+        printOption(name: "-blocked", description: "PRs where reviewers request changes")
+        printOption(name: "-approved", description: "PRs where all reviewers approve")
+        log()
+    }
 
-	static func reportAndExit(message: String?) -> Never {
-		if let message = message {
-			log()
-			log("[![R*!! \(message)*]!]")
-		}
-		log()
-		printOptionHeader("Usage: trailer [*<ACTION>*] <action options...> <advanced options...>")
-		log()
+    static func reportAndExit(message: String?) -> Never {
+        if let message = message {
+            log()
+            log("[![R*!! \(message)*]!]")
+        }
+        log()
+        printOptionHeader("Usage: trailer [*<ACTION>*] <action options...> <advanced options...>")
+        log()
 
-		printOptionHeader("ACTION can be one of the following:")
-		log()
-		printOption(name: "update", description: "(Re)load local cache from GitHub. Specify 'help' for more info.")
-		printOption(name: "list", description: "List or search for various items. Specify 'help' for more info.")
-		printOption(name: "show", description: "Display details of specific items. Specify 'help' for more info.")
-		printOption(name: "open", description: "Open the specific item in a web browser. If multiple items match, the first one opens. Specify 'help' for more info.")
-		printOption(name: "config", description: "Visibility options for repositories. Specify 'help' for more info.")
-		printOption(name: "stats", description: "List stats on stored data.")
-		printOption(name: "reset", description: "Clear all stored data, including config/token.")
-		log()
+        printOptionHeader("ACTION can be one of the following:")
+        log()
+        printOption(name: "update", description: "(Re)load local cache from GitHub. Specify 'help' for more info.")
+        printOption(name: "list", description: "List or search for various items. Specify 'help' for more info.")
+        printOption(name: "show", description: "Display details of specific items. Specify 'help' for more info.")
+        printOption(name: "open", description: "Open the specific item in a web browser. If multiple items match, the first one opens. Specify 'help' for more info.")
+        printOption(name: "config", description: "Visibility options for repositories. Specify 'help' for more info.")
+        printOption(name: "stats", description: "List stats on stored data.")
+        printOption(name: "reset", description: "Clear all stored data, including config/token.")
+        log()
 
-		printOptionHeader("Advanced options:")
-		log()
-		printOption(name: "-server <URL>", description: "Full URL to the API endpoint of the GitHub server you want to query. Defaults to 'https://api.github.com/graphql'.")
-		printOption(name: "-token <token>", description: "Auth API token to use when accessing the default or selected server. The value given here is persisted and doesn't need to be repeated. '-token display' shows the stored token. '-token test' tests the stored token.")
-		printOption(name: "-v / -debug", description: "Enable verbose output, -debug provides a debug trace.")
-		printOption(name: "-page-size", description: "Minimum items fetched per API call (default: 50). If you get errors about queries failing, reduce this to a lower value. Must be between 10 and 100.")
-		printOption(name: "-mono", description: "Generate monochrome text output.")
-		log()
+        printOptionHeader("Advanced options:")
+        log()
+        printOption(name: "-server <URL>", description: "Full URL to the API endpoint of the GitHub server you want to query. Defaults to 'https://api.github.com/graphql'.")
+        printOption(name: "-token <token>", description: "Auth API token to use when accessing the default or selected server. The value given here is persisted and doesn't need to be repeated. '-token display' shows the stored token. '-token test' tests the stored token.")
+        printOption(name: "-v / -debug", description: "Enable verbose output, -debug provides a debug trace.")
+        printOption(name: "-page-size", description: "Minimum items fetched per API call (default: 50). If you get errors about queries failing, reduce this to a lower value. Must be between 10 and 100.")
+        printOption(name: "-mono", description: "Generate monochrome text output.")
+        log()
 
-		exit(1)
-	}
+        exit(1)
+    }
 }

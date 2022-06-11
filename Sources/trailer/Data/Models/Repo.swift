@@ -9,93 +9,92 @@
 import Foundation
 
 enum RepoVisibility: String, Codable {
-	case hidden, visible, onlyPrs, onlyIssues
+    case hidden, visible, onlyPrs, onlyIssues
 }
 
 struct Repo: Item, Announceable {
-	var id: String
-	var parents: [String: [Relationship]]
-	var syncState: SyncState
-	var elementType: String
+    var id: String
+    var parents: [String: [Relationship]]
+    var syncState: SyncState
+    var elementType: String
 
-	static var allItems = [String:Repo]()
-	static let idField = "id"
+    static var allItems = [String: Repo]()
+    static let idField = "id"
 
-	var createdAt = Date.distantPast
-	var updatedAt = Date.distantPast
-	var isFork = false
-	var url = emptyURL
-	var nameWithOwner = ""
-	var visibility = RepoVisibility.visible
+    var createdAt = Date.distantPast
+    var updatedAt = Date.distantPast
+    var isFork = false
+    var url = emptyURL
+    var nameWithOwner = ""
+    var visibility = RepoVisibility.visible
 
-	private enum CodingKeys : CodingKey {
-		case id
-		case parents
-		case elementType
-		case createdAt
-		case updatedAt
-		case isFork
-		case url
-		case nameWithOwner
-		case visibility
-	}
+    private enum CodingKeys: CodingKey {
+        case id
+        case parents
+        case elementType
+        case createdAt
+        case updatedAt
+        case isFork
+        case url
+        case nameWithOwner
+        case visibility
+    }
 
-	init(from decoder: Decoder) throws {
-		let c = try decoder.container(keyedBy: CodingKeys.self)
-		id = try c.decode(String.self, forKey: .id)
-		parents = try c.decode([String: [Relationship]].self, forKey: .parents)
-		elementType = try c.decode(String.self, forKey: .elementType)
-		createdAt = try c.decode(Date.self, forKey: .createdAt)
-		updatedAt = try c.decode(Date.self, forKey: .updatedAt)
-		isFork = try c.decode(Bool.self, forKey: .isFork)
-		url = try c.decode(URL.self, forKey: .url)
-		nameWithOwner = try c.decode(String.self, forKey: .nameWithOwner)
-		visibility = try c.decode(RepoVisibility.self, forKey: .visibility)
-		syncState = .none
-	}
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = try c.decode(String.self, forKey: .id)
+        parents = try c.decode([String: [Relationship]].self, forKey: .parents)
+        elementType = try c.decode(String.self, forKey: .elementType)
+        createdAt = try c.decode(Date.self, forKey: .createdAt)
+        updatedAt = try c.decode(Date.self, forKey: .updatedAt)
+        isFork = try c.decode(Bool.self, forKey: .isFork)
+        url = try c.decode(URL.self, forKey: .url)
+        nameWithOwner = try c.decode(String.self, forKey: .nameWithOwner)
+        visibility = try c.decode(RepoVisibility.self, forKey: .visibility)
+        syncState = .none
+    }
 
-	func encode(to encoder: Encoder) throws {
-		var c = encoder.container(keyedBy: CodingKeys.self)
-		try c.encode(id, forKey: .id)
-		try c.encode(parents, forKey: .parents)
-		try c.encode(elementType, forKey: .elementType)
-		try c.encode(createdAt, forKey: .createdAt)
-		try c.encode(updatedAt, forKey: .updatedAt)
-		try c.encode(isFork, forKey: .isFork)
-		try c.encode(url, forKey: .url)
-		try c.encode(nameWithOwner, forKey: .nameWithOwner)
-		try c.encode(visibility, forKey: .visibility)
-	}
+    func encode(to encoder: Encoder) throws {
+        var c = encoder.container(keyedBy: CodingKeys.self)
+        try c.encode(id, forKey: .id)
+        try c.encode(parents, forKey: .parents)
+        try c.encode(elementType, forKey: .elementType)
+        try c.encode(createdAt, forKey: .createdAt)
+        try c.encode(updatedAt, forKey: .updatedAt)
+        try c.encode(isFork, forKey: .isFork)
+        try c.encode(url, forKey: .url)
+        try c.encode(nameWithOwner, forKey: .nameWithOwner)
+        try c.encode(visibility, forKey: .visibility)
+    }
 
-	mutating func apply(_ node: [AnyHashable:Any]) -> Bool {
+    mutating func apply(_ node: [AnyHashable: Any]) -> Bool {
+        guard node.keys.count > 5 else { return false }
 
-		guard node.keys.count > 5 else { return false }
+        createdAt = GHDateFormatter.parseGH8601(node["createdAt"] as? String) ?? Date.distantPast
+        updatedAt = GHDateFormatter.parseGH8601(node["updatedAt"] as? String) ?? Date.distantPast
+        isFork = node["isFork"] as? Bool ?? false
+        url = URL(string: node["url"] as? String ?? "") ?? emptyURL
+        nameWithOwner = node["nameWithOwner"] as? String ?? ""
 
-		createdAt = GHDateFormatter.parseGH8601(node["createdAt"] as? String) ?? Date.distantPast
-		updatedAt = GHDateFormatter.parseGH8601(node["updatedAt"] as? String) ?? Date.distantPast
-		isFork = node["isFork"] as? Bool ?? false
-		url = URL(string: node["url"] as? String ?? "") ?? emptyURL
-		nameWithOwner = node["nameWithOwner"] as? String ?? ""
+        return true
+    }
 
-		return true
-	}
-
-	init?(id: String, type: String, node: [AnyHashable:Any]) {
-		self.id = id
-		self.parents = [String:[Relationship]]()
-		self.elementType = type
-		syncState = .new
-		visibility = config.defaultRepoVisibility
-		if !apply(node) {
-			return nil
-		}
-	}
+    init?(id: String, type: String, node: [AnyHashable: Any]) {
+        self.id = id
+        parents = [String: [Relationship]]()
+        elementType = type
+        syncState = .new
+        visibility = config.defaultRepoVisibility
+        if !apply(node) {
+            return nil
+        }
+    }
 
     func printSummaryLine() {
-		let bright = visibility != .hidden || syncState == .new
+        let bright = visibility != .hidden || syncState == .new
 
         var line = ""
-		if bright { line += "[!" }
+        if bright { line += "[!" }
         if syncState == .new {
             line += "[R*NEW *]Repo "
         } else {
@@ -104,58 +103,58 @@ struct Repo: Item, Announceable {
         line += "\(nameWithOwner)"
         if bright { line += "!]" }
 
-		let pc = pullRequests.count
-		let ic = issues.count
-		if pc+ic > 0 {
+        let pc = pullRequests.count
+        let ic = issues.count
+        if pc + ic > 0 {
             line += " ("
-		}
-		if pc > 0 {
+        }
+        if pc > 0 {
             if bright { line += "[!" }
             line += "[*\(pc)*]"
             if bright { line += "!]" }
             line += " PRs"
-		}
-		if ic > 0 {
-			if pc > 0 {
-				line += ", "
-			}
+        }
+        if ic > 0 {
+            if pc > 0 {
+                line += ", "
+            }
             if bright { line += "[!" }
             line += "[*\(ic)*]"
             if bright { line += "!]" }
-			line += " Issues"
-		}
-		if pc+ic > 0 {
-			line += ")"
-		}
-		switch visibility {
-		case .hidden:
-			line += " [Hidden]"
-		case .onlyIssues:
-			line += " [Issues Only]"
-		case .onlyPrs:
-			line += " [PRs Only]"
-		case .visible:
-			break
-		}
+            line += " Issues"
+        }
+        if pc + ic > 0 {
+            line += ")"
+        }
+        switch visibility {
+        case .hidden:
+            line += " [Hidden]"
+        case .onlyIssues:
+            line += " [Issues Only]"
+        case .onlyPrs:
+            line += " [PRs Only]"
+        case .visible:
+            break
+        }
         log(line)
-	}
+    }
 
     func printDetails() {
         printSummaryLine()
     }
 
     var shouldSyncPrs: Bool {
-        return (visibility == .onlyPrs || visibility == .visible) && syncState != .none
+        (visibility == .onlyPrs || visibility == .visible) && syncState != .none
     }
 
     var shouldSyncIssues: Bool {
-        return (visibility == .onlyIssues || visibility == .visible) && syncState != .none
+        (visibility == .onlyIssues || visibility == .visible) && syncState != .none
     }
 
     func announceIfNeeded(notificationMode: NotificationMode) {
         if syncState == .new {
             switch notificationMode {
-            case .standard, .consoleCommentsAndReviews:
+            case .consoleCommentsAndReviews, .standard:
                 printSummaryLine()
             case .none:
                 break
@@ -163,57 +162,56 @@ struct Repo: Item, Announceable {
         }
     }
 
-	var pullRequests: [PullRequest] {
-		return children(field: "pullRequests")
-	}
+    var pullRequests: [PullRequest] {
+        children(field: "pullRequests")
+    }
 
-	var issues: [Issue] {
-		return children(field: "issues")
-	}
+    var issues: [Issue] {
+        children(field: "issues")
+    }
 
-	var org: Org? {
-		if let id = parents["Org:repositories"]?.first?.parentId {
-			return Org.allItems[id]
-		}
-		return nil
-	}
+    var org: Org? {
+        if let id = parents["Org:repositories"]?.first?.parentId {
+            return Org.allItems[id]
+        }
+        return nil
+    }
 
-	mutating func setChildrenSyncStatus(_ status: SyncState) {
-		for p in pullRequests {
-			var P = p
-			P.setSyncStatus(status, andChildren: true)
-			PullRequest.allItems[p.id] = P
-		}
-		for i in issues {
-			var I = i
-			I.setSyncStatus(status, andChildren: true)
-			Issue.allItems[i.id] = I
-		}
-	}
+    mutating func setChildrenSyncStatus(_ status: SyncState) {
+        for p in pullRequests {
+            var P = p
+            P.setSyncStatus(status, andChildren: true)
+            PullRequest.allItems[p.id] = P
+        }
+        for i in issues {
+            var I = i
+            I.setSyncStatus(status, andChildren: true)
+            Issue.allItems[i.id] = I
+        }
+    }
 
-	static let fragment = Fragment(name: "repoFields", on: "Repository", elements: [
+    static let fragment = Fragment(name: "repoFields", on: "Repository", elements: [
         Field.id,
-		Field(name: "nameWithOwner"),
-		Field(name: "isFork"),
-		Field(name: "url"),
-		Field(name: "createdAt"),
-		Field(name: "updatedAt"),
-		])
+        Field(name: "nameWithOwner"),
+        Field(name: "isFork"),
+        Field(name: "url"),
+        Field(name: "createdAt"),
+        Field(name: "updatedAt")
+    ])
 
-	static let prAndIssueIdsFragment = Fragment(name: "repoFields", on: "Repository", elements: [
+    static let prAndIssueIdsFragment = Fragment(name: "repoFields", on: "Repository", elements: [
         Field.id,
         Group(name: "pullRequests", fields: [Field.id], extraParams: ["states": "OPEN"], paging: .largePage),
-		Group(name: "issues", fields: [Field.id], extraParams: ["states": "OPEN"], paging: .largePage),
-		])
+        Group(name: "issues", fields: [Field.id], extraParams: ["states": "OPEN"], paging: .largePage)
+    ])
 
-	static let prIdsFragment = Fragment(name: "repoFields", on: "Repository", elements: [
+    static let prIdsFragment = Fragment(name: "repoFields", on: "Repository", elements: [
         Field.id,
-		Group(name: "pullRequests", fields: [Field.id], extraParams: ["states": "OPEN"], paging: .largePage),
-		])
+        Group(name: "pullRequests", fields: [Field.id], extraParams: ["states": "OPEN"], paging: .largePage)
+    ])
 
-	static let issueIdsFragment = Fragment(name: "repoFields", on: "Repository", elements: [
+    static let issueIdsFragment = Fragment(name: "repoFields", on: "Repository", elements: [
         Field.id,
-		Group(name: "issues", fields: [Field.id], extraParams: ["states": "OPEN"], paging: .largePage),
-		])
+        Group(name: "issues", fields: [Field.id], extraParams: ["states": "OPEN"], paging: .largePage)
+    ])
 }
-

@@ -16,9 +16,10 @@ protocol Identifiable: Codable {
 
 extension Identifiable {
     static var typeName: String {
-        return String(describing: type(of: self)).components(separatedBy: ".").first!
+        String(describing: type(of: self)).components(separatedBy: ".").first!
     }
+
     var typeName: String {
-        return String(describing: type(of: self)).components(separatedBy: ".").first!
+        String(describing: type(of: self)).components(separatedBy: ".").first!
     }
 }

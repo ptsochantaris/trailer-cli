@@ -9,79 +9,79 @@
 import Foundation
 
 struct Comment: Item, Announceable {
-	var id: String
-	var parents: [String: [Relationship]]
-	var syncState: SyncState
-	var elementType: String
+    var id: String
+    var parents: [String: [Relationship]]
+    var syncState: SyncState
+    var elementType: String
 
-	static var allItems = [String:Comment]()
-	static let idField = "id"
+    static var allItems = [String: Comment]()
+    static let idField = "id"
 
-	var syncNeedsReactions = false
+    var syncNeedsReactions = false
 
-	var body = ""
-	var viewerDidAuthor = false
-	var createdAt = Date.distantPast
-	var updatedAt = Date.distantPast
+    var body = ""
+    var viewerDidAuthor = false
+    var createdAt = Date.distantPast
+    var updatedAt = Date.distantPast
 
-	private enum CodingKeys : CodingKey {
-		case id
-		case parents
-		case elementType
-		case body
-		case viewerDidAuthor
-		case createdAt
-		case updatedAt
-	}
+    private enum CodingKeys: CodingKey {
+        case id
+        case parents
+        case elementType
+        case body
+        case viewerDidAuthor
+        case createdAt
+        case updatedAt
+    }
 
-	init(from decoder: Decoder) throws {
-		let c = try decoder.container(keyedBy: CodingKeys.self)
-		id = try c.decode(String.self, forKey: .id)
-		parents = try c.decode([String: [Relationship]].self, forKey: .parents)
-		elementType = try c.decode(String.self, forKey: .elementType)
-		body = try c.decode(String.self, forKey: .body)
-		viewerDidAuthor = try c.decode(Bool.self, forKey: .viewerDidAuthor)
-		createdAt = try c.decode(Date.self, forKey: .createdAt)
-		updatedAt = try c.decode(Date.self, forKey: .updatedAt)
-		syncState = .none
-	}
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = try c.decode(String.self, forKey: .id)
+        parents = try c.decode([String: [Relationship]].self, forKey: .parents)
+        elementType = try c.decode(String.self, forKey: .elementType)
+        body = try c.decode(String.self, forKey: .body)
+        viewerDidAuthor = try c.decode(Bool.self, forKey: .viewerDidAuthor)
+        createdAt = try c.decode(Date.self, forKey: .createdAt)
+        updatedAt = try c.decode(Date.self, forKey: .updatedAt)
+        syncState = .none
+    }
 
-	func encode(to encoder: Encoder) throws {
-		var c = encoder.container(keyedBy: CodingKeys.self)
-		try c.encode(id, forKey: .id)
-		try c.encode(parents, forKey: .parents)
-		try c.encode(elementType, forKey: .elementType)
-		try c.encode(body, forKey: .body)
-		try c.encode(viewerDidAuthor, forKey: .viewerDidAuthor)
-		try c.encode(createdAt, forKey: .createdAt)
-		try c.encode(updatedAt, forKey: .updatedAt)
-	}
+    func encode(to encoder: Encoder) throws {
+        var c = encoder.container(keyedBy: CodingKeys.self)
+        try c.encode(id, forKey: .id)
+        try c.encode(parents, forKey: .parents)
+        try c.encode(elementType, forKey: .elementType)
+        try c.encode(body, forKey: .body)
+        try c.encode(viewerDidAuthor, forKey: .viewerDidAuthor)
+        try c.encode(createdAt, forKey: .createdAt)
+        try c.encode(updatedAt, forKey: .updatedAt)
+    }
 
-	mutating func apply(_ node: [AnyHashable:Any]) -> Bool {
-		guard node.keys.count > 5 else { return false }
+    mutating func apply(_ node: [AnyHashable: Any]) -> Bool {
+        guard node.keys.count > 5 else { return false }
 
-		syncNeedsReactions = (node["reactions"] as? [AnyHashable : Any])?["totalCount"] as? Int ?? 0 > 0
-		body = node["body"] as? String ?? ""
-		viewerDidAuthor = node["viewerDidAuthor"] as? Bool ?? false
-		createdAt = GHDateFormatter.parseGH8601(node["createdAt"] as? String) ?? Date.distantPast
-		updatedAt = GHDateFormatter.parseGH8601(node["updatedAt"] as? String) ?? Date.distantPast
-		return true
-	}
+        syncNeedsReactions = (node["reactions"] as? [AnyHashable: Any])?["totalCount"] as? Int ?? 0 > 0
+        body = node["body"] as? String ?? ""
+        viewerDidAuthor = node["viewerDidAuthor"] as? Bool ?? false
+        createdAt = GHDateFormatter.parseGH8601(node["createdAt"] as? String) ?? Date.distantPast
+        updatedAt = GHDateFormatter.parseGH8601(node["updatedAt"] as? String) ?? Date.distantPast
+        return true
+    }
 
-	init?(id: String, type: String, node: [AnyHashable:Any]) {
-		self.id = id
-		self.syncState = .new
-		self.parents = [String:[Relationship]]()
-		self.elementType = type
-		if !apply(node) {
-			return nil
-		}
-	}
+    init?(id: String, type: String, node: [AnyHashable: Any]) {
+        self.id = id
+        syncState = .new
+        parents = [String: [Relationship]]()
+        elementType = type
+        if !apply(node) {
+            return nil
+        }
+    }
 
     func announceIfNeeded(notificationMode: NotificationMode) {
-		if viewerDidAuthor { return }
+        if viewerDidAuthor { return }
 
-		if syncState == .new {
+        if syncState == .new {
             switch notificationMode {
             case .consoleCommentsAndReviews:
                 let a = author?.login ?? ""
@@ -109,32 +109,32 @@ struct Comment: Item, Announceable {
                 let subtitle = (inPr ? "PR" : "Issue") + " #\(n) \(t)"
                 Notifications.notify(title: title, subtitle: subtitle, details: body, relatedDate: createdAt)
 
-            case .standard, .none:
+            case .none, .standard:
                 return
             }
         }
     }
 
-	func includes(text: String) -> Bool {
-		return body.localizedCaseInsensitiveContains(text)
-	}
+    func includes(text: String) -> Bool {
+        body.localizedCaseInsensitiveContains(text)
+    }
 
-	func printDetails() {
+    func printDetails() {
         printSummaryLine()
         log(body.trimmingCharacters(in: .whitespacesAndNewlines), unformatted: true)
 
-		let react = reactions
-		if react.hasItems {
-			let reactionList: [String] = react.compactMap {
-				if let u = $0.user {
-					return "[\($0.emoji) @\(u.login)]"
-				}
-				return nil
-			}
-			log(reactionList.joined(separator: " "))
-		}
+        let react = reactions
+        if react.hasItems {
+            let reactionList: [String] = react.compactMap {
+                if let u = $0.user {
+                    return "[\($0.emoji) @\(u.login)]"
+                }
+                return nil
+            }
+            log(reactionList.joined(separator: " "))
+        }
         log()
-	}
+    }
 
     func printSummaryLine() {
         if let a = author?.login {
@@ -142,73 +142,71 @@ struct Comment: Item, Announceable {
         }
     }
 
-	var mentionsMe: Bool {
-		return body.localizedCaseInsensitiveContains(config.myLogin)
-	}
+    var mentionsMe: Bool {
+        body.localizedCaseInsensitiveContains(config.myLogin)
+    }
 
-	var reactions: [Reaction] {
-		return children(field: "reactions")
-	}
+    var reactions: [Reaction] {
+        children(field: "reactions")
+    }
 
-	var issue: Issue? {
-		if let parentId = parents["Issue:comments"]?.first?.parentId {
-			return Issue.allItems[parentId]
-		}
-		return nil
-	}
+    var issue: Issue? {
+        if let parentId = parents["Issue:comments"]?.first?.parentId {
+            return Issue.allItems[parentId]
+        }
+        return nil
+    }
 
-	var pullRequest: PullRequest? {
-		if let parentId = parents["PullRequest:comments"]?.first?.parentId {
-			return PullRequest.allItems[parentId]
-		}
-		return nil
-	}
+    var pullRequest: PullRequest? {
+        if let parentId = parents["PullRequest:comments"]?.first?.parentId {
+            return PullRequest.allItems[parentId]
+        }
+        return nil
+    }
 
-	var review: Review? {
-		if let parentId = parents["Review:comments"]?.first?.parentId {
-			return Review.allItems[parentId]
-		}
-		return nil
-	}
+    var review: Review? {
+        if let parentId = parents["Review:comments"]?.first?.parentId {
+            return Review.allItems[parentId]
+        }
+        return nil
+    }
 
-	var author: User? {
-		return children(field: "author").first
-	}
+    var author: User? {
+        children(field: "author").first
+    }
 
-	mutating func setChildrenSyncStatus(_ status: SyncState) {
-		if var u = author {
-			u.setSyncStatus(status, andChildren: true)
-			User.allItems[u.id] = u
-		}
-		for c in reactions {
-			var C = c
-			C.setSyncStatus(status, andChildren: true)
-			Reaction.allItems[c.id] = C
-		}
-	}
-	
-	static let commentFields: [Element] = [
+    mutating func setChildrenSyncStatus(_ status: SyncState) {
+        if var u = author {
+            u.setSyncStatus(status, andChildren: true)
+            User.allItems[u.id] = u
+        }
+        for c in reactions {
+            var C = c
+            C.setSyncStatus(status, andChildren: true)
+            Reaction.allItems[c.id] = C
+        }
+    }
+
+    static let commentFields: [Element] = [
         Field.id,
-		Field(name: "body"),
-		Field(name: "viewerDidAuthor"),
-		Field(name: "createdAt"),
-		Field(name: "updatedAt"),
-		Group(name: "reactions", fields: [Field(name: "totalCount")]),
-		Group(name: "author", fields: [User.fragment])
-	]
+        Field(name: "body"),
+        Field(name: "viewerDidAuthor"),
+        Field(name: "createdAt"),
+        Field(name: "updatedAt"),
+        Group(name: "reactions", fields: [Field(name: "totalCount")]),
+        Group(name: "author", fields: [User.fragment])
+    ]
 
-	static let fragmentForItems = Fragment(name: "commentFieldsForItems", on: "IssueComment", elements: commentFields)
+    static let fragmentForItems = Fragment(name: "commentFieldsForItems", on: "IssueComment", elements: commentFields)
     static let fragmentForReviews = Fragment(name: "commentFieldsForReviews", on: "PullRequestReviewComment", elements: commentFields)
 
     static let pullRequestReviewCommentReactionFragment = Fragment(name: "PullRequestReviewCommentReactionFragment", on: "PullRequestReviewComment", elements: [
         Field.id, // not using fragment, no need to re-parse
         Group(name: "reactions", fields: [Reaction.fragment], paging: .largePage)
-        ])
+    ])
 
     static let issueCommentReactionFragment = Fragment(name: "IssueCommentReactionsFragment", on: "IssueComment", elements: [
         Field.id, // not using fragment, no need to re-parse
         Group(name: "reactions", fields: [Reaction.fragment], paging: .largePage)
-        ])
-
+    ])
 }
-
