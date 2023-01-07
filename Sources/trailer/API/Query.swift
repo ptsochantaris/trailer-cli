@@ -52,7 +52,7 @@ struct Query {
         self.subQuery = subQuery
     }
 
-    static func batching(_ name: String, fields: [Element], idList: [String], perNodeBlock: BatchGroup.NodeBlock? = nil) -> [Query] {
+    static func batching(_ name: String, fields: [Element], idList: [String], perNodeBlock: BatchGroup.NodeBlock? = nil) -> LinkedList<Query> {
         var list = idList
         var segments = [[String]]()
         while list.hasItems {
@@ -61,32 +61,30 @@ struct Query {
             list = Array(list[p...])
         }
         var isNext = false
-        return segments.map {
-            let q = Query(name: name, rootElement: BatchGroup(templateGroup: Group(name: "items", fields: fields), idList: $0, perNodeBlock: perNodeBlock), subQuery: isNext)
-            if !isNext {
-                isNext = true
-            }
-            return q
+        let res = LinkedList<Query>()
+        for segment in segments {
+            let q = Query(name: name, rootElement: BatchGroup(templateGroup: Group(name: "items", fields: fields), idList: segment, perNodeBlock: perNodeBlock), subQuery: isNext)
+            isNext = true
+            res.append(q)
         }
+        return res
     }
 
     var queryText: String {
-        var fragments = [Fragment]()
+        let fragments = LinkedList<Fragment>()
+        var processedNames = Set<String>()
         for f in rootElement.fragments {
-            if !fragments.contains(where: { $0.name == f.name }) {
+            if processedNames.insert(f.name).inserted {
                 fragments.append(f)
             }
         }
 
-        var text = ""
-        for f in fragments {
-            text.append(f.declaration + " ")
-        }
+        let text = fragments.map { $0.declaration }.joined(separator: " ")
         var rootQuery = rootElement.queryText
         if let parentItem = parent?.item {
             rootQuery = "node(id: \"\(parentItem.id)\") { ... on \(parentItem.elementType) { " + rootQuery + " } }"
         }
-        return text + "{ " + rootQuery + " rateLimit { limit cost remaining resetAt nodeCount } }"
+        return text + " { " + rootQuery + " rateLimit { limit cost remaining resetAt nodeCount } }"
     }
 
     private static let RETRY_COUNT = 3
@@ -99,7 +97,7 @@ struct Query {
                 try await run(shouldRetry: shouldRetry - 1)
             } else {
                 log("[*\(name)*] \(message)")
-                throw NSError(domain: "build.bru.trailer-cli.quert", code: 1, userInfo: [NSLocalizedDescriptionKey: message])
+                throw NSError(domain: "build.bru.trailer-cli.query", code: 1, userInfo: [NSLocalizedDescriptionKey: message])
             }
         }
 
@@ -169,8 +167,8 @@ struct Query {
             return
         }
 
-        let extraQueries = await root.ingest(query: self, pageData: topData, parent: parent, level: 0)
-        if extraQueries.isEmpty {
+        let extraQueries = root.ingest(query: self, pageData: topData, parent: parent, level: 0)
+        if extraQueries.count == 0 {
             return
         }
 
@@ -178,7 +176,7 @@ struct Query {
         try await Query.attempt(extraQueries)
     }
 
-    static func attempt(_ queries: [Query]) async throws {
+    static func attempt(_ queries: LinkedList<Query>) async throws {
         try await withThrowingTaskGroup(of: Void.self) { group in
             for q in queries {
                 group.addTask {

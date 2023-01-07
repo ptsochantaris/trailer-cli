@@ -11,7 +11,7 @@ import Foundation
 struct Field: Element {
     let name: String
     var queryText: String { name }
-    var fragments: [Fragment] { [] }
+    var fragments: LinkedList<Fragment> { LinkedList<Fragment>() }
 
     static let id = Field(name: "id")
 }

@@ -48,29 +48,33 @@ enum DB {
 
     //////////////////////////////////// Child lookup
 
-    private static var parents2fields2children = [String: [String: [String]]]()
+    private static var parents2fields2children = [String: [String: LinkedList<String>]]()
 
-    static func idsForChildren(of itemId: String, field: String) -> [String]? {
+    static func idsForChildren(of itemId: String, field: String) -> LinkedList<String>? {
         parents2fields2children[itemId]?[field]
     }
 
     static func addChild(id: String, to parent: Parent) {
         let fieldName = parent.field
         let parentId = parent.item.id
-        var field2children = parents2fields2children[parentId] ?? [String: [String]]()
-        var listOfChildren = field2children[fieldName] ?? [String]()
-        if !listOfChildren.contains(id) {
-            listOfChildren.append(id)
-            field2children[fieldName] = listOfChildren
-            parents2fields2children[parentId] = field2children
+        var field2children = parents2fields2children[parentId] ?? [String: LinkedList<String>]()
+        if let listOfChildren = field2children[fieldName] {
+            if !listOfChildren.contains(id) {
+                listOfChildren.append(id)
+            }
+        } else {
+            field2children[fieldName] = LinkedList(value: id)
         }
     }
 
     static func removeChild(id: String, from parentId: String, field: String) {
-        var field2children = parents2fields2children[parentId] ?? [String: [String]]()
-        let listOfChildren = field2children[field]?.filter { $0 != id } ?? []
-        field2children[field] = listOfChildren.isEmpty ? nil : listOfChildren
-        parents2fields2children[parentId] = field2children
+        var field2children = parents2fields2children[parentId] ?? [String: LinkedList<String>]()
+        if let listOfChildren = field2children[field] {
+            listOfChildren.remove { $0 == id }
+            if listOfChildren.count == 0 {
+                field2children[field] = nil
+            }
+        }
     }
 
     static func removeParent(_ item: some Item) {
@@ -110,11 +114,15 @@ enum DB {
         if FileManager.default.fileExists(atPath: l.path) {
             do {
                 let d = try Data(contentsOf: l)
-                let temp = try decoder.decode([String: [String: [String]]].self, from: d)
+                let temp = try decoder.decode([String: [String: LinkedList<String>]].self, from: d)
                 for (parent, var fields2children) in temp {
                     for (field, children) in fields2children {
                         var ids = Set<String>()
-                        fields2children[field] = children.filter { ids.insert($0).inserted }
+                        let clist = LinkedList<String>()
+                        for c in children where ids.insert(c).inserted {
+                            clist.append(c)
+                        }
+                        fields2children[field] = clist
                     }
                     parents2fields2children[parent] = fields2children
                 }

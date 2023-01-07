@@ -39,11 +39,10 @@ struct BatchGroup: Ingesting {
         }
     }
 
-    var fragments: [Fragment] {
-        var fragments = [Fragment]()
+    var fragments: LinkedList<Fragment> {
+        let fragments = LinkedList<Fragment>()
         for f in idsToGroups.values {
-            let newFragments = f.fragments
-            fragments.append(contentsOf: newFragments)
+            fragments.append(contentsOf: f.fragments)
         }
         return fragments
     }
@@ -54,11 +53,11 @@ struct BatchGroup: Ingesting {
         return [String](k[0 ..< max])
     }
 
-    func ingest(query: Query, pageData: Any, parent: Parent?, level: Int) async -> [Query] {
+    func ingest(query: Query, pageData: Any, parent: Parent?, level: Int) -> LinkedList<Query> {
         log(level: .debug, indent: level, "Ingesting batch group \(name)")
-        guard let nodes = pageData as? [Any] else { return [] }
+        guard let nodes = pageData as? [Any] else { return LinkedList<Query>() }
 
-        var extraQueries = [Query]()
+        let extraQueries = LinkedList<Query>()
 
         let page = pageOfIds
         let newIds = idsToGroups.keys.filter { !page.contains($0) }
@@ -69,13 +68,13 @@ struct BatchGroup: Ingesting {
 
         for n in nodes {
             if let n = n as? [AnyHashable: Any], let id = n["id"] as? String, let group = idsToGroups[id] {
-                let newQueries = await group.ingest(query: query, pageData: n, parent: parent, level: level + 1)
+                let newQueries = group.ingest(query: query, pageData: n, parent: parent, level: level + 1)
                 extraQueries.append(contentsOf: newQueries)
                 perNodeBlock?(n)
             }
         }
 
-        if extraQueries.hasItems {
+        if extraQueries.count > 0 {
             log(level: .debug, indent: level, "\(name) will need further paging")
         }
         return extraQueries

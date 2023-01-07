@@ -10,7 +10,7 @@ import Foundation
 
 struct Issue: Item, Announceable, Closeable, Sortable {
     var id: String
-    var parents: [String: [Relationship]]
+    var parents: [String: LinkedList<Relationship>]
     var syncState: SyncState
     var elementType: String
 
@@ -44,7 +44,7 @@ struct Issue: Item, Announceable, Closeable, Sortable {
     init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         id = try c.decode(String.self, forKey: .id)
-        parents = try c.decode([String: [Relationship]].self, forKey: .parents)
+        parents = try c.decode([String: LinkedList<Relationship>].self, forKey: .parents)
         elementType = try c.decode(String.self, forKey: .elementType)
         bodyText = try c.decode(String.self, forKey: .bodyText)
         createdAt = try c.decode(Date.self, forKey: .createdAt)
@@ -90,7 +90,7 @@ struct Issue: Item, Announceable, Closeable, Sortable {
 
     init?(id: String, type: String, node: [AnyHashable: Any]) {
         self.id = id
-        parents = [String: [Relationship]]()
+        parents = [String: LinkedList<Relationship>]()
         elementType = type
         syncState = .new
         if !apply(node) {

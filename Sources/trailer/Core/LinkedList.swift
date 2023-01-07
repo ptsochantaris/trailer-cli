@@ -39,14 +39,40 @@ final class LinkedList<Value>: Sequence {
     func push(_ value: Value) {
         count += 1
 
-        if head == nil {
-            let newNode = Node(value, nil)
-            head = newNode
+        let newNode = Node(value, head)
+        if tail == nil {
             tail = newNode
-        } else {
-            head = Node(value, head)
         }
+        head = newNode
     }
+    
+    func append(_ value: Value) {
+        count += 1
+
+        let newNode = Node(value, nil)
+        if let t = tail {
+            t.next = newNode
+        } else {
+            head = newNode
+        }
+        tail = newNode
+    }
+    
+    func append(contentsOf collection: LinkedList<Value>) {
+        if collection.count == 0 {
+            return
+        }
+        
+        count += collection.count
+
+        if let t = tail {
+            t.next = collection.head
+        } else {
+            head = collection.head
+        }
+        tail = collection.tail
+    }
+
 
     func pop() -> Value? {
         if let top = head {
@@ -56,6 +82,32 @@ final class LinkedList<Value>: Sequence {
         } else {
             return nil
         }
+    }
+    
+    var first: Value? {
+        head?.value
+    }
+
+    @discardableResult
+    func remove(first removeCheck: (Value) -> Bool) -> Bool {
+        guard var prev = head else {
+            return false
+        }
+        
+        var current = head
+        
+        while let c = current {
+            if removeCheck(c.value) {
+                prev.next = c.next
+                count -= 1
+                return true
+            }
+                        
+            prev = c
+            current = c.next
+        }
+        
+        return false
     }
 
     func removeAll() {
@@ -89,4 +141,22 @@ final class LinkedList<Value>: Sequence {
     var underestimatedCount: Int { count }
 
     func withContiguousStorageIfAvailable<R>(_: (_ buffer: UnsafeBufferPointer<Value>) throws -> R) rethrows -> R? { nil }
+}
+
+extension LinkedList: Codable where Value: Codable {
+    convenience init(from decoder: Decoder) throws {
+        var values = try decoder.unkeyedContainer()
+        self.init()
+        if let list = try? values.decode([Value].self) {
+            for object in list {
+                append(object)
+            }
+        }
+    }
+    
+    func encode(to encoder: Encoder) throws {
+        let array = map { $0 }
+        var container = encoder.unkeyedContainer()
+        try container.encode(array)
+    }
 }

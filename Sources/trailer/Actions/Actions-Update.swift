@@ -101,7 +101,7 @@ extension Actions {
                 return
             }
         }
-        if updateTypes.count > 0 {
+        if !updateTypes.isEmpty {
             try await update(updateTypes,
                              limitToRepoNames: CommandLine.value(for: "-from"),
                              keepOnlyNewItems: CommandLine.argument(exists: "-fresh"))

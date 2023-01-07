@@ -24,7 +24,7 @@ enum ReviewState: String, Codable {
 
 struct Review: Item, Announceable {
     var id: String
-    var parents: [String: [Relationship]]
+    var parents: [String: LinkedList<Relationship>]
     var syncState: SyncState
     var elementType: String
 
@@ -57,7 +57,7 @@ struct Review: Item, Announceable {
     init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         id = try c.decode(String.self, forKey: .id)
-        parents = try c.decode([String: [Relationship]].self, forKey: .parents)
+        parents = try c.decode([String: LinkedList<Relationship>].self, forKey: .parents)
         elementType = try c.decode(String.self, forKey: .elementType)
         state = ReviewState(rawValue: try c.decode(String.self, forKey: .state)) ?? ReviewState.pending
         body = try c.decode(String.self, forKey: .body)
@@ -94,7 +94,7 @@ struct Review: Item, Announceable {
 
     init?(id: String, type: String, node: [AnyHashable: Any]) {
         self.id = id
-        parents = [String: [Relationship]]()
+        parents = [String: LinkedList<Relationship>]()
         elementType = type
         syncState = .new
         if !apply(node) {

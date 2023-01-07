@@ -37,7 +37,7 @@ struct Notifications {
         }
     }
 
-    private static var notificationQueue = [Notification]()
+    private static var notificationQueue = LinkedList<Notification>()
 
     static func notify(title: String?, subtitle: String?, details: String?, relatedDate: Date) {
         let n = Notification(title: title, subtitle: subtitle, details: details, relatedDate: relatedDate)

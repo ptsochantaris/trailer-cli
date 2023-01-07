@@ -10,7 +10,7 @@ import Foundation
 
 struct User: Item {
     var id: String
-    var parents: [String: [Relationship]]
+    var parents: [String: LinkedList<Relationship>]
     var syncState: SyncState
     var elementType: String
 
@@ -34,7 +34,7 @@ struct User: Item {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         id = try c.decode(String.self, forKey: .id)
         login = try c.decode(String.self, forKey: .login)
-        parents = try c.decode([String: [Relationship]].self, forKey: .parents)
+        parents = try c.decode([String: LinkedList<Relationship>].self, forKey: .parents)
         elementType = try c.decode(String.self, forKey: .elementType)
         elementType = try c.decode(String.self, forKey: .elementType)
         avatarUrl = try c.decode(URL.self, forKey: .avatarUrl)
@@ -61,7 +61,7 @@ struct User: Item {
 
     init?(id: String, type: String, node: [AnyHashable: Any]) {
         self.id = id
-        parents = [String: [Relationship]]()
+        parents = [String: LinkedList<Relationship>]()
         elementType = type
         syncState = .new
         if !apply(node) {

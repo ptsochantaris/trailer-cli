@@ -69,32 +69,32 @@ struct Group: Ingesting {
         return query
     }
 
-    var fragments: [Fragment] {
-        var res = [Fragment]()
+    var fragments: LinkedList<Fragment> {
+        let res = LinkedList<Fragment>()
         for f in fields {
             res.append(contentsOf: f.fragments)
         }
         return res
     }
 
-    private func checkFields(query: Query, hash: [AnyHashable: Any], parent: Parent?, level: Int) async -> [Query] {
+    private func checkFields(query: Query, hash: [AnyHashable: Any], parent: Parent?, level: Int) -> LinkedList<Query> {
         let thisObject: Identifiable?
-        if let o = await Group.parse(parent: parent, info: hash, level: level) {
+        if let o = Group.parse(parent: parent, info: hash, level: level) {
             thisObject = o
         } else {
             thisObject = parent?.item
         }
 
-        var extraQueries = [Query]()
+        let extraQueries = LinkedList<Query>()
 
         for field in fields {
             if let field = field as? Fragment {
                 let p = Parent(item: thisObject, field: parent?.field)
-                let newQueries = await field.ingest(query: query, pageData: hash, parent: p, level: level + 1)
+                let newQueries = field.ingest(query: query, pageData: hash, parent: p, level: level + 1)
                 extraQueries.append(contentsOf: newQueries)
             } else if let field = field as? Ingesting, let fieldData = hash[field.name] {
                 let p = Parent(item: thisObject, field: field.name)
-                let newQueries = await field.ingest(query: query, pageData: fieldData, parent: p, level: level + 1)
+                let newQueries = field.ingest(query: query, pageData: fieldData, parent: p, level: level + 1)
                 extraQueries.append(contentsOf: newQueries)
             }
         }
@@ -102,8 +102,8 @@ struct Group: Ingesting {
         return extraQueries
     }
 
-    func ingest(query: Query, pageData: Any, parent: Parent?, level: Int) async -> [Query] {
-        var extraQueries = [Query]()
+    func ingest(query: Query, pageData: Any, parent: Parent?, level: Int) -> LinkedList<Query> {
+        let extraQueries = LinkedList<Query>()
 
         if let hash = pageData as? [AnyHashable: Any] { // data was a dictionary
             if let edges = hash["edges"] as? [[AnyHashable: Any]] {
@@ -111,7 +111,7 @@ struct Group: Ingesting {
                 var latestCursor: String?
                 for e in edges {
                     if let node = e["node"] as? [AnyHashable: Any] {
-                        let newQueries = await checkFields(query: query, hash: node, parent: parent, level: level + 1)
+                        let newQueries = checkFields(query: query, hash: node, parent: parent, level: level + 1)
                         extraQueries.append(contentsOf: newQueries)
                     }
                     latestCursor = e["cursor"] as? String
@@ -125,25 +125,25 @@ struct Group: Ingesting {
 
             } else {
                 log(level: .debug, indent: level, "Ingesting group \(name)")
-                let newQueries = await checkFields(query: query, hash: hash, parent: parent, level: level + 1)
+                let newQueries = checkFields(query: query, hash: hash, parent: parent, level: level + 1)
                 extraQueries.append(contentsOf: newQueries)
             }
 
         } else if let nodes = pageData as? [[AnyHashable: Any]] { // data was an array of dictionaries with no paging info
             log(level: .debug, indent: level, "Ingesting list of groups \(name)")
             for node in nodes {
-                let newQueries = await checkFields(query: query, hash: node, parent: parent, level: level + 1)
+                let newQueries = checkFields(query: query, hash: node, parent: parent, level: level + 1)
                 extraQueries.append(contentsOf: newQueries)
             }
         }
 
-        if extraQueries.hasItems {
+        if extraQueries.count > 0 {
             log(level: .debug, indent: level, "\(name) will need further paging")
         }
         return extraQueries
     }
 
-    private static func parse(parent: Parent?, info: [AnyHashable: Any], level: Int) async -> Identifiable? {
+    private static func parse(parent: Parent?, info: [AnyHashable: Any], level: Int) -> Identifiable? {
         if let typeName = info["__typename"] as? String {
             if let p = parent {
                 log(level: .debug, indent: level, "Scanning \(typeName) with parent \(p.item.typeName) \(p.item.id)")
@@ -153,21 +153,21 @@ struct Group: Ingesting {
 
             switch typeName {
             case "Repository":
-                return await Repo.parse(parent: parent, elementType: typeName, node: info, level: level)
+                return Repo.parse(parent: parent, elementType: typeName, node: info, level: level)
             case "Label":
-                return await Label.parse(parent: parent, elementType: typeName, node: info, level: level)
+                return Label.parse(parent: parent, elementType: typeName, node: info, level: level)
             case "PullRequest":
-                return await PullRequest.parse(parent: parent, elementType: typeName, node: info, level: level)
+                return PullRequest.parse(parent: parent, elementType: typeName, node: info, level: level)
             case "Issue":
-                return await Issue.parse(parent: parent, elementType: typeName, node: info, level: level)
+                return Issue.parse(parent: parent, elementType: typeName, node: info, level: level)
             case "IssueComment", "PullRequestReviewComment":
-                return await Comment.parse(parent: parent, elementType: typeName, node: info, level: level)
+                return Comment.parse(parent: parent, elementType: typeName, node: info, level: level)
             case "PullRequestReview":
-                return await Review.parse(parent: parent, elementType: typeName, node: info, level: level)
+                return Review.parse(parent: parent, elementType: typeName, node: info, level: level)
             case "Reaction":
-                return await Reaction.parse(parent: parent, elementType: typeName, node: info, level: level)
+                return Reaction.parse(parent: parent, elementType: typeName, node: info, level: level)
             case "User":
-                let u = await User.parse(parent: parent, elementType: typeName, node: info, level: level)
+                let u = User.parse(parent: parent, elementType: typeName, node: info, level: level)
                 if parent == nil, var me = u {
                     me.isMe = true
                     config.myUser = me
@@ -176,13 +176,13 @@ struct Group: Ingesting {
                 }
                 return u
             case "ReviewRequest":
-                return await ReviewRequest.parse(parent: parent, elementType: typeName, node: info, level: level)
+                return ReviewRequest.parse(parent: parent, elementType: typeName, node: info, level: level)
             case "CheckRun", "StatusContext":
-                return await Status.parse(parent: parent, elementType: typeName, node: info, level: level)
+                return Status.parse(parent: parent, elementType: typeName, node: info, level: level)
             case "Milestone":
-                return await Milestone.parse(parent: parent, elementType: typeName, node: info, level: level)
+                return Milestone.parse(parent: parent, elementType: typeName, node: info, level: level)
             case "Organization":
-                return await Org.parse(parent: parent, elementType: typeName, node: info, level: level)
+                return Org.parse(parent: parent, elementType: typeName, node: info, level: level)
             case "Bot", "CheckSuite", "Commit", "PullRequestCommit", "PullRequestReviewCommentConnection", "ReactionConnection", "Status":
                 return nil
             default:

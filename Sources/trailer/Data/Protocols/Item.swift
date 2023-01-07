@@ -15,7 +15,7 @@ protocol Item: Identifiable, Databaseable, Equatable {
 
     init?(id: String, type: String, node: [AnyHashable: Any])
 
-    var parents: [String: [Relationship]] { get set }
+    var parents: [String: LinkedList<Relationship>] { get set }
     mutating func apply(_ node: [AnyHashable: Any]) -> Bool
     mutating func setChildrenSyncStatus(_ status: SyncState)
 }
@@ -35,8 +35,14 @@ extension Item {
 
     mutating func setSyncStatus(_ status: SyncState, andChildren: Bool) {
         syncState = status
-        parents = parents.mapValues { relationshipsToAType -> [Relationship] in
-            relationshipsToAType.map { var n = $0; n.syncState = status; return n }
+        parents = parents.mapValues { relationshipsToAType -> LinkedList<Relationship> in
+            let res = LinkedList<Relationship>()
+            for n in relationshipsToAType {
+                var n = n
+                n.syncState = status
+                res.append(n)
+            }
+            return res
         }
         if andChildren {
             setChildrenSyncStatus(status)
@@ -73,21 +79,23 @@ extension Item {
                 let parentTypeName = String(P.first!)
                 let parentField = String(P.last!)
 
-                newItem.parents[relationshipKey] = previousRelationships.compactMap { relationship -> Relationship? in
+                let newRelationships = LinkedList<Relationship>()
+                for relationship in previousRelationships {
                     if relationship.syncState == .none {
                         log(level: .debug, "Removing stale relationship from \(item.typeName) \(item.id) to parent ID \(relationship.parentId)")
                         DB.removeChild(id: item.id, from: relationship.parentId, field: parentField)
-                        return nil
+
                     } else if checkItemExists(type: parentTypeName, id: relationship.parentId) { // object actually exists
                         var newRelationship = relationship
                         newRelationship.syncState = .none
-                        return newRelationship
+                        newRelationships.append(newRelationship)
+
                     } else {
                         log(level: .debug, "Removing relationship from \(item.typeName) \(item.id) to parent ID \(relationship.parentId) which no longer exists")
                         DB.removeChild(id: item.id, from: relationship.parentId, field: parentField)
-                        return nil
                     }
                 }
+                newItem.parents[relationshipKey] = newRelationships
             }
             return newItem
         }
@@ -164,25 +172,23 @@ extension Item {
     mutating func makeChild(of parent: Parent, indent level: Int, quiet: Bool = false) {
         let relationship = Relationship(to: parent)
         let storedField = "\(parent.item.typeName):\(parent.field)"
-        if var existingRelationships = parents[storedField] {
-            if let indexOfExisting = existingRelationships.firstIndex(where: { $0 == relationship }) {
-                existingRelationships[indexOfExisting] = relationship
-                parents[storedField] = existingRelationships
+        if let existingRelationships = parents[storedField] {
+            if existingRelationships.remove(first: { $0 == relationship }) {
+                existingRelationships.append(relationship)
                 if !quiet { log(level: .debug, indent: level, "Already linked to this parent in relationship '\(parent.field)'") }
             } else {
                 existingRelationships.append(relationship)
                 DB.addChild(id: id, to: parent)
-                parents[storedField] = existingRelationships
                 if !quiet { log(level: .debug, indent: level, "Adding another link to the existing parent(s) in relationship '\(parent.field)'") }
             }
         } else {
-            parents[storedField] = [relationship]
+            parents[storedField] = LinkedList(value: relationship)
             DB.addChild(id: id, to: parent)
             if !quiet { log(level: .debug, indent: level, "Linking to parent through relationship '\(parent.field)'") }
         }
     }
 
-    @MainActor static func parse(parent: Parent?, elementType: String, node: [AnyHashable: Any], level: Int) -> Self? {
+    static func parse(parent: Parent?, elementType: String, node: [AnyHashable: Any], level: Int) -> Self? {
         guard let id = node[Self.idField] as? String else { return nil }
 
         if var ret = existingItem(with: id) {
