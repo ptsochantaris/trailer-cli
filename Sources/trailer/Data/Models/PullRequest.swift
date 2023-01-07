@@ -198,7 +198,6 @@ struct PullRequest: Item, Announceable, Closeable, Sortable {
     }
 
     func printSummaryLine(closing: Bool) {
-        var components = [String]()
         var line = "[!"
         if closing, state == .closed {
             line += "[B*CLOSED"
@@ -225,47 +224,48 @@ struct PullRequest: Item, Announceable, Closeable, Sortable {
             }
         }
         line += "*]"
-        components.append(line)
+
+        let components = LinkedList<String>(value: line)
 
         if listFieldsDefinition.type {
-            components.append("PR")
+            components.push("PR")
         }
         if listFieldsDefinition.number {
-            components.append("[*\(number)*]")
+            components.push("[*\(number)*]")
         }
         if listFieldsDefinition.title {
-            components.append(title)
+            components.push(title)
         }
 
-        let x = components.popLast()! + "!]"
-        components.append(x)
+        let x = components.pop()! + "!]"
+        components.push(x)
 
         if listFieldsDefinition.labels, labels.hasItems {
             let l = labels.map(\.id).joined(separator: "] [")
-            components.append("[\(l)]")
+            components.push("[\(l)]")
         }
         if listFieldsDefinition.repo, let r = repo {
-            components.append("(\(r.nameWithOwner))")
+            components.push("(\(r.nameWithOwner))")
         }
         if listFieldsDefinition.branch, headRefName.hasItems {
-            components.append("(\(headRefName))")
+            components.push("(\(headRefName))")
         }
         if listFieldsDefinition.author, let a = author {
-            components.append("(@\(a.login))")
+            components.push("(@\(a.login))")
         }
         if listFieldsDefinition.created {
             let a = agoFormat(prefix: "", since: createdAt)
-            components.append("(Created \(a))")
+            components.push("(Created \(a))")
         }
         if listFieldsDefinition.updated {
             let a = agoFormat(prefix: "", since: updatedAt)
-            components.append("(Updated \(a))")
+            components.push("(Updated \(a))")
         }
         if listFieldsDefinition.url {
-            components.append("[C*\(url.absoluteString)*]")
+            components.push("[C*\(url.absoluteString)*]")
         }
 
-        log(components.joined(separator: " "))
+        log(components.reversed().joined(separator: " "))
     }
 
     var parentIsNew: Bool {

@@ -48,7 +48,7 @@ enum Actions {
                 Actions.failUpdate("Unknown argument(s): \(i.joined(separator: ", "))")
                 exit(1)
             }
-            if let listSequence = listSequence {
+            if let listSequence {
                 try await Actions.processUpdateDirective(listSequence)
             }
 
@@ -56,7 +56,7 @@ enum Actions {
             log("[!Will delete token and data for '\(config.server)' in 5 seconds[R*")
             log("[&Press CTRL-C to abort*]&]!]")
             log()
-            Thread.sleep(until: Date(timeIntervalSinceNow: 5))
+            try? await Task.sleep(nanoseconds: 5 * NSEC_PER_SEC)
             try! FileManager.default.removeItem(at: config.saveLocation)
             log("All data for [*\(config.server)*] has been removed")
 
@@ -65,7 +65,7 @@ enum Actions {
                 Actions.failList("Unknown argument(s): \(i.joined(separator: ", "))")
                 exit(1)
             }
-            if let listSequence = listSequence {
+            if let listSequence {
                 await Actions.processListDirective(listSequence)
             }
 
@@ -74,7 +74,7 @@ enum Actions {
                 Actions.failOpen("Unknown argument(s): \(i.joined(separator: ", "))")
                 exit(1)
             }
-            if let listSequence = listSequence {
+            if let listSequence {
                 await Actions.processOpenDirective(listSequence)
             }
 
@@ -83,7 +83,7 @@ enum Actions {
                 Actions.failShow("Unknown argument(s): \(i.joined(separator: ", "))")
                 exit(1)
             }
-            if let listSequence = listSequence {
+            if let listSequence {
                 try await Actions.processShowDirective(listSequence)
             }
 
@@ -92,7 +92,7 @@ enum Actions {
                 Actions.failConfig("Unknown argument(s): \(i.joined(separator: ", "))")
                 exit(1)
             }
-            if let listSequence = listSequence {
+            if let listSequence {
                 await Actions.processConfigDirective(listSequence)
             }
 
@@ -157,7 +157,7 @@ enum Actions {
     }
 
     static func printErrorMesage(_ message: String?) {
-        if let message = message {
+        if let message {
             log()
             log("[![R*!! \(message)*]!]")
             log()
@@ -234,7 +234,7 @@ enum Actions {
     }
 
     static func reportAndExit(message: String?) -> Never {
-        if let message = message {
+        if let message {
             log()
             log("[![R*!! \(message)*]!]")
         }

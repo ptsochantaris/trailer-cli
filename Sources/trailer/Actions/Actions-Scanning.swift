@@ -99,9 +99,9 @@ struct ItemFilterArgs {
     }
 
     func dateValid(for date: Date) -> Bool {
-        if olderThan != nil, let refDate = refDate {
+        if olderThan != nil, let refDate {
             return date <= refDate
-        } else if youngerThan != nil, let refDate = refDate {
+        } else if youngerThan != nil, let refDate {
             return date >= refDate
         } else {
             return true
@@ -178,7 +178,7 @@ extension Actions {
                 return false
             }
 
-            if let number = number, p.number != number {
+            if let number, p.number != number {
                 return false
             }
 
@@ -266,7 +266,7 @@ extension Actions {
 
         return allItems.filter { i in
 
-            if let number = number, i.number != number {
+            if let number, i.number != number {
                 return false
             }
 

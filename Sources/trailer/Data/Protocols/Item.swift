@@ -187,7 +187,7 @@ extension Item {
 
         if var ret = existingItem(with: id) {
             log(level: .debug, indent: level, "Existing \(typeName) ID \(ret.id)")
-            if let parent = parent {
+            if let parent {
                 ret.makeChild(of: parent, indent: level)
             }
             if !ret.apply(node) {
@@ -201,7 +201,7 @@ extension Item {
         } else {
             if var new = Self(id: id, type: elementType, node: node) {
                 log(level: .debug, indent: level, "+ \(typeName): \(id)")
-                if let parent = parent {
+                if let parent {
                     new.makeChild(of: parent, indent: level)
                 }
                 allItems[id] = new

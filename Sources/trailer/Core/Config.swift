@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import NIOHTTP1
 
 struct Config {
     var server = URL(string: "https://api.github.com/graphql")!
@@ -17,7 +18,7 @@ struct Config {
     var dryRun = false
 
     let versionMajor = 1
-    let versionMinor = 3
+    let versionMinor = 4
     let versionPatch = 0
     var versionString: String {
         [versionMajor, versionMinor, versionPatch].map { String($0) }.joined(separator: ".")
@@ -53,7 +54,7 @@ struct Config {
         return false
     }
 
-    var httpHeaders: [String: String] {
+    var httpHeaders: HTTPHeaders {
         #if DEBUG
             let variant = "Development"
         #else
@@ -68,10 +69,10 @@ struct Config {
             let OS = "Linux"
         #endif
 
-        return [
-            "Authorization": "bearer \(token)",
-            "User-Agent": "Trailer-CLI-v\(versionString)-\(OS)-\(variant)"
-        ]
+        return HTTPHeaders([
+            ("Authorization", "bearer \(token)"),
+            ("User-Agent", "Trailer-CLI-v\(versionString)-\(OS)-\(variant)")
+        ])
     }
 
     var myUser: User? {

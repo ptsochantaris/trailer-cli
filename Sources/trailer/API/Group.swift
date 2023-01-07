@@ -38,12 +38,12 @@ struct Group: Ingesting {
             brackets.append("last: 1")
         case .largePage:
             brackets.append("first: 100")
-            if let lastCursor = lastCursor {
+            if let lastCursor {
                 brackets.append("after: \"\(lastCursor)\"")
             }
         case .smallPage:
             brackets.append("first: 20")
-            if let lastCursor = lastCursor {
+            if let lastCursor {
                 brackets.append("after: \"\(lastCursor)\"")
             }
         }
@@ -116,7 +116,7 @@ struct Group: Ingesting {
                     }
                     latestCursor = e["cursor"] as? String
                 }
-                if let latestCursor = latestCursor, let pageInfo = hash["pageInfo"] as? [AnyHashable: Any], let hasNextPage = pageInfo["hasNextPage"] as? Bool, hasNextPage {
+                if let latestCursor, let pageInfo = hash["pageInfo"] as? [AnyHashable: Any], let hasNextPage = pageInfo["hasNextPage"] as? Bool, hasNextPage {
                     var newGroup = self
                     newGroup.lastCursor = latestCursor
                     let nextPage = Query(name: query.name, rootElement: newGroup, parent: parent, subQuery: true)

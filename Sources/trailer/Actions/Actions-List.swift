@@ -121,7 +121,7 @@ extension Actions {
     private static func listOrgRepos(_ o: Org?, hideEmpty: Bool, onlyEmpty: Bool) {
         let r: [Repo]
         let name: String
-        if let o = o {
+        if let o {
             r = o.repos
             name = o.name
         } else {

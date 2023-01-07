@@ -6,10 +6,9 @@
 //  Copyright © 2017 Paul Tsochantaris. All rights reserved.
 //
 
+import AsyncHTTPClient
 import Foundation
-#if canImport(FoundationNetworking)
-    import FoundationNetworking
-#endif
+import NIOCore
 
 struct Parent {
     let item: Identifiable
@@ -24,38 +23,22 @@ struct Parent {
     }
 }
 
+enum Network {
+    private static let httpClient = HTTPClient(eventLoopGroupProvider: .createNew,
+                                               configuration: HTTPClient.Configuration(certificateVerification: .fullVerification,
+                                                                                       redirectConfiguration: .disallow,
+                                                                                       decompression: .enabled(limit: .none)))
+
+    static func getData(for request: HTTPClientRequest) async throws -> (Data, HTTPClientResponse) {
+        var request = request
+        request.headers = config.httpHeaders
+        let res = try await httpClient.execute(request, timeout: .seconds(60))
+        let buffer = try await res.body.collect(upTo: Int.max)
+        return (Data(buffer: buffer), res)
+    }
+}
+
 struct Query {
-    private static let urlSession: URLSession = {
-        let c = URLSessionConfiguration.default
-        c.httpMaximumConnectionsPerHost = 1
-        c.httpShouldUsePipelining = true
-        c.httpAdditionalHeaders = config.httpHeaders
-        return URLSession(configuration: c, delegate: nil, delegateQueue: nil)
-    }()
-
-    static func getData(for request: URLRequest) async throws -> (Data, URLResponse) {
-        #if os(macOS)
-            if #available(macOS 12.0, *) {
-                return try await urlSession.data(for: request)
-            }
-        #endif
-        return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<(Data, URLResponse), Error>) in
-            let task = urlSession.dataTask(with: request) { data, response, error in
-                if let data = data, let response = response {
-                    continuation.resume(returning: (data, response))
-                } else {
-                    continuation.resume(throwing: error ?? NSError(domain: "build.bru.trailer-cli.network", code: 92, userInfo: [NSLocalizedDescriptionKey: "No data or error from server"]))
-                }
-            }
-            task.resume()
-        }
-    }
-
-    static func getData(from url: URL) async throws -> (Data, URLResponse) {
-        let req = URLRequest(url: url)
-        return try await getData(for: req)
-    }
-
     let name: String
 
     private let rootElement: Ingesting
@@ -144,13 +127,13 @@ struct Query {
         let Q = queryText
         log(level: .debug, "[*\(name)*] \(Q)")
 
-        var req = URLRequest(url: config.server)
-        req.httpMethod = "POST"
-        req.httpBody = try! JSONEncoder().encode(["query": Q])
+        var req = HTTPClientRequest(url: config.server.absoluteString)
+        req.method = .POST
+        req.body = HTTPClientRequest.Body.bytes(ByteBuffer(data: try! JSONEncoder().encode(["query": Q])))
 
         let info: Data
         do {
-            (info, _) = try await Query.getData(for: req)
+            (info, _) = try await Network.getData(for: req)
         } catch {
             try await retryOrFail("Network error: \(error.localizedDescription)")
             return

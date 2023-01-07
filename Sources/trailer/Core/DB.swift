@@ -73,7 +73,7 @@ enum DB {
         parents2fields2children[parentId] = field2children
     }
 
-    static func removeParent<T: Item>(_ item: T) {
+    static func removeParent(_ item: some Item) {
         let id = item.id
         type(of: item).allItems[id] = nil
         parents2fields2children[id] = nil

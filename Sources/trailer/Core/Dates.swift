@@ -47,7 +47,7 @@ struct GHDateFormatter {
     }()
 
     func agoFormat(prefix: String, since: Date?) -> String {
-        guard let since = since, since != .distantPast else {
+        guard let since, since != .distantPast else {
             return "\(prefix)(unknown)"
         }
 
@@ -73,7 +73,7 @@ struct GHDateFormatter {
     }()
 
     func agoFormat(prefix: String, since: Date?) -> String {
-        guard let since = since, since != .distantPast else {
+        guard let since, since != .distantPast else {
             return "\(prefix)(unknown)"
         }
 

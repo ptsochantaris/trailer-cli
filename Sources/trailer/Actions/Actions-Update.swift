@@ -6,6 +6,7 @@
 //  Copyright © 2017 Paul Tsochantaris. All rights reserved.
 //
 
+import AsyncHTTPClient
 import Foundation
 
 enum UpdateType {
@@ -43,9 +44,9 @@ extension Actions {
         var newVersion: String?
         var success = false
         if alwaysCheck || config.lastUpdateCheckDate.timeIntervalSinceNow < -3600 {
-            let versionURL = URL(string: "https://api.github.com/repos/ptsochantaris/trailer-cli/releases/latest")!
+            let versionRequest = HTTPClientRequest(url: "https://api.github.com/repos/ptsochantaris/trailer-cli/releases/latest")
             if
-                let data = try? await Query.getData(from: versionURL).0,
+                let data = try? await Network.getData(for: versionRequest).0,
                 let json = (try? JSONSerialization.jsonObject(with: data, options: [])) as? [AnyHashable: Any],
                 let tagName = json["tag_name"] as? String {
                 success = true
@@ -60,7 +61,7 @@ extension Actions {
 
     static func checkForUpdates(reportError _: Bool, alwaysCheck: Bool) async {
         let (newVersion, success) = await updateCheck(alwaysCheck: alwaysCheck)
-        if let newVersion = newVersion {
+        if let newVersion {
             log("[![G*New Trailer version \(newVersion) is available*]!]")
         } else if !success {
             log("[R*(Latest version check failed)*]")
@@ -362,21 +363,19 @@ extension Actions {
 
         ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-        if !keepOnlyNewItems {
-            if !userWantsComments {
-                var itemIds = [String]()
+        if !keepOnlyNewItems, !userWantsComments {
+            var itemIds = [String]()
 
-                for p in PullRequest.allItems.values.filter({ $0.syncState == .updated }) {
-                    itemIds += p.comments.map(\.id)
-                }
+            for p in PullRequest.allItems.values.filter({ $0.syncState == .updated }) {
+                itemIds += p.comments.map(\.id)
+            }
 
-                for p in Issue.allItems.values.filter({ $0.syncState == .updated }) {
-                    itemIds += p.comments.map(\.id)
-                }
+            for p in Issue.allItems.values.filter({ $0.syncState == .updated }) {
+                itemIds += p.comments.map(\.id)
+            }
 
-                if itemIds.count > 0 {
-                    Comment.setSyncStatus(.updated, andChildren: true, limitToIds: itemIds)
-                }
+            if !itemIds.isEmpty {
+                Comment.setSyncStatus(.updated, andChildren: true, limitToIds: itemIds)
             }
         }
 

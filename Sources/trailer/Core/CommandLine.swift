@@ -83,7 +83,7 @@ private struct ListSortDefinition {
 
         let components = CommandLine.value(for: "-sort")?.split(separator: ",")
         let s = components?.compactMap { Criterion(rawValue: String($0)) }
-        if let s = s, s.hasItems {
+        if let s, s.hasItems {
             criteria = s
         } else {
             criteria = [.number, .title, .created]
