@@ -73,11 +73,13 @@ final class LinkedList<Value>: Sequence {
         tail = collection.tail
     }
 
-
     func pop() -> Value? {
         if let top = head {
-            head = top.next
             count -= 1
+            head = top.next
+            if count == 0 {
+                tail = nil
+            }
             return top.value
         } else {
             return nil
@@ -86,6 +88,10 @@ final class LinkedList<Value>: Sequence {
     
     var first: Value? {
         head?.value
+    }
+    
+    var last: Value? {
+        tail?.value
     }
 
     @discardableResult
@@ -162,5 +168,35 @@ extension LinkedList: Codable where Value: Codable {
     func encode(to encoder: Encoder) throws {
         var container = encoder.unkeyedContainer()
         try container.encode(contentsOf: self)
+    }
+}
+
+extension LinkedList where Value: AnyObject {
+    @discardableResult
+    func removeInstance(of item: Value) -> Bool {
+        guard var prev = head else {
+            return false
+        }
+        
+        var current = head
+        
+        while let c = current {
+            if c.value === item {
+                prev.next = c.next
+                count -= 1
+                if count == 0 {
+                    head = nil
+                    tail = nil
+                } else if tail === c {
+                    tail = prev
+                }
+                return true
+            }
+                        
+            prev = c
+            current = c.next
+        }
+        
+        return false
     }
 }
