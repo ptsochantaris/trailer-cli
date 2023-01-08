@@ -9,6 +9,7 @@
 import AsyncHTTPClient
 import Foundation
 import NIOCore
+import NIOFoundationCompat
 
 struct Parent {
     let item: Identifiable

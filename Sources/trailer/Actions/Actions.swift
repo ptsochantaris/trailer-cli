@@ -56,7 +56,7 @@ enum Actions {
             log("[!Will delete token and data for '\(config.server)' in 5 seconds[R*")
             log("[&Press CTRL-C to abort*]&]!]")
             log()
-            try? await Task.sleep(nanoseconds: 5 * NSEC_PER_SEC)
+            try? await Task.sleep(nanoseconds: 5000000000)
             try! FileManager.default.removeItem(at: config.saveLocation)
             log("All data for [*\(config.server)*] has been removed")
 
