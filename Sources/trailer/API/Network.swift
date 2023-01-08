@@ -54,6 +54,10 @@ extension Network {
 
 #else
 
+#if canImport(FoundationNetworking)
+import FoundationNetworking
+#endif
+
 extension Network {
     private static let urlSession: URLSession = {
         let c = URLSessionConfiguration.default
