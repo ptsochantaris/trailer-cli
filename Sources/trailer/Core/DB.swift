@@ -57,22 +57,30 @@ enum DB {
     static func addChild(id: String, to parent: Parent) {
         let fieldName = parent.field
         let parentId = parent.item.id
-        var field2children = parents2fields2children[parentId] ?? [String: LinkedList<String>]()
-        if let listOfChildren = field2children[fieldName] {
-            if !listOfChildren.contains(id) {
-                listOfChildren.append(id)
+        if var field2children = parents2fields2children[parentId] {
+            if let listOfChildren = field2children[fieldName] {
+                if !listOfChildren.contains(id) {
+                    listOfChildren.append(id)
+                }
+            } else {
+                field2children[fieldName] = LinkedList(value: id)
+                parents2fields2children[parentId] = field2children
             }
         } else {
+            var field2children = [String: LinkedList<String>]()
             field2children[fieldName] = LinkedList(value: id)
+            parents2fields2children[parentId] = field2children
         }
     }
 
     static func removeChild(id: String, from parentId: String, field: String) {
-        var field2children = parents2fields2children[parentId] ?? [String: LinkedList<String>]()
-        if let listOfChildren = field2children[field] {
-            listOfChildren.remove { $0 == id }
-            if listOfChildren.count == 0 {
-                field2children[field] = nil
+        if var field2children = parents2fields2children[parentId] {
+            if let listOfChildren = field2children[field] {
+                listOfChildren.remove { $0 == id }
+                if listOfChildren.count == 0 {
+                    field2children[field] = nil
+                    parents2fields2children[parentId] = field2children
+                }
             }
         }
     }

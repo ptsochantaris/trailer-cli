@@ -151,17 +151,16 @@ final class LinkedList<Value>: Sequence {
 
 extension LinkedList: Codable where Value: Codable {
     convenience init(from decoder: Decoder) throws {
-        var values = try decoder.unkeyedContainer()
+        var container = try decoder.unkeyedContainer()
         self.init()
-        if let list = try? values.decode([Value].self) {
-            for object in list {
-                append(object)
-            }
+        while !container.isAtEnd {
+            let element = try container.decode(Value.self)
+            self.append(element)
         }
     }
     
     func encode(to encoder: Encoder) throws {
         var container = encoder.unkeyedContainer()
-        try container.encode(Array(self))
+        try container.encode(contentsOf: self)
     }
 }
