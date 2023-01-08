@@ -25,9 +25,9 @@ final class LinkedList<Value>: Sequence {
 
     init(value: Value? = nil) {
         if let value {
-            let node = Node(value, nil)
-            head = node
-            tail = node
+            let newNode = Node(value, nil)
+            head = newNode
+            tail = newNode
             count = 1
         } else {
             head = nil
@@ -100,6 +100,12 @@ final class LinkedList<Value>: Sequence {
             if removeCheck(c.value) {
                 prev.next = c.next
                 count -= 1
+                if count == 0 {
+                    head = nil
+                    tail = nil
+                } else if tail === c {
+                    tail = prev
+                }
                 return true
             }
                         
@@ -155,8 +161,7 @@ extension LinkedList: Codable where Value: Codable {
     }
     
     func encode(to encoder: Encoder) throws {
-        let array = map { $0 }
         var container = encoder.unkeyedContainer()
-        try container.encode(array)
+        try container.encode(Array(self))
     }
 }

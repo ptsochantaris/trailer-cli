@@ -94,7 +94,9 @@ enum DB {
                     type.loadAll(using: e)
                 }
             }
-            loadRelationships(using: e)
+            group.addTask {
+                loadRelationships(using: e)
+            }
         }
         log(level: .verbose, "Loaded DB")
 
@@ -157,7 +159,9 @@ enum DB {
                     type.saveAll(using: e)
                 }
             }
-            saveRelationships(using: e)
+            group.addTask {
+                saveRelationships(using: e)
+            }
         }
         log(level: .verbose, "Saved DB to \(config.saveLocation.path)/")
     }

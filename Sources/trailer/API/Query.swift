@@ -177,13 +177,8 @@ struct Query {
     }
 
     static func attempt(_ queries: LinkedList<Query>) async throws {
-        try await withThrowingTaskGroup(of: Void.self) { group in
-            for q in queries {
-                group.addTask {
-                    try await q.run()
-                }
-            }
-            try await group.waitForAll()
+        for q in queries {
+            try await q.run()
         }
     }
 }
