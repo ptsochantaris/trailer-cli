@@ -6,7 +6,6 @@
 //  Copyright © 2017 Paul Tsochantaris. All rights reserved.
 //
 
-import AsyncHTTPClient
 import Foundation
 
 enum UpdateType {
@@ -44,9 +43,9 @@ extension Actions {
         var newVersion: String?
         var success = false
         if alwaysCheck || config.lastUpdateCheckDate.timeIntervalSinceNow < -3600 {
-            let versionRequest = HTTPClientRequest(url: "https://api.github.com/repos/ptsochantaris/trailer-cli/releases/latest")
+            let versionRequest = Network.Request(url: "https://api.github.com/repos/ptsochantaris/trailer-cli/releases/latest", method: .get, body: nil)
             if
-                let data = try? await Network.getData(for: versionRequest).0,
+                let data = try? await Network.getData(for: versionRequest),
                 let json = (try? JSONSerialization.jsonObject(with: data, options: [])) as? [AnyHashable: Any],
                 let tagName = json["tag_name"] as? String {
                 success = true

@@ -6,38 +6,7 @@
 //  Copyright © 2017 Paul Tsochantaris. All rights reserved.
 //
 
-import AsyncHTTPClient
 import Foundation
-import NIOCore
-import NIOFoundationCompat
-
-struct Parent {
-    let item: Identifiable
-    let field: String
-    init?(item: Identifiable?, field: String?) {
-        self.field = field ?? "NOFIELD"
-        if let i = item {
-            self.item = i
-        } else {
-            return nil
-        }
-    }
-}
-
-enum Network {
-    private static let httpClient = HTTPClient(eventLoopGroupProvider: .createNew,
-                                               configuration: HTTPClient.Configuration(certificateVerification: .fullVerification,
-                                                                                       redirectConfiguration: .disallow,
-                                                                                       decompression: .enabled(limit: .none)))
-
-    static func getData(for request: HTTPClientRequest) async throws -> (Data, HTTPClientResponse) {
-        var request = request
-        request.headers = config.httpHeaders
-        let res = try await httpClient.execute(request, timeout: .seconds(60))
-        let buffer = try await res.body.collect(upTo: Int.max)
-        return (Data(buffer: buffer), res)
-    }
-}
 
 struct Query {
     let name: String
@@ -126,20 +95,18 @@ struct Query {
         let Q = queryText
         log(level: .debug, "[*\(name)*] \(Q)")
 
-        var req = HTTPClientRequest(url: config.server.absoluteString)
-        req.method = .POST
-        req.body = HTTPClientRequest.Body.bytes(ByteBuffer(data: try! JSONEncoder().encode(["query": Q])))
-
         let info: Data
         do {
-            (info, _) = try await Network.getData(for: req)
+            let body = try JSONEncoder().encode(["query": Q])
+            let req = Network.Request(url: config.server.absoluteString, method: .post, body: body)
+            info = try await Network.getData(for: req)
         } catch {
-            try await retryOrFail("Network error: \(error.localizedDescription)")
+            try await retryOrFail("Query error: \(error.localizedDescription)")
             return
         }
 
         guard let json = (try? JSONSerialization.jsonObject(with: info, options: [])) as? [AnyHashable: Any] else {
-            try await retryOrFail("No JSON in response")
+            try await retryOrFail("No JSON in API response")
             return
         }
 
