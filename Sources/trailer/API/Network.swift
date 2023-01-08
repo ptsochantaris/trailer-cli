@@ -66,12 +66,21 @@ extension Network {
         c.httpAdditionalHeaders = Dictionary<String, String>(uniqueKeysWithValues: config.httpHeaders)
         return URLSession(configuration: c, delegate: nil, delegateQueue: nil)
     }()
-        
+    
     static func getData(for request: Request) async throws -> Data {
-        var req = URLRequest(url: URL(string: request.url)!)
-        req.httpMethod = request.method.rawValue
-        req.httpBody = request.body
-        return try await urlSession.data(for: req).0
+        return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Data, Error>) in
+            var req = URLRequest(url: URL(string: request.url)!)
+            req.httpMethod = request.method.rawValue
+            req.httpBody = request.body
+            let task = urlSession.dataTask(with: req) { data, response, error in
+                if let data = data {
+                    continuation.resume(returning: data)
+                } else {
+                    continuation.resume(throwing: error ?? NSError(domain: "build.bru.trailer-cli.network", code: 92, userInfo: [NSLocalizedDescriptionKey: "No data or error from server"]))
+                }
+            }
+            task.resume()
+        }
     }
 }
 #endif
