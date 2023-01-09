@@ -579,9 +579,7 @@ struct PullRequest: Item, Announceable, Closeable, Sortable {
     ])
 
     static var fragmentWithComments: Fragment {
-        var f = fragment
-        f.addField(Group(name: "comments", fields: [Comment.fragmentForItems], paging: .largePage))
-        return f
+        fragment.addingField(Group(name: "comments", fields: [Comment.fragmentForItems], paging: .largePage))
     }
 
     static let reactionsFragment = Fragment(name: "PullRequestReactionFragment", on: "PullRequest", elements: [

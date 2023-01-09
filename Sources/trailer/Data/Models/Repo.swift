@@ -15,7 +15,7 @@ enum RepoVisibility: String, Codable {
 struct Repo: Item, Announceable {
     var id: String
     var parents: [String: LinkedList<Relationship>]
-    var syncState: SyncState
+    var syncState = SyncState.none
     var elementType: String
 
     static var allItems = [String: Repo]()
@@ -38,33 +38,6 @@ struct Repo: Item, Announceable {
         case url
         case nameWithOwner
         case visibility
-    }
-
-    init(from decoder: Decoder) throws {
-        let c = try decoder.container(keyedBy: CodingKeys.self)
-        id = try c.decode(String.self, forKey: .id)
-        parents = try c.decode([String: LinkedList<Relationship>].self, forKey: .parents)
-        elementType = try c.decode(String.self, forKey: .elementType)
-        createdAt = try c.decode(Date.self, forKey: .createdAt)
-        updatedAt = try c.decode(Date.self, forKey: .updatedAt)
-        isFork = try c.decode(Bool.self, forKey: .isFork)
-        url = try c.decode(URL.self, forKey: .url)
-        nameWithOwner = try c.decode(String.self, forKey: .nameWithOwner)
-        visibility = try c.decode(RepoVisibility.self, forKey: .visibility)
-        syncState = .none
-    }
-
-    func encode(to encoder: Encoder) throws {
-        var c = encoder.container(keyedBy: CodingKeys.self)
-        try c.encode(id, forKey: .id)
-        try c.encode(parents, forKey: .parents)
-        try c.encode(elementType, forKey: .elementType)
-        try c.encode(createdAt, forKey: .createdAt)
-        try c.encode(updatedAt, forKey: .updatedAt)
-        try c.encode(isFork, forKey: .isFork)
-        try c.encode(url, forKey: .url)
-        try c.encode(nameWithOwner, forKey: .nameWithOwner)
-        try c.encode(visibility, forKey: .visibility)
     }
 
     mutating func apply(_ node: [AnyHashable: Any]) -> Bool {

@@ -145,14 +145,9 @@ final class LinkedList<Value>: Sequence {
         }
     }
 
-    /// Returns an iterator over the elements of this sequence.
     func makeIterator() -> ListIterator {
         ListIterator(head)
     }
-
-    var underestimatedCount: Int { count }
-
-    func withContiguousStorageIfAvailable<R>(_: (_ buffer: UnsafeBufferPointer<Value>) throws -> R) rethrows -> R? { nil }
 }
 
 extension LinkedList: Codable where Value: Codable {

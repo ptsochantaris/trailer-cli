@@ -11,7 +11,7 @@ import Foundation
 struct User: Item {
     var id: String
     var parents: [String: LinkedList<Relationship>]
-    var syncState: SyncState
+    var syncState = SyncState.none
     var elementType: String
 
     var avatarUrl = emptyURL
@@ -28,28 +28,6 @@ struct User: Item {
         case elementType
         case avatarUrl
         case isMe
-    }
-
-    init(from decoder: Decoder) throws {
-        let c = try decoder.container(keyedBy: CodingKeys.self)
-        id = try c.decode(String.self, forKey: .id)
-        login = try c.decode(String.self, forKey: .login)
-        parents = try c.decode([String: LinkedList<Relationship>].self, forKey: .parents)
-        elementType = try c.decode(String.self, forKey: .elementType)
-        elementType = try c.decode(String.self, forKey: .elementType)
-        avatarUrl = try c.decode(URL.self, forKey: .avatarUrl)
-        isMe = try c.decode(Bool.self, forKey: .isMe)
-        syncState = .none
-    }
-
-    func encode(to encoder: Encoder) throws {
-        var c = encoder.container(keyedBy: CodingKeys.self)
-        try c.encode(id, forKey: .id)
-        try c.encode(login, forKey: .login)
-        try c.encode(parents, forKey: .parents)
-        try c.encode(elementType, forKey: .elementType)
-        try c.encode(avatarUrl, forKey: .avatarUrl)
-        try c.encode(isMe, forKey: .isMe)
     }
 
     mutating func apply(_ node: [AnyHashable: Any]) -> Bool {

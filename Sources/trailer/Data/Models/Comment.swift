@@ -11,7 +11,7 @@ import Foundation
 struct Comment: Item, Announceable {
     var id: String
     var parents: [String: LinkedList<Relationship>]
-    var syncState: SyncState
+    var syncState = SyncState.none
     var elementType: String
 
     static var allItems = [String: Comment]()
@@ -32,29 +32,6 @@ struct Comment: Item, Announceable {
         case viewerDidAuthor
         case createdAt
         case updatedAt
-    }
-
-    init(from decoder: Decoder) throws {
-        let c = try decoder.container(keyedBy: CodingKeys.self)
-        id = try c.decode(String.self, forKey: .id)
-        parents = try c.decode([String: LinkedList<Relationship>].self, forKey: .parents)
-        elementType = try c.decode(String.self, forKey: .elementType)
-        body = try c.decode(String.self, forKey: .body)
-        viewerDidAuthor = try c.decode(Bool.self, forKey: .viewerDidAuthor)
-        createdAt = try c.decode(Date.self, forKey: .createdAt)
-        updatedAt = try c.decode(Date.self, forKey: .updatedAt)
-        syncState = .none
-    }
-
-    func encode(to encoder: Encoder) throws {
-        var c = encoder.container(keyedBy: CodingKeys.self)
-        try c.encode(id, forKey: .id)
-        try c.encode(parents, forKey: .parents)
-        try c.encode(elementType, forKey: .elementType)
-        try c.encode(body, forKey: .body)
-        try c.encode(viewerDidAuthor, forKey: .viewerDidAuthor)
-        try c.encode(createdAt, forKey: .createdAt)
-        try c.encode(updatedAt, forKey: .updatedAt)
     }
 
     mutating func apply(_ node: [AnyHashable: Any]) -> Bool {

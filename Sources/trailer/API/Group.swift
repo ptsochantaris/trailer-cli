@@ -14,8 +14,8 @@ enum PagingStyle {
 }
 
 struct Group: Ingesting {
-    var name: String
-    var fields: [Element]
+    let name: String
+    let fields: [Element]
     private let paging: PagingStyle
     private let extraParams: [String: String]?
     private var lastCursor: String?
@@ -25,6 +25,14 @@ struct Group: Ingesting {
         self.fields = fields
         self.paging = paging
         self.extraParams = extraParams
+    }
+    
+    init(group: Group, name: String? = nil, lastCursor: String? = nil) {
+        self.name = name ?? group.name
+        fields = group.fields
+        paging = group.paging
+        extraParams = group.extraParams
+        self.lastCursor = lastCursor
     }
 
     var queryText: String {

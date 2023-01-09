@@ -11,7 +11,7 @@ import Foundation
 struct Milestone: Item {
     var id: String
     var parents: [String: LinkedList<Relationship>]
-    var syncState: SyncState
+    var syncState = SyncState.none
     var elementType: String
 
     static var allItems = [String: Milestone]()
@@ -24,23 +24,6 @@ struct Milestone: Item {
         case parents
         case elementType
         case title
-    }
-
-    init(from decoder: Decoder) throws {
-        let c = try decoder.container(keyedBy: CodingKeys.self)
-        id = try c.decode(String.self, forKey: .id)
-        parents = try c.decode([String: LinkedList<Relationship>].self, forKey: .parents)
-        elementType = try c.decode(String.self, forKey: .elementType)
-        syncState = .none
-        title = try c.decode(String.self, forKey: .title)
-    }
-
-    func encode(to encoder: Encoder) throws {
-        var c = encoder.container(keyedBy: CodingKeys.self)
-        try c.encode(id, forKey: .id)
-        try c.encode(parents, forKey: .parents)
-        try c.encode(elementType, forKey: .elementType)
-        try c.encode(title, forKey: .title)
     }
 
     mutating func apply(_ node: [AnyHashable: Any]) -> Bool {

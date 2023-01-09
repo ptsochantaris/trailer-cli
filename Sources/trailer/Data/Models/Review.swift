@@ -9,15 +9,14 @@
 import Foundation
 
 enum ReviewState: String, Codable {
-    case pending, commented, approved, changes_requested, dimissed
-    init?(rawValue: String) {
+    case pending, commented, approved, changes_requested, dismissed
+    init(rawValue: String) {
         switch rawValue.lowercased() {
-        case "pending": self = ReviewState.pending
         case "commented": self = ReviewState.commented
         case "approved": self = ReviewState.approved
         case "changes_requested": self = ReviewState.changes_requested
-        case "dimissed": self = ReviewState.dimissed
-        default: return nil
+        case "dimissed", "dismissed": self = ReviewState.dismissed
+        default: self = ReviewState.pending
         }
     }
 }
@@ -25,7 +24,7 @@ enum ReviewState: String, Codable {
 struct Review: Item, Announceable {
     var id: String
     var parents: [String: LinkedList<Relationship>]
-    var syncState: SyncState
+    var syncState = SyncState.none
     var elementType: String
 
     static var allItems = [String: Review]()
@@ -54,37 +53,12 @@ struct Review: Item, Announceable {
         case updatedAt
     }
 
-    init(from decoder: Decoder) throws {
-        let c = try decoder.container(keyedBy: CodingKeys.self)
-        id = try c.decode(String.self, forKey: .id)
-        parents = try c.decode([String: LinkedList<Relationship>].self, forKey: .parents)
-        elementType = try c.decode(String.self, forKey: .elementType)
-        state = ReviewState(rawValue: try c.decode(String.self, forKey: .state)) ?? ReviewState.pending
-        body = try c.decode(String.self, forKey: .body)
-        viewerDidAuthor = try c.decode(Bool.self, forKey: .viewerDidAuthor)
-        createdAt = try c.decode(Date.self, forKey: .createdAt)
-        updatedAt = try c.decode(Date.self, forKey: .updatedAt)
-        syncState = .none
-    }
-
-    func encode(to encoder: Encoder) throws {
-        var c = encoder.container(keyedBy: CodingKeys.self)
-        try c.encode(id, forKey: .id)
-        try c.encode(parents, forKey: .parents)
-        try c.encode(elementType, forKey: .elementType)
-        try c.encode(state, forKey: .state)
-        try c.encode(body, forKey: .body)
-        try c.encode(viewerDidAuthor, forKey: .viewerDidAuthor)
-        try c.encode(createdAt, forKey: .createdAt)
-        try c.encode(updatedAt, forKey: .updatedAt)
-    }
-
     mutating func apply(_ node: [AnyHashable: Any]) -> Bool {
         guard node.keys.count > 5 else { return false }
 
         syncNeedsComments = (node["comments"] as? [AnyHashable: Any])?["totalCount"] as? Int ?? 0 > 0
 
-        state = ReviewState(rawValue: node["state"] as? String ?? "PENDING") ?? ReviewState.pending
+        state = ReviewState(rawValue: node["state"] as? String ?? "PENDING")
         body = node["body"] as? String ?? ""
         createdAt = GHDateFormatter.parseGH8601(node["createdAt"] as? String) ?? Date.distantPast
         updatedAt = GHDateFormatter.parseGH8601(node["updatedAt"] as? String) ?? Date.distantPast

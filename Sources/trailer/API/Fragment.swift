@@ -9,7 +9,7 @@
 import Foundation
 
 struct Fragment: Ingesting {
-    var name: String
+    let name: String
 
     var queryText: String {
         "... \(name)"
@@ -27,7 +27,7 @@ struct Fragment: Ingesting {
         return res
     }
 
-    private var elements: [Element]
+    private let elements: [Element]
     private let type: String
 
     init(name: String, on type: String, elements: [Element]) {
@@ -36,8 +36,8 @@ struct Fragment: Ingesting {
         self.elements = elements
     }
 
-    mutating func addField(_ extraField: Element) {
-        elements.append(extraField)
+    func addingField(_ extraField: Element) -> Self {
+        Fragment(name: name, on: type, elements: elements + [extraField])
     }
 
     func ingest(query: Query, pageData: Any, parent: Parent?, level: Int) -> LinkedList<Query> {

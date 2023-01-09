@@ -13,7 +13,7 @@ struct BatchGroup: Ingesting {
 
     typealias NodeBlock = ([AnyHashable: Any]) -> Void
 
-    private var idsToGroups = [String: Group]()
+    private let idsToGroups: [String: Group]
     private let originalTemplate: Group
     private let nextCount: Int
     private let perNodeBlock: NodeBlock?
@@ -22,12 +22,14 @@ struct BatchGroup: Ingesting {
         self.perNodeBlock = perNodeBlock
         originalTemplate = templateGroup
         var index = startingCount
+        
+        var id2g = [String: Group]()
+        id2g.reserveCapacity(idList.count)
         for id in idList {
-            var t = templateGroup
-            t.name = templateGroup.name + "\(index)"
-            idsToGroups[id] = t
+            id2g[id] = Group(group: templateGroup, name: "\(templateGroup.name)\(index)")
             index += 1
         }
+        idsToGroups = id2g
         nextCount = index
     }
 

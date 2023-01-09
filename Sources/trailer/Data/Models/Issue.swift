@@ -11,7 +11,7 @@ import Foundation
 struct Issue: Item, Announceable, Closeable, Sortable {
     var id: String
     var parents: [String: LinkedList<Relationship>]
-    var syncState: SyncState
+    var syncState = SyncState.none
     var elementType: String
 
     static var allItems = [String: Issue]()
@@ -39,37 +39,6 @@ struct Issue: Item, Announceable, Closeable, Sortable {
         case url
         case state
         case viewerDidAuthor
-    }
-
-    init(from decoder: Decoder) throws {
-        let c = try decoder.container(keyedBy: CodingKeys.self)
-        id = try c.decode(String.self, forKey: .id)
-        parents = try c.decode([String: LinkedList<Relationship>].self, forKey: .parents)
-        elementType = try c.decode(String.self, forKey: .elementType)
-        bodyText = try c.decode(String.self, forKey: .bodyText)
-        createdAt = try c.decode(Date.self, forKey: .createdAt)
-        updatedAt = try c.decode(Date.self, forKey: .updatedAt)
-        number = try c.decode(Int.self, forKey: .number)
-        title = try c.decode(String.self, forKey: .title)
-        url = try c.decode(URL.self, forKey: .url)
-        state = try c.decode(ItemState.self, forKey: .state)
-        viewerDidAuthor = try c.decode(Bool.self, forKey: .viewerDidAuthor)
-        syncState = .none
-    }
-
-    func encode(to encoder: Encoder) throws {
-        var c = encoder.container(keyedBy: CodingKeys.self)
-        try c.encode(id, forKey: .id)
-        try c.encode(parents, forKey: .parents)
-        try c.encode(elementType, forKey: .elementType)
-        try c.encode(bodyText, forKey: .bodyText)
-        try c.encode(createdAt, forKey: .createdAt)
-        try c.encode(updatedAt, forKey: .updatedAt)
-        try c.encode(number, forKey: .number)
-        try c.encode(title, forKey: .title)
-        try c.encode(url, forKey: .url)
-        try c.encode(state, forKey: .state)
-        try c.encode(viewerDidAuthor, forKey: .viewerDidAuthor)
     }
 
     mutating func apply(_ node: [AnyHashable: Any]) -> Bool {
@@ -356,8 +325,6 @@ struct Issue: Item, Announceable, Closeable, Sortable {
     ])
 
     static var fragmentWithComments: Fragment {
-        var f = fragment
-        f.addField(Group(name: "comments", fields: [Comment.fragmentForItems], paging: .largePage))
-        return f
+        fragment.addingField(Group(name: "comments", fields: [Comment.fragmentForItems], paging: .largePage))
     }
 }

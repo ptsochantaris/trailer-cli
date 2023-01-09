@@ -24,18 +24,15 @@ struct Query {
 
     static func batching(_ name: String, fields: [Element], idList: [String], perNodeBlock: BatchGroup.NodeBlock? = nil) -> LinkedList<Query> {
         var list = idList
-        var segments = [[String]]()
-        while list.hasItems {
-            let p = min(config.pageSize, list.count)
-            segments.append(Array(list[0 ..< p]))
-            list = Array(list[p...])
-        }
         var isNext = false
         let res = LinkedList<Query>()
-        for segment in segments {
+        while list.hasItems {
+            let p = min(config.pageSize, list.count)
+            let segment = Array(list[0 ..< p])
             let q = Query(name: name, rootElement: BatchGroup(templateGroup: Group(name: "items", fields: fields), idList: segment, perNodeBlock: perNodeBlock), subQuery: isNext)
-            isNext = true
             res.append(q)
+            isNext = true
+            list.removeFirst(p)
         }
         return res
     }

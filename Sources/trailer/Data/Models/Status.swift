@@ -30,7 +30,7 @@ enum StatusState: String, Codable {
 struct Status: Item {
     var id: String
     var parents: [String: LinkedList<Relationship>]
-    var syncState: SyncState
+    var syncState = SyncState.none
     var elementType: String
 
     static var allItems = [String: Status]()
@@ -51,31 +51,6 @@ struct Status: Item {
         case description
         case state
         case targetUrl
-    }
-
-    init(from decoder: Decoder) throws {
-        let c = try decoder.container(keyedBy: CodingKeys.self)
-        id = try c.decode(String.self, forKey: .id)
-        parents = try c.decode([String: LinkedList<Relationship>].self, forKey: .parents)
-        elementType = try c.decode(String.self, forKey: .elementType)
-        context = try c.decode(String.self, forKey: .context)
-        createdAt = try c.decode(Date.self, forKey: .createdAt)
-        description = try c.decode(String.self, forKey: .description)
-        state = try c.decode(StatusState.self, forKey: .state)
-        targetUrl = try c.decode(URL.self, forKey: .targetUrl)
-        syncState = .none
-    }
-
-    func encode(to encoder: Encoder) throws {
-        var c = encoder.container(keyedBy: CodingKeys.self)
-        try c.encode(id, forKey: .id)
-        try c.encode(parents, forKey: .parents)
-        try c.encode(elementType, forKey: .elementType)
-        try c.encode(context, forKey: .context)
-        try c.encode(createdAt, forKey: .createdAt)
-        try c.encode(description, forKey: .description)
-        try c.encode(state, forKey: .state)
-        try c.encode(targetUrl, forKey: .targetUrl)
     }
 
     mutating func apply(_ node: [AnyHashable: Any]) -> Bool {
