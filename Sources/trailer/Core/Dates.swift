@@ -6,12 +6,22 @@
 //
 
 import Foundation
-#if os(Linux)
-import Glibc
-#endif
 
 struct GHDateFormatter {
-    #if os(Windows)
+    #if os(OSX)
+        private static var timeData = tm()
+        private static var dateParserHolder = "                   +0000".cString(using: String.Encoding.ascii)!
+        static func parseGH8601(_ iso8601: String?) -> Date? {
+            guard let i = iso8601, i.count > 18 else { return nil }
+
+            memcpy(&dateParserHolder, i, 19)
+            strptime(dateParserHolder, "%FT%T%z", &timeData)
+
+            let t = mktime(&timeData)
+            return Date(timeIntervalSince1970: TimeInterval(t))
+        }
+
+    #elseif os(Linux) || os(Windows)
         private static let formatter: DateFormatter = {
             let d = DateFormatter()
             d.timeZone = TimeZone(secondsFromGMT: 0)
@@ -24,18 +34,6 @@ struct GHDateFormatter {
             guard let i = iso8601 else { return nil }
             return formatter.date(from: i)
         }
-    #else
-    private static var timeData = tm()
-    private static var dateParserHolder = "                   +0000".cString(using: .ascii)!
-    static func parseGH8601(_ iso8601: String?) -> Date? {
-        guard let i = iso8601, i.count > 18 else { return nil }
-
-        memcpy(&dateParserHolder, i, 19)
-        strptime(dateParserHolder, "%FT%T%z", &timeData)
-
-        let t = mktime(&timeData)
-        return Date(timeIntervalSince1970: TimeInterval(t))
-    }
     #endif
 }
 
