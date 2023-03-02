@@ -22,7 +22,7 @@ struct BatchGroup: Ingesting {
         self.perNodeBlock = perNodeBlock
         originalTemplate = templateGroup
         var index = startingCount
-        
+
         var id2g = [String: Group]()
         id2g.reserveCapacity(idList.count)
         for id in idList {

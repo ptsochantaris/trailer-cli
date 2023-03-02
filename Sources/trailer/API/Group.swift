@@ -26,7 +26,7 @@ struct Group: Ingesting {
         self.paging = paging
         self.extraParams = extraParams
     }
-    
+
     init(group: Group, name: String? = nil, lastCursor: String? = nil) {
         self.name = name ?? group.name
         fields = group.fields

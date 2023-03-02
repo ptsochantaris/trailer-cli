@@ -54,11 +54,6 @@ struct Org: Item {
         children(field: "repositories")
     }
 
-    static let fragment = Fragment(name: "orgFields", on: "Organization", elements: [
-        Field.id,
-        Field(name: "name")
-    ])
-
     static let fragmentWithRepos = Fragment(name: "orgFieldsAndRepos", on: "Organization", elements: [
         Field.id,
         Field(name: "name"),

@@ -12,10 +12,6 @@ enum ListableItem: Equatable, Sortable {
     case pullRequest(PullRequest)
     case issue(Issue)
 
-    var id: String {
-        pullRequest?.id ?? issue?.id ?? ""
-    }
-
     var title: String {
         pullRequest?.title ?? issue?.title ?? ""
     }

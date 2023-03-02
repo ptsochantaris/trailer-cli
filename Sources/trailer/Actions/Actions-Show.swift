@@ -44,19 +44,19 @@ extension Actions {
         switch command {
         case "item":
             await DB.load()
-            if !(try await showItem(number, includePrs: true, includeIssues: true)) {
+            if try await !showItem(number, includePrs: true, includeIssues: true) {
                 log("[R*Item #\(number) not found*]")
             }
 
         case "pr":
             await DB.load()
-            if !(try await showItem(number, includePrs: true, includeIssues: false)) {
+            if try await !showItem(number, includePrs: true, includeIssues: false) {
                 log("[R*PR #\(number) not found*]")
             }
 
         case "issue":
             await DB.load()
-            if !(try await showItem(number, includePrs: false, includeIssues: true)) {
+            if try await !showItem(number, includePrs: false, includeIssues: true) {
                 log("[R*Issue #\(number) not found*]")
             }
 

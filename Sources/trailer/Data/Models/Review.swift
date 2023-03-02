@@ -118,11 +118,6 @@ struct Review: Item, Announceable {
         }
     }
 
-    func printSummaryLine() {
-        printHeader()
-        log()
-    }
-
     var pullRequest: PullRequest? {
         if let parentId = parents["PullRequest:reviews"]?.first?.parentId {
             return PullRequest.allItems[parentId]

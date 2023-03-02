@@ -46,7 +46,7 @@ struct Query {
             }
         }
 
-        let text = fragments.map { $0.declaration }.joined(separator: " ")
+        let text = fragments.map(\.declaration).joined(separator: " ")
         var rootQuery = rootElement.queryText
         if let parentItem = parent?.item {
             rootQuery = "node(id: \"\(parentItem.id)\") { ... on \(parentItem.elementType) { " + rootQuery + " } }"
