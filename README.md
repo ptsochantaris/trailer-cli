@@ -13,12 +13,16 @@ Please refer to the "cookbook" section below for an introduction to various feat
 - It can run on Linux, Windows as well as macOS.
 - It can be used remotely via SSH, or in command-line scripts.
 - It uses the new GitHub GraphQL-based v4 API, making syncs very quick. Additionally it allows trimming down both the data that is synced (for instance, skipping comments or issues for a certain sync)
-- Far more Geek Cred than a GUI tool.
+- Provides far more Geek Cred than a GUI tool.
 
 ## Installing
 
 ### macOS
-You can get a pre-built macOS build from the [Releases](../../releases) page and put it into `/usr/local/bin`.
+If you have Xcode command line tools, the easiest way to install trailer-cli is via Homebrew:
+```
+brew install ptsochantaris/tap/trailer-cli
+```
+Alternatively you can get a pre-built macOS build from the [Releases](../../releases) page and put it into `/usr/local/bin`.
 
 ### Linux
 It's very hard to maintain builds for various distros, as Swift currently can't produce static binaries, although it's quite simple to install the latest Swift version and run `./install.sh` to create the binary in your favourite distro.
