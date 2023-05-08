@@ -85,7 +85,7 @@ struct Group: Ingesting {
         return res
     }
 
-    private func checkFields(query: Query, hash: [AnyHashable: Any], parent: Parent?, level: Int) -> LinkedList<Query> {
+    private func checkFields(query: Query, hash: JSON, parent: Parent?, level: Int) -> LinkedList<Query> {
         let thisObject: Identifiable?
         if let o = Group.parse(parent: parent, info: hash, level: level) {
             thisObject = o
@@ -113,18 +113,18 @@ struct Group: Ingesting {
     func ingest(query: Query, pageData: Any, parent: Parent?, level: Int) -> LinkedList<Query> {
         let extraQueries = LinkedList<Query>()
 
-        if let hash = pageData as? [AnyHashable: Any] { // data was a dictionary
-            if let edges = hash["edges"] as? [[AnyHashable: Any]] {
+        if let hash = pageData as? JSON { // data was a dictionary
+            if let edges = hash["edges"] as? [JSON] {
                 log(level: .debug, indent: level, "Ingesting paged group \(name)")
                 var latestCursor: String?
                 for e in edges {
-                    if let node = e["node"] as? [AnyHashable: Any] {
+                    if let node = e["node"] as? JSON {
                         let newQueries = checkFields(query: query, hash: node, parent: parent, level: level + 1)
                         extraQueries.append(contentsOf: newQueries)
                     }
                     latestCursor = e["cursor"] as? String
                 }
-                if let latestCursor, let pageInfo = hash["pageInfo"] as? [AnyHashable: Any], let hasNextPage = pageInfo["hasNextPage"] as? Bool, hasNextPage {
+                if let latestCursor, let pageInfo = hash["pageInfo"] as? JSON, let hasNextPage = pageInfo["hasNextPage"] as? Bool, hasNextPage {
                     var newGroup = self
                     newGroup.lastCursor = latestCursor
                     let nextPage = Query(name: query.name, rootElement: newGroup, parent: parent, subQuery: true)
@@ -137,7 +137,7 @@ struct Group: Ingesting {
                 extraQueries.append(contentsOf: newQueries)
             }
 
-        } else if let nodes = pageData as? [[AnyHashable: Any]] { // data was an array of dictionaries with no paging info
+        } else if let nodes = pageData as? [JSON] { // data was an array of dictionaries with no paging info
             log(level: .debug, indent: level, "Ingesting list of groups \(name)")
             for node in nodes {
                 let newQueries = checkFields(query: query, hash: node, parent: parent, level: level + 1)
@@ -151,7 +151,7 @@ struct Group: Ingesting {
         return extraQueries
     }
 
-    private static func parse(parent: Parent?, info: [AnyHashable: Any], level: Int) -> Identifiable? {
+    private static func parse(parent: Parent?, info: JSON, level: Int) -> Identifiable? {
         if let typeName = info["__typename"] as? String {
             if let p = parent {
                 log(level: .debug, indent: level, "Scanning \(typeName) with parent \(p.item.typeName) \(p.item.id)")

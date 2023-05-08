@@ -68,20 +68,20 @@ struct Query {
             }
         }
 
-        func extractNodeData(from json: [AnyHashable: Any]) -> [AnyHashable: Any]? {
-            if let data = json["data"] as? [AnyHashable: Any] {
+        func extractNodeData(from json: JSON) -> JSON? {
+            if let data = json["data"] as? JSON {
                 if parent == nil {
                     return data
                 } else {
-                    return data["node"] as? [AnyHashable: Any]
+                    return data["node"] as? JSON
                 }
             }
             return nil
         }
 
-        func extractRateLimit(from json: [AnyHashable: Any]) -> [AnyHashable: Any]? {
-            if let data = json["data"] as? [AnyHashable: Any] {
-                return data["rateLimit"] as? [AnyHashable: Any]
+        func extractRateLimit(from json: JSON) -> JSON? {
+            if let data = json["data"] as? JSON {
+                return data["rateLimit"] as? JSON
             }
             return nil
         }
@@ -102,14 +102,14 @@ struct Query {
             return
         }
 
-        guard let json = (try? JSONSerialization.jsonObject(with: info, options: [])) as? [AnyHashable: Any] else {
+        guard let json = (try? FoundationJson.jsonObject(with: info)) as? JSON else {
             try await retryOrFail("No JSON in API response")
             return
         }
 
         guard let data = extractNodeData(from: json) else {
             let msg: String
-            if let errors = json["errors"] as? [[AnyHashable: Any]] {
+            if let errors = json["errors"] as? [JSON] {
                 msg = errors.first?["message"] as? String ?? "Unspecified server error: \(json)"
             } else {
                 msg = json["message"] as? String ?? "Unspecified server error: \(json)"

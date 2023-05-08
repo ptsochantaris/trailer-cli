@@ -53,7 +53,7 @@ struct Status: Item {
         case targetUrl
     }
 
-    mutating func apply(_ node: [AnyHashable: Any]) -> Bool {
+    mutating func apply(_ node: JSON) -> Bool {
         guard node.keys.count > 6 else { return false }
 
         createdAt = GHDateFormatter.parseGH8601(node["createdAt"] as? String) ?? .distantPast
@@ -80,7 +80,7 @@ struct Status: Item {
 
     mutating func setChildrenSyncStatus(_: SyncState) {}
 
-    init?(id: String, type: String, node: [AnyHashable: Any]) {
+    init?(id: String, type: String, node: JSON) {
         self.id = id
         parents = [String: LinkedList<Relationship>]()
         elementType = type

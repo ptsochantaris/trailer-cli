@@ -46,7 +46,7 @@ extension Actions {
             let versionRequest = Network.Request(url: "https://api.github.com/repos/ptsochantaris/trailer-cli/releases/latest", method: .get, body: nil)
             if
                 let data = try? await Network.getData(for: versionRequest),
-                let json = (try? JSONSerialization.jsonObject(with: data, options: [])) as? [AnyHashable: Any],
+                let json = (try? FoundationJson.jsonObject(with: data)) as? JSON,
                 let tagName = json["tag_name"] as? String {
                 success = true
                 if config.isNewer(tagName) {
@@ -192,7 +192,7 @@ extension Actions {
         }
 
         if userWantsPrs || userWantsIssues, !filtersRequested { // detect new items
-            let itemIdParser = { (node: [AnyHashable: Any]) in
+            let itemIdParser = { (node: JSON) in
 
                 guard let repoId = node["id"] as? String else {
                     return
@@ -217,18 +217,18 @@ extension Actions {
                     }
                 }
 
-                if syncPrs, let section = node["pullRequests"] as? [AnyHashable: Any], let itemList = section["edges"] as? [[AnyHashable: Any]] {
+                if syncPrs, let section = node["pullRequests"] as? JSON, let itemList = section["edges"] as? [JSON] {
                     for p in itemList {
-                        if let node = p["node"] as? [AnyHashable: Any], let id = node["id"] as? String {
+                        if let node = p["node"] as? JSON, let id = node["id"] as? String {
                             prIdList[id] = repoId
                             log(level: .debug, indent: 1, "Registered PR ID: \(id)")
                         }
                     }
                 }
 
-                if syncIssues, let section = node["issues"] as? [AnyHashable: Any], let itemList = section["edges"] as? [[AnyHashable: Any]] {
+                if syncIssues, let section = node["issues"] as? JSON, let itemList = section["edges"] as? [JSON] {
                     for p in itemList {
-                        if let node = p["node"] as? [AnyHashable: Any], let id = node["id"] as? String {
+                        if let node = p["node"] as? JSON, let id = node["id"] as? String {
                             issueIdList[id] = repoId
                             log(level: .debug, indent: 1, "Registered Issue ID: \(id)")
                         }
@@ -433,7 +433,7 @@ extension Actions {
         }
         if let l = await latestVersion {
             log("[![G*New Trailer version \(l) is available*]!]")
-        }
+        }        
     }
 
     static func singleItemUpdate(for item: ListableItem) async throws -> ListableItem {

@@ -41,10 +41,10 @@ struct Issue: Item, Announceable, Closeable, Sortable {
         case viewerDidAuthor
     }
 
-    mutating func apply(_ node: [AnyHashable: Any]) -> Bool {
+    mutating func apply(_ node: JSON) -> Bool {
         guard node.keys.count > 8 else { return false }
 
-        syncNeedsReactions = (node["reactions"] as? [AnyHashable: Any])?["totalCount"] as? Int ?? 0 > 0
+        syncNeedsReactions = (node["reactions"] as? JSON)?["totalCount"] as? Int ?? 0 > 0
 
         bodyText = node["bodyText"] as? String ?? ""
         createdAt = GHDateFormatter.parseGH8601(node["createdAt"] as? String) ?? Date.distantPast
@@ -57,7 +57,7 @@ struct Issue: Item, Announceable, Closeable, Sortable {
         return true
     }
 
-    init?(id: String, type: String, node: [AnyHashable: Any]) {
+    init?(id: String, type: String, node: JSON) {
         self.id = id
         parents = [String: LinkedList<Relationship>]()
         elementType = type

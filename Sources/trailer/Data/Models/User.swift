@@ -30,14 +30,14 @@ struct User: Item {
         case isMe
     }
 
-    mutating func apply(_ node: [AnyHashable: Any]) -> Bool {
+    mutating func apply(_ node: JSON) -> Bool {
         guard node.keys.count > 2 else { return false }
         avatarUrl = URL(string: node["avatarUrl"] as? String ?? "") ?? emptyURL
         login = node["login"] as? String ?? ""
         return true
     }
 
-    init?(id: String, type: String, node: [AnyHashable: Any]) {
+    init?(id: String, type: String, node: JSON) {
         self.id = id
         parents = [String: LinkedList<Relationship>]()
         elementType = type

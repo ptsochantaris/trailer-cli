@@ -11,7 +11,7 @@ import Foundation
 struct BatchGroup: Ingesting {
     let name = "nodes"
 
-    typealias NodeBlock = ([AnyHashable: Any]) -> Void
+    typealias NodeBlock = (JSON) -> Void
 
     private let idsToGroups: [String: Group]
     private let originalTemplate: Group
@@ -69,7 +69,7 @@ struct BatchGroup: Ingesting {
         }
 
         for n in nodes {
-            if let n = n as? [AnyHashable: Any], let id = n["id"] as? String, let group = idsToGroups[id] {
+            if let n = n as? JSON, let id = n["id"] as? String, let group = idsToGroups[id] {
                 let newQueries = group.ingest(query: query, pageData: n, parent: parent, level: level + 1)
                 extraQueries.append(contentsOf: newQueries)
                 perNodeBlock?(n)

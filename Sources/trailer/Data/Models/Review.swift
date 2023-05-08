@@ -53,10 +53,10 @@ struct Review: Item, Announceable {
         case updatedAt
     }
 
-    mutating func apply(_ node: [AnyHashable: Any]) -> Bool {
+    mutating func apply(_ node: JSON) -> Bool {
         guard node.keys.count > 5 else { return false }
 
-        syncNeedsComments = (node["comments"] as? [AnyHashable: Any])?["totalCount"] as? Int ?? 0 > 0
+        syncNeedsComments = (node["comments"] as? JSON)?["totalCount"] as? Int ?? 0 > 0
 
         state = ReviewState(rawValue: node["state"] as? String ?? "PENDING")
         body = node["body"] as? String ?? ""
@@ -66,7 +66,7 @@ struct Review: Item, Announceable {
         return true
     }
 
-    init?(id: String, type: String, node: [AnyHashable: Any]) {
+    init?(id: String, type: String, node: JSON) {
         self.id = id
         parents = [String: LinkedList<Relationship>]()
         elementType = type

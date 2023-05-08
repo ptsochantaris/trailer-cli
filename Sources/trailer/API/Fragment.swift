@@ -42,7 +42,7 @@ struct Fragment: Ingesting {
 
     func ingest(query: Query, pageData: Any, parent: Parent?, level: Int) -> LinkedList<Query> {
         log(level: .debug, indent: level, "Ingesting fragment \(name)")
-        guard let hash = pageData as? [AnyHashable: Any] else { return LinkedList<Query>() }
+        guard let hash = pageData as? JSON else { return LinkedList<Query>() }
 
         let extraQueries = LinkedList<Query>()
         for element in elements {

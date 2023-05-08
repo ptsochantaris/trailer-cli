@@ -26,13 +26,13 @@ struct Milestone: Item {
         case title
     }
 
-    mutating func apply(_ node: [AnyHashable: Any]) -> Bool {
+    mutating func apply(_ node: JSON) -> Bool {
         guard node.keys.count > 1 else { return false }
         title = node["title"] as? String ?? ""
         return true
     }
 
-    init?(id: String, type: String, node: [AnyHashable: Any]) {
+    init?(id: String, type: String, node: JSON) {
         self.id = id
         parents = [String: LinkedList<Relationship>]()
         elementType = type

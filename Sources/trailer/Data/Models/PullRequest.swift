@@ -108,10 +108,10 @@ struct PullRequest: Item, Announceable, Closeable, Sortable {
         try c.encode(headRefName, forKey: .headRefName)
     }
 
-    mutating func apply(_ node: [AnyHashable: Any]) -> Bool {
+    mutating func apply(_ node: JSON) -> Bool {
         guard node.keys.count > 9 else { return false }
 
-        syncNeedsReactions = (node["reactions"] as? [AnyHashable: Any])?["totalCount"] as? Int ?? 0 > 0
+        syncNeedsReactions = (node["reactions"] as? JSON)?["totalCount"] as? Int ?? 0 > 0
 
         mergeable = MergeableState(rawValue: node["mergeable"] as? String ?? "UNKNOWN") ?? MergeableState.unknown
         bodyText = node["bodyText"] as? String ?? ""
@@ -127,7 +127,7 @@ struct PullRequest: Item, Announceable, Closeable, Sortable {
         return true
     }
 
-    init?(id: String, type: String, node: [AnyHashable: Any]) {
+    init?(id: String, type: String, node: JSON) {
         self.id = id
         parents = [String: LinkedList<Relationship>]()
         elementType = type

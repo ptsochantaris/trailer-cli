@@ -34,10 +34,10 @@ struct Comment: Item, Announceable {
         case updatedAt
     }
 
-    mutating func apply(_ node: [AnyHashable: Any]) -> Bool {
+    mutating func apply(_ node: JSON) -> Bool {
         guard node.keys.count > 5 else { return false }
 
-        syncNeedsReactions = (node["reactions"] as? [AnyHashable: Any])?["totalCount"] as? Int ?? 0 > 0
+        syncNeedsReactions = (node["reactions"] as? JSON)?["totalCount"] as? Int ?? 0 > 0
         body = node["body"] as? String ?? ""
         viewerDidAuthor = node["viewerDidAuthor"] as? Bool ?? false
         createdAt = GHDateFormatter.parseGH8601(node["createdAt"] as? String) ?? Date.distantPast
@@ -45,7 +45,7 @@ struct Comment: Item, Announceable {
         return true
     }
 
-    init?(id: String, type: String, node: [AnyHashable: Any]) {
+    init?(id: String, type: String, node: JSON) {
         self.id = id
         syncState = .new
         parents = [String: LinkedList<Relationship>]()

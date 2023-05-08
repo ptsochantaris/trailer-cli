@@ -10,13 +10,13 @@ import Foundation
 
 protocol Item: Identifiable, Databaseable, Equatable {
     static var allItems: [String: Self] { get set }
-    static func parse(parent: Parent?, elementType: String, node: [AnyHashable: Any], level: Int) -> Self?
+    static func parse(parent: Parent?, elementType: String, node: JSON, level: Int) -> Self?
     static var idField: String { get }
 
-    init?(id: String, type: String, node: [AnyHashable: Any])
+    init?(id: String, type: String, node: JSON)
 
     var parents: [String: LinkedList<Relationship>] { get set }
-    mutating func apply(_ node: [AnyHashable: Any]) -> Bool
+    mutating func apply(_ node: JSON) -> Bool
     mutating func setChildrenSyncStatus(_ status: SyncState)
 }
 
@@ -188,7 +188,7 @@ extension Item {
         }
     }
 
-    static func parse(parent: Parent?, elementType: String, node: [AnyHashable: Any], level: Int) -> Self? {
+    static func parse(parent: Parent?, elementType: String, node: JSON, level: Int) -> Self? {
         guard let id = node[Self.idField] as? String else { return nil }
 
         if var ret = existingItem(with: id) {

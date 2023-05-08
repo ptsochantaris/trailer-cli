@@ -23,11 +23,11 @@ struct ReviewRequest: Item {
         case elementType
     }
 
-    mutating func apply(_: [AnyHashable: Any]) -> Bool {
+    mutating func apply(_: JSON) -> Bool {
         true
     }
 
-    init?(id: String, type: String, node: [AnyHashable: Any]) {
+    init?(id: String, type: String, node: JSON) {
         self.id = id
         parents = [String: LinkedList<Relationship>]()
         elementType = type
