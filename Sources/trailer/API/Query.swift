@@ -103,7 +103,7 @@ struct Query {
         }
 
         guard let json = (try? FoundationJson.jsonObject(with: info)) as? JSON else {
-            try await retryOrFail("No JSON in API response")
+            try await retryOrFail("No JSON in API response: \(String(data: info, encoding: .utf8) ?? "")")
             return
         }
 
