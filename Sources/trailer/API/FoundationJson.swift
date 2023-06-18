@@ -34,16 +34,16 @@ final class FoundationJson {
         array = bytes
         endIndex = bytes.endIndex
     }
-    
+
     func parse() throws -> Any? {
         try consumeWhitespace()
         return try parseValue()
     }
-    
+
     // MARK: Generic Value Parsing
-    
+
     private func parseValue() throws -> Any? {
-        while let byte = peek() {
+        while let byte = read() {
             switch byte {
             case ._quote:
                 return try readString()
@@ -51,32 +51,34 @@ final class FoundationJson {
                 return try parseObject()
             case ._openbracket:
                 return try parseArray()
-            case ._charF, ._charT:
-                return try readBool()
+            case ._charF:
+                try consumeFalse()
+                return false
+            case ._charT:
+                try consumeTrue()
+                return true
             case ._charN:
-                try readNull()
+                try consumeNull()
                 return nil
-            case ._minus, ._zero ... ._nine:
-                return try parseNumber()
+            case ._minus:
+                return try parseNumber(positive: false)
+            case ._zero ... ._nine:
+                return try parseNumber(positive: true)
             case ._newline, ._return, ._space, ._tab:
                 readerIndex += 1
             default:
                 throw JSONError.unexpectedCharacter(ascii: byte, characterIndex: readerIndex)
             }
         }
-        
+
         throw JSONError.unexpectedEndOfFile
     }
-    
+
     // MARK: - Parse Array -
-    
+
     private func parseArray() throws -> [Any] {
-        precondition(read() == ._openbracket)
-        
         // parse first value or end immediatly
         switch try consumeWhitespace() {
-        case ._newline, ._return, ._space, ._tab:
-            preconditionFailure("Expected that all white space is consumed")
         case ._closebracket:
             // if the first char after whitespace is a closing bracket, we found an empty array
             readerIndex += 1
@@ -84,24 +86,23 @@ final class FoundationJson {
         default:
             break
         }
-        
+
         var array = [Any]()
         array.reserveCapacity(10)
-        
+
         // parse values
         while true {
             if let value = try parseValue() {
                 array.append(value)
             }
-            
+
             // consume the whitespace after the value before the comma
             let ascii = try consumeWhitespace()
             switch ascii {
-            case ._newline, ._return, ._space, ._tab:
-                preconditionFailure("Expected that all white space is consumed")
             case ._closebracket:
                 readerIndex += 1
                 return array
+
             case ._comma:
                 // consume the comma
                 readerIndex += 1
@@ -111,22 +112,18 @@ final class FoundationJson {
                     readerIndex += 1
                     return array
                 }
-                continue
+
             default:
                 throw JSONError.unexpectedCharacter(ascii: ascii, characterIndex: readerIndex)
             }
         }
     }
-    
+
     // MARK: - Object parsing -
-    
+
     private func parseObject() throws -> JSON {
-        precondition(read() == ._openbrace)
-        
         // parse first value or end immediatly
         switch try consumeWhitespace() {
-        case ._newline, ._return, ._space, ._tab:
-            preconditionFailure("Expected that all white space is consumed")
         case ._closebrace:
             // if the first char after whitespace is a closing bracket, we found an empty array
             readerIndex += 1
@@ -134,11 +131,12 @@ final class FoundationJson {
         default:
             break
         }
-        
+
         var object = JSON()
         object.reserveCapacity(20)
-        
+
         while true {
+            readerIndex += 1 // quote
             let key = try readString()
             let colon = try consumeWhitespace()
             guard colon == ._colon else {
@@ -147,7 +145,7 @@ final class FoundationJson {
             readerIndex += 1
             try consumeWhitespace()
             object[key] = try parseValue()
-            
+
             let commaOrBrace = try consumeWhitespace()
             switch commaOrBrace {
             case ._closebrace:
@@ -166,9 +164,9 @@ final class FoundationJson {
             }
         }
     }
-    
+
     // document reading
-    
+
     private func read() -> UInt8? {
         guard readerIndex < endIndex else {
             readerIndex = endIndex
@@ -180,18 +178,14 @@ final class FoundationJson {
         return array[readerIndex]
     }
 
-    private func peek() -> UInt8? {
-        return readerIndex < endIndex ? array[readerIndex] : nil
-    }
-
-    private func peek(offset: Int) -> UInt8? {
-        let index = readerIndex + offset
-        return index < endIndex ? array[index] : nil
+    private func peekPrevious() -> UInt8 {
+        array[readerIndex - 1]
     }
 
     @discardableResult
     private func consumeWhitespace() throws -> UInt8 {
-        while let ascii = peek() {
+        while readerIndex < endIndex {
+            let ascii = array[readerIndex]
             switch ascii {
             case ._newline, ._return, ._space, ._tab:
                 readerIndex += 1
@@ -199,143 +193,126 @@ final class FoundationJson {
                 return ascii
             }
         }
-        
+
         throw JSONError.unexpectedEndOfFile
     }
-    
-    private func readBool() throws -> Bool {
-        switch read() {
-        case UInt8._charT:
-            guard read() == ._charR,
-                  read() == ._charU,
-                  read() == ._charE
-            else {
-                if readerIndex >= endIndex {
-                    throw JSONError.unexpectedEndOfFile
-                }
-                
-                throw JSONError.unexpectedCharacter(ascii: peek(offset: -1)!, characterIndex: readerIndex - 1)
+
+    private func consumeFalse() throws {
+        guard read() == ._charA,
+              read() == ._charL,
+              read() == ._charS,
+              read() == ._charE
+        else {
+            if readerIndex >= endIndex {
+                throw JSONError.unexpectedEndOfFile
             }
-            
-            return true
-        case UInt8._charF:
-            guard read() == ._charA,
-                  read() == ._charL,
-                  read() == ._charS,
-                  read() == ._charE
-            else {
-                if readerIndex >= endIndex {
-                    throw JSONError.unexpectedEndOfFile
-                }
-                
-                throw JSONError.unexpectedCharacter(ascii: peek(offset: -1)!, characterIndex: readerIndex - 1)
-            }
-            
-            return false
-        default:
-            preconditionFailure("Expected to have `t` or `f` as first character")
+
+            throw JSONError.unexpectedCharacter(ascii: peekPrevious(), characterIndex: readerIndex - 1)
         }
     }
-    
-    private func readNull() throws {
-        guard read() == ._charN,
+
+    private func consumeTrue() throws {
+        guard read() == ._charR,
               read() == ._charU,
+              read() == ._charE
+        else {
+            if readerIndex >= endIndex {
+                throw JSONError.unexpectedEndOfFile
+            }
+
+            throw JSONError.unexpectedCharacter(ascii: peekPrevious(), characterIndex: readerIndex - 1)
+        }
+    }
+
+    private func consumeNull() throws {
+        guard read() == ._charU,
               read() == ._charL,
               read() == ._charL
         else {
             if readerIndex >= endIndex {
                 throw JSONError.unexpectedEndOfFile
             }
-            
-            throw JSONError.unexpectedCharacter(ascii: peek(offset: -1)!, characterIndex: readerIndex - 1)
+
+            throw JSONError.unexpectedCharacter(ascii: peekPrevious(), characterIndex: readerIndex - 1)
         }
     }
-    
+
     // MARK: String
-    
+
     private enum EscapedSequenceError: Swift.Error {
         case expectedLowSurrogateUTF8SequenceAfterHighSurrogate(index: Int)
         case unexpectedEscapedCharacter(ascii: UInt8, index: Int)
         case couldNotCreateUnicodeScalarFromUInt32(index: Int, unicodeScalarValue: UInt32)
     }
-    
+
     private func readString() throws -> String {
-        guard read() == ._quote else {
-            throw JSONError.unexpectedCharacter(ascii: peek(offset: -1)!, characterIndex: readerIndex - 1)
-        }
         var stringStartIndex = readerIndex
-        var characterCount = 0
         var output: String?
-        
-        while let byte = peek(offset: characterCount) {
+
+        while let byte = read() {
             switch byte {
             case ._quote:
-                readerIndex += characterCount + 1
+                let currentCharIndex = readerIndex - 1
                 if let output {
-                    return output + array[stringStartIndex ..< stringStartIndex + characterCount].asString
+                    return output + array[stringStartIndex ..< currentCharIndex].asString
                 } else {
-                    return array[stringStartIndex ..< stringStartIndex + characterCount].asString
+                    return array[stringStartIndex ..< currentCharIndex].asString
                 }
-                
+
             case 0 ... 31:
+                let currentCharIndex = readerIndex - 1
                 // All Unicode characters may be placed within the
                 // quotation marks, except for the characters that must be escaped:
                 // quotation mark, reverse solidus, and the control characters (U+0000
                 // through U+001F).
-                let errorIndex = readerIndex + characterCount
                 let string: String
                 if let output {
-                    string = output + array[stringStartIndex ... errorIndex].asString
+                    string = output + array[stringStartIndex ... currentCharIndex].asString
                 } else {
-                    string = array[stringStartIndex ... errorIndex].asString
+                    string = array[stringStartIndex ... currentCharIndex].asString
                 }
-                throw JSONError.unescapedControlCharacterInString(ascii: byte, in: string, index: errorIndex)
-                
+                throw JSONError.unescapedControlCharacterInString(ascii: byte, in: string, index: currentCharIndex)
+
             case ._backslash:
-                readerIndex += characterCount
+                let currentCharIndex = readerIndex - 1
                 if let existing = output {
-                    output = existing + array[stringStartIndex ..< stringStartIndex + characterCount].asString
+                    output = existing + array[stringStartIndex ..< currentCharIndex].asString
                 } else {
-                    output = array[stringStartIndex ..< stringStartIndex + characterCount].asString
+                    output = array[stringStartIndex ..< currentCharIndex].asString
                 }
-                
-                let escapedStartIndex = readerIndex
-                
+
                 do {
                     if let existing = output {
-                        output = existing + (try parseEscapeSequence())
+                        output = try existing + parseEscapeSequence()
                     } else {
                         output = try parseEscapeSequence()
                     }
                     stringStartIndex = readerIndex
-                    characterCount = 0
+
                 } catch let EscapedSequenceError.unexpectedEscapedCharacter(ascii, failureIndex) {
-                    output! += array[escapedStartIndex ..< readerIndex].asString
+                    output! += array[currentCharIndex ..< readerIndex].asString
                     throw JSONError.unexpectedEscapedCharacter(ascii: ascii, in: output!, index: failureIndex)
                 } catch let EscapedSequenceError.expectedLowSurrogateUTF8SequenceAfterHighSurrogate(failureIndex) {
-                    output! += array[escapedStartIndex ..< readerIndex].asString
+                    output! += array[currentCharIndex ..< readerIndex].asString
                     throw JSONError.expectedLowSurrogateUTF8SequenceAfterHighSurrogate(in: output!, index: failureIndex)
                 } catch let EscapedSequenceError.couldNotCreateUnicodeScalarFromUInt32(failureIndex, unicodeScalarValue) {
-                    output! += array[escapedStartIndex ..< readerIndex].asString
-                    throw JSONError.couldNotCreateUnicodeScalarFromUInt32(
-                        in: output!, index: failureIndex, unicodeScalarValue: unicodeScalarValue
-                    )
+                    output! += array[currentCharIndex ..< readerIndex].asString
+                    throw JSONError.couldNotCreateUnicodeScalarFromUInt32(in: output!, index: failureIndex, unicodeScalarValue: unicodeScalarValue)
                 }
-                
+
             default:
-                characterCount += 1
+                break
             }
         }
-        
+
         throw JSONError.unexpectedEndOfFile
     }
-    
+
     private func parseEscapeSequence() throws -> String {
-        precondition(read() == ._backslash, "Expected to have an backslash first")
         guard let ascii = read() else {
             throw JSONError.unexpectedEndOfFile
         }
-        
+
         switch ascii {
         case 0x22: return "\""
         case 0x5C: return "\\"
@@ -352,11 +329,11 @@ final class FoundationJson {
             throw EscapedSequenceError.unexpectedEscapedCharacter(ascii: ascii, index: readerIndex - 1)
         }
     }
-    
+
     private func parseUnicodeSequence() throws -> Unicode.Scalar {
         // we build this for utf8 only for now.
         let bitPattern = try parseUnicodeHexSequence()
-        
+
         // check if high surrogate
         let isFirstByteHighSurrogate = bitPattern & 0xFC00 // nil everything except first six bits
         if isFirstByteHighSurrogate == 0xD800 {
@@ -367,11 +344,11 @@ final class FoundationJson {
             else {
                 throw JSONError.unexpectedEndOfFile
             }
-            
+
             guard escapeChar == UInt8(ascii: #"\"#), uChar == UInt8(ascii: "u") else {
                 throw EscapedSequenceError.expectedLowSurrogateUTF8SequenceAfterHighSurrogate(index: readerIndex - 1)
             }
-            
+
             let lowSurrogateBitBattern = try parseUnicodeHexSequence()
             let isSecondByteLowSurrogate = lowSurrogateBitBattern & 0xFC00 // nil everything except first six bits
             guard isSecondByteLowSurrogate == 0xDC00 else {
@@ -379,7 +356,7 @@ final class FoundationJson {
                 // been initialized
                 throw EscapedSequenceError.expectedLowSurrogateUTF8SequenceAfterHighSurrogate(index: readerIndex - 1)
             }
-            
+
             let highValue = UInt32(highSurrogateBitPattern - 0xD800) * 0x400
             let lowValue = UInt32(lowSurrogateBitBattern - 0xDC00)
             let unicodeValue = highValue + lowValue + 0x10000
@@ -390,7 +367,7 @@ final class FoundationJson {
             }
             return unicode
         }
-        
+
         guard let unicode = Unicode.Scalar(bitPattern) else {
             throw EscapedSequenceError.couldNotCreateUnicodeScalarFromUInt32(
                 index: readerIndex, unicodeScalarValue: UInt32(bitPattern)
@@ -398,7 +375,7 @@ final class FoundationJson {
         }
         return unicode
     }
-    
+
     private func parseUnicodeHexSequence() throws -> UInt16 {
         // As stated in RFC-8259 an escaped unicode character is 4 HEXDIGITs long
         // https://tools.ietf.org/html/rfc8259#section-7
@@ -410,7 +387,7 @@ final class FoundationJson {
         else {
             throw JSONError.unexpectedEndOfFile
         }
-        
+
         guard let first = FoundationJson.hexAsciiTo4Bits(firstHex),
               let second = FoundationJson.hexAsciiTo4Bits(secondHex),
               let third = FoundationJson.hexAsciiTo4Bits(thirdHex),
@@ -421,12 +398,12 @@ final class FoundationJson {
         }
         let firstByte = UInt16(first) << 4 | UInt16(second)
         let secondByte = UInt16(third) << 4 | UInt16(forth)
-        
+
         let bitPattern = UInt16(firstByte) << 8 | UInt16(secondByte)
-        
+
         return bitPattern
     }
-    
+
     private static func hexAsciiTo4Bits(_ ascii: UInt8) -> UInt8? {
         switch ascii {
         case 48 ... 57:
@@ -441,63 +418,58 @@ final class FoundationJson {
             return nil
         }
     }
-    
+
     // MARK: Numbers
-    
+
     private enum ControlCharacter {
         case operand
         case decimalPoint
         case exp
         case expOperator
     }
-    
-    private func parseNumber() throws -> Any {
-        var pastControlChar: ControlCharacter = .operand
-        
-        guard let ascii = peek() else {
-            preconditionFailure("Why was this function called, if there is no further character")
-        }
 
-        var numbersSinceControlChar = ascii != ._minus
-        var numberchars = 1
-        
+    private func parseNumber(positive: Bool) throws -> Any {
+        var pastControlChar: ControlCharacter = .operand
+        let startIndex = readerIndex - 1
+
+        var numbersSinceControlChar = positive
+
         // parse everything else
-        while let byte = peek(offset: numberchars) {
+        while let byte = read() {
             switch byte {
             case ._zero ... ._nine:
                 numbersSinceControlChar = true
-                
+
             case ._period:
                 guard numbersSinceControlChar, pastControlChar == .operand else {
-                    throw JSONError.unexpectedCharacter(ascii: byte, characterIndex: readerIndex + numberchars)
+                    throw JSONError.unexpectedCharacter(ascii: byte, characterIndex: readerIndex - 1)
                 }
                 pastControlChar = .decimalPoint
                 numbersSinceControlChar = false
-                
-            case ._charE, ._charCapitalE:
+
+            case ._charCapitalE, ._charE:
                 guard numbersSinceControlChar,
                       pastControlChar == .operand || pastControlChar == .decimalPoint
                 else {
-                    throw JSONError.unexpectedCharacter(ascii: byte, characterIndex: readerIndex + numberchars)
+                    throw JSONError.unexpectedCharacter(ascii: byte, characterIndex: readerIndex - 1)
                 }
                 pastControlChar = .exp
                 numbersSinceControlChar = false
 
             case ._minus, ._plus:
                 guard !numbersSinceControlChar, pastControlChar == .exp else {
-                    throw JSONError.unexpectedCharacter(ascii: byte, characterIndex: readerIndex + numberchars)
+                    throw JSONError.unexpectedCharacter(ascii: byte, characterIndex: readerIndex - 1)
                 }
                 pastControlChar = .expOperator
                 numbersSinceControlChar = false
 
             case ._closebrace, ._closebracket, ._comma, ._newline, ._return, ._space, ._tab:
                 guard numbersSinceControlChar else {
-                    throw JSONError.unexpectedCharacter(ascii: byte, characterIndex: readerIndex + numberchars)
+                    throw JSONError.unexpectedCharacter(ascii: byte, characterIndex: readerIndex - 1)
                 }
-                let numberStartIndex = readerIndex
-                readerIndex += numberchars
-                
-                let stringValue = array[numberStartIndex ..< readerIndex].asString
+
+                readerIndex -= 1
+                let stringValue = array[startIndex ..< readerIndex].asString
                 switch pastControlChar {
                 case .decimalPoint:
                     guard let result = Float(stringValue) else {
@@ -512,22 +484,20 @@ final class FoundationJson {
                     }
                     return result
                 }
-                
+
             default:
-                throw JSONError.unexpectedCharacter(ascii: byte, characterIndex: readerIndex + numberchars)
+                throw JSONError.unexpectedCharacter(ascii: byte, characterIndex: readerIndex - 1)
             }
-            
-            numberchars += 1
         }
-        
+
         guard numbersSinceControlChar else {
             throw JSONError.unexpectedEndOfFile
         }
-        
+
         defer { readerIndex = endIndex }
         return array[readerIndex...].asString
     }
-    
+
     private enum JSONError: Swift.Error, Equatable {
         case cannotConvertInputDataToUTF8
         case unexpectedCharacter(ascii: UInt8, characterIndex: Int)
@@ -541,13 +511,13 @@ final class FoundationJson {
         case numberIsNotRepresentableInSwift(parsed: String)
         case invalidUTF8Sequence(Data, characterIndex: Int)
     }
-    
+
     static func jsonObject(with data: Data) throws -> Any {
         do {
             let array = [UInt8](data)
             let parser = FoundationJson(bytes: array)
             return try parser.parse() ?? NSNull()
-            
+
         } catch let error as JSONError {
             switch error {
             case .cannotConvertInputDataToUTF8:
@@ -611,27 +581,27 @@ private extension UInt8 {
     static let _return = UInt8(ascii: "\r")
     static let _newline = UInt8(ascii: "\n")
     static let _tab = UInt8(ascii: "\t")
-    
+
     static let _colon = UInt8(ascii: ":")
     static let _comma = UInt8(ascii: ",")
     static let _period = UInt8(ascii: ".")
-    
+
     static let _openbrace = UInt8(ascii: "{")
     static let _closebrace = UInt8(ascii: "}")
-    
+
     static let _openbracket = UInt8(ascii: "[")
     static let _closebracket = UInt8(ascii: "]")
-    
+
     static let _quote = UInt8(ascii: "\"")
     static let _backslash = UInt8(ascii: "\\")
-    
+
     static let _minus = UInt8(ascii: "-")
     static let _plus = UInt8(ascii: "+")
-    
+
     static let _zero = UInt8(ascii: "0")
     static let _one = UInt8(ascii: "1")
     static let _nine = UInt8(ascii: "9")
-    
+
     static let _charF = UInt8(ascii: "f")
     static let _charA = UInt8(ascii: "a")
     static let _charL = UInt8(ascii: "l")

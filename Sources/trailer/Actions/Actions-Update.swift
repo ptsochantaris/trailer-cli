@@ -433,7 +433,7 @@ extension Actions {
         }
         if let l = await latestVersion {
             log("[![G*New Trailer version \(l) is available*]!]")
-        }        
+        }
     }
 
     static func singleItemUpdate(for item: ListableItem) async throws -> ListableItem {
