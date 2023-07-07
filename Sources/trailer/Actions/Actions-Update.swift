@@ -1,12 +1,5 @@
-//
-//  Actions-Update.swift
-//  trailer
-//
-//  Created by Paul Tsochantaris on 26/08/2017.
-//  Copyright © 2017 Paul Tsochantaris. All rights reserved.
-//
-
 import Foundation
+import TrailerJson
 
 enum UpdateType {
     case repos, prs, issues, comments, reactions
@@ -46,7 +39,7 @@ extension Actions {
             let versionRequest = Network.Request(url: "https://api.github.com/repos/ptsochantaris/trailer-cli/releases/latest", method: .get, body: nil)
             if
                 let data = try? await Network.getData(for: versionRequest),
-                let json = (try? FoundationJson.jsonObject(with: data)) as? JSON,
+                let json = try? data.asJsonObject(),
                 let tagName = json["tag_name"] as? String {
                 success = true
                 if config.isNewer(tagName) {

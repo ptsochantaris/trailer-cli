@@ -1,10 +1,3 @@
-//
-//  Network.swift
-//  trailer
-//
-//  Created by Paul Tsochantaris on 08/01/2023.
-//
-
 import Foundation
 
 enum Network {

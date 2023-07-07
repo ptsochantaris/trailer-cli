@@ -1,10 +1,3 @@
-//
-//  CommandLine.swift
-//  trailer-cliPackageDescription
-//
-//  Created by Paul Tsochantaris on 17/09/2017.
-//
-
 import Foundation
 
 private let _args = CommandLine.arguments.map { $0.lowercased() }

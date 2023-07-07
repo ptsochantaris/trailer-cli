@@ -80,6 +80,15 @@
         "revision" : "c0d9a144cfaec8d3d596aadde3039286a266c15c",
         "version" : "1.15.0"
       }
+    },
+    {
+      "identity" : "trailer-json",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/ptsochantaris/trailer-json",
+      "state" : {
+        "branch" : "main",
+        "revision" : "6c65cd80696e3ce46fa72d586b427d61bb96a31a"
+      }
     }
   ],
   "version" : 2

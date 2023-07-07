@@ -1,10 +1,3 @@
-//
-//  Dates.swift
-//  trailer
-//
-//  Created by Paul Tsochantaris on 17/09/2017.
-//
-
 import Foundation
 
 struct GHDateFormatter {

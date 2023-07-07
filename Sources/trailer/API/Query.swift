@@ -1,12 +1,5 @@
-//
-//  Query.swift
-//  trailer
-//
-//  Created by Paul Tsochantaris on 18/08/2017.
-//  Copyright © 2017 Paul Tsochantaris. All rights reserved.
-//
-
 import Foundation
+import TrailerJson
 
 struct Query {
     let name: String
@@ -102,7 +95,7 @@ struct Query {
             return
         }
 
-        guard let json = (try? FoundationJson.jsonObject(with: info)) as? JSON else {
+        guard let json = try info.asJsonObject() else {
             try await retryOrFail("No JSON in API response: \(String(data: info, encoding: .utf8) ?? "")")
             return
         }

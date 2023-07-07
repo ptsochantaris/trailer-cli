@@ -1,11 +1,3 @@
-//
-//  Actions-Show.swift
-//  trailer
-//
-//  Created by Paul Tsochantaris on 26/08/2017.
-//  Copyright © 2017 Paul Tsochantaris. All rights reserved.
-//
-
 import Foundation
 
 extension Actions {

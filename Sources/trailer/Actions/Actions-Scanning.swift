@@ -1,10 +1,3 @@
-//
-//  Actions-Scanning.swift
-//  trailer-cliPackageDescription
-//
-//  Created by Paul Tsochantaris on 10/09/2017.
-//
-
 import Foundation
 
 private let atCharacterSet: CharacterSet = {
