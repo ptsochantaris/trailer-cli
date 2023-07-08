@@ -1,6 +1,8 @@
 import Foundation
 import TrailerJson
 
+typealias JSON = [String: Any]
+
 protocol Item: Identifiable, Databaseable, Equatable {
     static var allItems: [String: Self] { get set }
     static func parse(parent: Parent?, elementType: String, node: JSON, level: Int) -> Self?
