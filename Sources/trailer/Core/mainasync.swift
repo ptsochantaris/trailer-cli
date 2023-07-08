@@ -1,4 +1,5 @@
 import Foundation
+import TrailerQL
 #if os(Windows)
     import WinSDK
 #endif
@@ -6,6 +7,8 @@ import Foundation
 @main
 struct MainApp {
     static func main() async {
+        TQL.debugLog = { log(level: .debug, indent: 0, $0) }
+        
         let app = MainApp()
         try? await app.go()
     }

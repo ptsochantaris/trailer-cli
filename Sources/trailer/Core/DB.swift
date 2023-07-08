@@ -1,4 +1,5 @@
 import Foundation
+import TrailerQL
 
 enum NotificationMode {
     case none, standard, consoleCommentsAndReviews
@@ -66,15 +67,48 @@ enum DB {
     }
 
     static func removeChild(id: String, from parentId: String, field: String) {
-        if var field2children = parents2fields2children[parentId] {
-            if let listOfChildren = field2children[field] {
-                listOfChildren.remove { $0 == id }
-                if listOfChildren.count == 0 {
-                    field2children[field] = nil
-                    parents2fields2children[parentId] = field2children
-                }
-            }
+        guard var field2children = parents2fields2children[parentId] else {
+            return
         }
+        guard let listOfChildren = field2children[field] else {
+            return
+        }
+        listOfChildren.remove { $0 == id }
+        if listOfChildren.count == 0 {
+            field2children[field] = nil
+            parents2fields2children[parentId] = field2children
+        }
+    }
+    
+    static func lookup(type: String, id: String) -> (any Item)? {
+        switch type {
+        case "Org": return Org.allItems[id]
+        case "Repo": return Repo.allItems[id]
+        case "Comment": return Comment.allItems[id]
+        case "User": return User.allItems[id]
+        case "Reaction": return Reaction.allItems[id]
+        case "PullRequest": return PullRequest.allItems[id]
+        case "Issue": return Issue.allItems[id]
+        case "Label": return Label.allItems[id]
+        case "Review": return Review.allItems[id]
+        case "ReviewRequest": return ReviewRequest.allItems[id]
+        case "Status": return Status.allItems[id]
+        case "Milestone": return Milestone.allItems[id]
+        default: return nil
+        }
+    }
+    
+    static func getParentField(for node: Node) -> String? {
+        guard let parent = node.parent,
+              let fieldMap = parents2fields2children[parent.id]
+        else {
+            return nil
+        }
+        
+        for (field, childIdList) in fieldMap where childIdList.contains(node.id) {
+            return field
+        }
+        return nil
     }
 
     static func removeParent(_ item: some Item) {

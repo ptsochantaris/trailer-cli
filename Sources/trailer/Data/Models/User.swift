@@ -1,4 +1,5 @@
 import Foundation
+import TrailerQL
 
 struct User: Item {
     var id: String
@@ -41,9 +42,9 @@ struct User: Item {
 
     mutating func setChildrenSyncStatus(_: SyncState) {}
 
-    static let fragment = Fragment(name: "userFields", on: "User", elements: [
-        Field.id,
-        Field(name: "login"),
-        Field(name: "avatarUrl")
-    ])
+    static let fragment = Fragment(on: "User") {
+        TQL.idField
+        Field("login")
+        Field("avatarUrl")
+    }
 }

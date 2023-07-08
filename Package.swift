@@ -12,7 +12,8 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/swift-server/async-http-client.git", from: "1.0.0"),
-        .package(url: "https://github.com/ptsochantaris/trailer-json", branch: "main")
+        .package(url: "https://github.com/ptsochantaris/trailer-json", branch: "main"),
+        .package(url: "https://github.com/ptsochantaris/trailer-ql", branch: "main")
     ],
     targets: [
         .executableTarget(name: "trailer", dependencies: [

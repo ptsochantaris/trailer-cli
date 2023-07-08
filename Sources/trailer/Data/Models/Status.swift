@@ -1,4 +1,5 @@
 import Foundation
+import TrailerQL
 
 enum StatusState: String, Codable {
     case expected, error, failure, pending, success, empty, neutral, actionRequired, cancelled, skipped
@@ -82,21 +83,21 @@ struct Status: Item {
         }
     }
 
-    static var fragmentForStatus = Fragment(name: "statusFields", on: "StatusContext", elements: [
-        Field.id,
-        Field(name: "context"),
-        Field(name: "description"),
-        Field(name: "state"),
-        Field(name: "targetUrl"),
-        Field(name: "createdAt")
-    ])
+    static var fragmentForStatus = Fragment(on: "StatusContext") {
+        TQL.idField
+        Field("context")
+        Field("description")
+        Field("state")
+        Field("targetUrl")
+        Field("createdAt")
+    }
 
-    static let fragmentForCheck = Fragment(name: "checkFields", on: "CheckRun", elements: [
-        Field.id,
-        Field(name: "name"),
-        Field(name: "conclusion"),
-        Field(name: "startedAt"),
-        Field(name: "completedAt"),
-        Field(name: "permalink")
-    ])
+    static let fragmentForCheck = Fragment(on: "CheckRun") {
+        TQL.idField
+        Field("name")
+        Field("conclusion")
+        Field("startedAt")
+        Field("completedAt")
+        Field("permalink")
+    }
 }

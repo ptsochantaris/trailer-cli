@@ -1,4 +1,5 @@
 import Foundation
+import TrailerQL
 
 struct ReviewRequest: Item {
     var id: String
@@ -47,8 +48,8 @@ struct ReviewRequest: Item {
         return nil
     }
 
-    static let fragment = Fragment(name: "reviewRequestFields", on: "ReviewRequest", elements: [
-        Field.id,
-        Group(name: "requestedReviewer", fields: [User.fragment])
-    ])
+    static let fragment = Fragment(on: "ReviewRequest") {
+        TQL.idField
+        Group("requestedReviewer") { User.fragment }
+    }
 }

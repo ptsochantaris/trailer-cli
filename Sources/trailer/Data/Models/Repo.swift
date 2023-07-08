@@ -1,4 +1,5 @@
 import Foundation
+import TrailerQL
 
 enum RepoVisibility: String, Codable {
     case hidden, visible, onlyPrs, onlyIssues
@@ -155,28 +156,28 @@ struct Repo: Item, Announceable {
         }
     }
 
-    static let fragment = Fragment(name: "repoFields", on: "Repository", elements: [
-        Field.id,
-        Field(name: "nameWithOwner"),
-        Field(name: "isFork"),
-        Field(name: "url"),
-        Field(name: "createdAt"),
-        Field(name: "updatedAt")
-    ])
+    static let fragment = Fragment(on: "Repository") {
+        TQL.idField
+        Field("nameWithOwner")
+        Field("isFork")
+        Field("url")
+        Field("createdAt")
+        Field("updatedAt")
+    }
 
-    static let prAndIssueIdsFragment = Fragment(name: "repoFields", on: "Repository", elements: [
-        Field.id,
-        Group(name: "pullRequests", fields: [Field.id], extraParams: ["states": "OPEN"], paging: .largePage),
-        Group(name: "issues", fields: [Field.id], extraParams: ["states": "OPEN"], paging: .largePage)
-    ])
+    static let prAndIssueIdsFragment = Fragment(on: "Repository") {
+        TQL.idField
+        Group("pullRequests", ("states", "[OPEN]"), paging: .first(count: 100, paging: true)) { TQL.idField }
+        Group("issues", ("states", "[OPEN]"), paging: .first(count: 100, paging: true)) { TQL.idField }
+    }
 
-    static let prIdsFragment = Fragment(name: "repoFields", on: "Repository", elements: [
-        Field.id,
-        Group(name: "pullRequests", fields: [Field.id], extraParams: ["states": "OPEN"], paging: .largePage)
-    ])
+    static let prIdsFragment = Fragment(on: "Repository") {
+        TQL.idField
+        Group("pullRequests", ("states", "[OPEN]"), paging: .first(count: 100, paging: true)) { TQL.idField }
+    }
 
-    static let issueIdsFragment = Fragment(name: "repoFields", on: "Repository", elements: [
-        Field.id,
-        Group(name: "issues", fields: [Field.id], extraParams: ["states": "OPEN"], paging: .largePage)
-    ])
+    static let issueIdsFragment = Fragment(on: "Repository") {
+        TQL.idField
+        Group("issues", ("states", "[OPEN]"), paging: .first(count: 100, paging: true)) { TQL.idField }
+    }
 }

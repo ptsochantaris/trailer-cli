@@ -1,4 +1,5 @@
 import Foundation
+import TrailerQL
 
 struct Label: Item {
     var id: String
@@ -50,8 +51,8 @@ struct Label: Item {
 
     mutating func setChildrenSyncStatus(_: SyncState) {}
 
-    static let fragment = Fragment(name: "labelFields", on: "Label", elements: [
-        Field(name: "name"),
-        Field(name: "color")
-    ])
+    static let fragment = Fragment(on: "Label") {
+        Field("name")
+        Field("color")
+    }
 }

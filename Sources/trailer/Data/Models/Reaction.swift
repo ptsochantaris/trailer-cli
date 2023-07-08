@@ -1,4 +1,5 @@
 import Foundation
+import TrailerQL
 
 struct Reaction: Item {
     var id: String
@@ -59,9 +60,11 @@ struct Reaction: Item {
         }
     }
 
-    static let fragment = Fragment(name: "reactions", on: "Reaction", elements: [
-        Field.id,
-        Field(name: "content"),
-        Group(name: "user", fields: [User.fragment])
-    ])
+    static let fragment = Fragment(on: "Reaction") {
+        TQL.idField
+        Field("content")
+        Group("user") {
+            User.fragment
+        }
+    }
 }

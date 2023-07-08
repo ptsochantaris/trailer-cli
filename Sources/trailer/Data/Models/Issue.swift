@@ -1,4 +1,5 @@
 import Foundation
+import TrailerQL
 
 struct Issue: Item, Announceable, Closeable, Sortable {
     var id: String
@@ -288,35 +289,37 @@ struct Issue: Item, Announceable, Closeable, Sortable {
         return nil
     }
 
-    static let fragment = Fragment(name: "issueFields", on: "Issue", elements: [
-        Field.id,
-        Field(name: "bodyText"),
-        Field(name: "createdAt"),
-        Field(name: "updatedAt"),
-        Field(name: "number"),
-        Field(name: "title"),
-        Field(name: "url"),
-        Field(name: "state"),
-        Field(name: "viewerDidAuthor"),
+    static let fragment = Fragment(on: "Issue") {
+        TQL.idField
+        Field("bodyText")
+        Field("createdAt")
+        Field("updatedAt")
+        Field("number")
+        Field("title")
+        Field("url")
+        Field("state")
+        Field("viewerDidAuthor")
+        
+        Group("milestone") { Milestone.fragment }
+        Group("author") { User.fragment }
+        Group("labels", paging: .first(count: 20, paging: true)) { Label.fragment }
+        Group("assignees", paging: .first(count: 20, paging: true)) { User.fragment }
+        Group("reactions") { Field("totalCount") }
+    }
 
-        Group(name: "milestone", fields: [Milestone.fragment]),
-        Group(name: "author", fields: [User.fragment]),
-        Group(name: "labels", fields: [Label.fragment], paging: .smallPage),
-        Group(name: "assignees", fields: [User.fragment], paging: .smallPage),
-        Group(name: "reactions", fields: [Field(name: "totalCount")])
-    ])
+    static let reactionsFragment = Fragment(on: "Issue") {
+        TQL.idField // not using fragment, no need to re-parse
+        Group("reactions", paging: .first(count: 100, paging: true)) { Reaction.fragment }
+    }
 
-    static let reactionsFragment = Fragment(name: "IssueReactionFragment", on: "Issue", elements: [
-        Field.id, // not using fragment, no need to re-parse
-        Group(name: "reactions", fields: [Reaction.fragment], paging: .largePage)
-    ])
-
-    static let commentsFragment = Fragment(name: "IssueCommentsFragment", on: "Issue", elements: [
-        Field.id, // not using fragment, no need to re-parse
-        Group(name: "comments", fields: [Comment.fragmentForItems], paging: .largePage)
-    ])
+    static let commentsFragment = Fragment(on: "Issue") {
+        TQL.idField // not using fragment, no need to re-parse
+        Group("comments", paging: .first(count: 100, paging: true)) { Comment.fragmentForItems }
+    }
 
     static var fragmentWithComments: Fragment {
-        fragment.addingField(Group(name: "comments", fields: [Comment.fragmentForItems], paging: .largePage))
+        fragment.addingElement(
+            Group("comments", paging: .first(count: 100, paging: true)) { Comment.fragmentForItems }
+        )
     }
 }

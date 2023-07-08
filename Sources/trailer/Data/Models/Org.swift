@@ -1,29 +1,30 @@
 import Foundation
+import TrailerQL
 
 struct Org: Item {
     var id: String
     var parents: [String: LinkedList<Relationship>]
     var syncState = SyncState.none
     var elementType: String
-
+    
     var name = ""
-
+    
     static var allItems = [String: Org]()
     static let idField = "id"
-
+    
     private enum CodingKeys: CodingKey {
         case id
         case name
         case parents
         case elementType
     }
-
+    
     mutating func apply(_ node: JSON) -> Bool {
         guard node.keys.count > 1 else { return false }
         name = node["name"] as? String ?? ""
         return true
     }
-
+    
     init?(id: String, type: String, node: JSON) {
         self.id = id
         parents = [String: LinkedList<Relationship>]()
@@ -33,7 +34,7 @@ struct Org: Item {
             return nil
         }
     }
-
+    
     mutating func setChildrenSyncStatus(_ status: SyncState) {
         for r in repos {
             var R = r
@@ -41,14 +42,14 @@ struct Org: Item {
             Repo.allItems[r.id] = R
         }
     }
-
+    
     var repos: [Repo] {
         children(field: "repositories")
     }
-
-    static let fragmentWithRepos = Fragment(name: "orgFieldsAndRepos", on: "Organization", elements: [
-        Field.id,
-        Field(name: "name"),
-        Group(name: "repositories", fields: [Repo.fragment], paging: .largePage)
-    ])
+    
+    static let fragmentWithRepos = Fragment(on: "Organization") {
+        TQL.idField
+        Field("name")
+        Group("repositories", paging: .first(count: 100, paging: true)) { Repo.fragment }
+    }
 }

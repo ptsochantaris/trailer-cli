@@ -1,4 +1,5 @@
 import Foundation
+import TrailerQL
 
 enum ReviewState: String, Codable {
     case pending, commented, approved, changes_requested, dismissed
@@ -145,19 +146,21 @@ struct Review: Item, Announceable {
         return comments.contains { $0.includes(text: text) }
     }
 
-    static let fragment = Fragment(name: "reviewFields", on: "PullRequestReview", elements: [
-        Field.id,
-        Field(name: "body"),
-        Field(name: "state"),
-        Field(name: "viewerDidAuthor"),
-        Field(name: "createdAt"),
-        Field(name: "updatedAt"),
-        Group(name: "author", fields: [User.fragment]),
-        Group(name: "comments", fields: [Field(name: "totalCount")])
-    ])
+    static let fragment = Fragment(on: "PullRequestReview") {
+        TQL.idField
+        Field("body")
+        Field("state")
+        Field("viewerDidAuthor")
+        Field("createdAt")
+        Field("updatedAt")
+        Group("author") { User.fragment }
+        Group("comments") { Field("totalCount") }
+    }
 
-    static let commentsFragment = Fragment(name: "ReviewCommentsFragment", on: "PullRequestReview", elements: [
-        Field.id, // not using fragment, no need to re-parse
-        Group(name: "comments", fields: [Comment.fragmentForReviews], paging: .largePage)
-    ])
+    static let commentsFragment = Fragment(on: "PullRequestReview") {
+        TQL.idField // not using fragment, no need to re-parse
+        Group("comments", paging: .first(count: 100, paging: true)) {
+            Comment.fragmentForReviews
+        }
+    }
 }

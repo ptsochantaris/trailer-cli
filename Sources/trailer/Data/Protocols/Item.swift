@@ -48,21 +48,7 @@ extension Item {
     }
 
     private static func checkItemExists(type: String, id: String) -> Bool {
-        switch type {
-        case "Org": return Org.allItems.keys.contains(id)
-        case "Repo": return Repo.allItems.keys.contains(id)
-        case "Comment": return Comment.allItems.keys.contains(id)
-        case "User": return User.allItems.keys.contains(id)
-        case "Reaction": return Reaction.allItems.keys.contains(id)
-        case "PullRequest": return PullRequest.allItems.keys.contains(id)
-        case "Issue": return Issue.allItems.keys.contains(id)
-        case "Label": return Label.allItems.keys.contains(id)
-        case "Review": return Review.allItems.keys.contains(id)
-        case "ReviewRequest": return ReviewRequest.allItems.keys.contains(id)
-        case "Status": return Status.allItems.keys.contains(id)
-        case "Milestone": return Milestone.allItems.keys.contains(id)
-        default: return false
-        }
+        DB.lookup(type: type, id: id) != nil
     }
 
     static func purgeStaleRelationships() {
@@ -182,10 +168,11 @@ extension Item {
         }
     }
 
+    @discardableResult
     static func parse(parent: Parent?, elementType: String, node: JSON, level: Int) -> Self? {
         guard let id = node[Self.idField] as? String else { return nil }
 
-        if var ret = existingItem(with: id) {
+        if var ret = Self.allItems[id] {
             log(level: .debug, indent: level, "Existing \(typeName) ID \(ret.id)")
             if let parent {
                 ret.makeChild(of: parent, indent: level)
@@ -211,10 +198,6 @@ extension Item {
                 return nil
             }
         }
-    }
-
-    static func existingItem(with id: String) -> Self? {
-        Self.allItems[id]
     }
 
     func children<T: Item>(field: String) -> [T] {

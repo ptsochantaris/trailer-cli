@@ -1,4 +1,6 @@
 import Foundation
+import TrailerQL
+import TrailerJson
 
 enum UpdateType {
     case repos, prs, issues, comments, reactions
@@ -103,14 +105,67 @@ extension Actions {
     }
 
     static func testToken() async throws {
-        let testQuery = Query(name: "Test", rootElement:
-            Group(name: "viewer", fields: [
-                User.fragment
-            ]))
-        try await testQuery.run()
+        let testQuery = Query(name: "Test", rootElement: Group("viewer") {
+            User.fragment
+        })
+        try await run(testQuery)
         log("Token for server [*\(config.server.absoluteString)*] is valid: Account is [*\(config.myLogin)*]")
     }
 
+    private static func parse(node: Node) {
+        let parent = Parent(of: node)
+        let info = node.jsonPayload
+        let level = 1
+        
+        guard let typeName = info["__typename"] as? String else {
+            log(level: .debug, indent: level, "+ Warning: no typename in info to parse")
+            return
+        }
+        
+        if let parent {
+            log(level: .debug, indent: level, "Scanning \(typeName) with parent \(parent.item.typeName) \(parent.item.id)")
+        } else {
+            log(level: .debug, indent: level, "Scanning \(typeName)")
+        }
+        
+        switch typeName {
+        case "Repository":
+            Repo.parse(parent: parent, elementType: typeName, node: info, level: level)
+        case "Label":
+            Label.parse(parent: parent, elementType: typeName, node: info, level: level)
+        case "PullRequest":
+            PullRequest.parse(parent: parent, elementType: typeName, node: info, level: level)
+        case "Issue":
+            Issue.parse(parent: parent, elementType: typeName, node: info, level: level)
+        case "IssueComment", "PullRequestReviewComment":
+            Comment.parse(parent: parent, elementType: typeName, node: info, level: level)
+        case "PullRequestReview":
+            Review.parse(parent: parent, elementType: typeName, node: info, level: level)
+        case "Reaction":
+            Reaction.parse(parent: parent, elementType: typeName, node: info, level: level)
+        case "User":
+            let u = User.parse(parent: parent, elementType: typeName, node: info, level: level)
+            guard parent == nil, var me = u else {
+                return
+            }
+            me.isMe = true
+            config.myUser = me
+            User.allItems[me.id] = me
+        case "ReviewRequest":
+            ReviewRequest.parse(parent: parent, elementType: typeName, node: info, level: level)
+        case "CheckRun", "StatusContext":
+            Status.parse(parent: parent, elementType: typeName, node: info, level: level)
+        case "Milestone":
+            Milestone.parse(parent: parent, elementType: typeName, node: info, level: level)
+        case "Organization":
+            Org.parse(parent: parent, elementType: typeName, node: info, level: level)
+        case "Bot", "CheckSuite", "Commit", "PullRequestCommit", "PullRequestReviewCommentConnection", "ReactionConnection", "Status":
+            return
+        default:
+            log(level: .debug, indent: level, "+ Warning: unhandled type '\(typeName)'")
+        }
+    }
+    
     private static func update(_ typesToSync: [UpdateType], limitToRepoNames: String?, keepOnlyNewItems: Bool) async throws {
         let repoFilters = RepoFilterArgs()
         let itemFilters = ItemFilterArgs()
@@ -141,14 +196,14 @@ extension Actions {
         ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
         if userWantsRepos {
-            let repositoryListQuery = Query(name: "Repos", rootElement:
-                Group(name: "viewer", fields: [
-                    User.fragment,
-                    Group(name: "organizations", fields: [Org.fragmentWithRepos], paging: .largePage),
-                    Group(name: "repositories", fields: [Repo.fragment], paging: .largePage),
-                    Group(name: "watching", fields: [Repo.fragment], paging: .largePage)
-                ]))
-            try await repositoryListQuery.run()
+            let root = Group("viewer") {
+                User.fragment
+                Group("organizations", paging: .first(count: 100, paging: true)) { Org.fragmentWithRepos }
+                Group("repositories", paging: .first(count: 100, paging: true)) { Repo.fragment }
+                Group("watching", paging: .first(count: 100, paging: true)) { Repo.fragment }
+            }
+            let repositoryListQuery = Query(name: "Repos", rootElement: root, perNode: parse)
+            try await run(repositoryListQuery)
         } else {
             log(level: .info, "[*Repos*] (Skipped)")
             Org.setSyncStatus(.updated, andChildren: false)
@@ -184,46 +239,31 @@ extension Actions {
         }
 
         if userWantsPrs || userWantsIssues, !filtersRequested { // detect new items
-            let itemIdParser = { (node: JSON) in
-
-                guard let repoId = node["id"] as? String else {
+            let itemIdParser: Query.PerNodeBlock = { node in
+                guard let parent = node.parent, parent.elementType == "Repository" else {
                     return
                 }
-
-                var syncPrs = true
-                var syncIssues = true
-                if let repo = Repo.allItems[repoId] {
-                    if repo.syncState == .none {
-                        return
-                    }
-
+                
+                let repoId = parent.id
+                guard let repo = Repo.allItems[repoId], repo.syncState != .none, repo.visibility != .hidden else {
+                    return
+                }
+                                
+                if node.elementType == "PullRequest" {
                     switch repo.visibility {
-                    case .hidden:
-                        return
-                    case .onlyIssues:
-                        syncPrs = false
-                    case .onlyPrs:
-                        syncIssues = false
-                    case .visible:
-                        break
+                    case .onlyPrs, .visible:
+                        let id = node.id
+                        prIdList[id] = repoId
+                        log(level: .debug, indent: 1, "Registered PR ID: \(id)")
+                    default: break
                     }
-                }
-
-                if syncPrs, let section = node["pullRequests"] as? JSON, let itemList = section["edges"] as? [JSON] {
-                    for p in itemList {
-                        if let node = p["node"] as? JSON, let id = node["id"] as? String {
-                            prIdList[id] = repoId
-                            log(level: .debug, indent: 1, "Registered PR ID: \(id)")
-                        }
-                    }
-                }
-
-                if syncIssues, let section = node["issues"] as? JSON, let itemList = section["edges"] as? [JSON] {
-                    for p in itemList {
-                        if let node = p["node"] as? JSON, let id = node["id"] as? String {
-                            issueIdList[id] = repoId
-                            log(level: .debug, indent: 1, "Registered Issue ID: \(id)")
-                        }
+                } else if node.elementType == "Issue" {
+                    switch repo.visibility {
+                    case .onlyIssues, .visible:
+                        let id = node.id
+                        issueIdList[id] = repoId
+                        log(level: .debug, indent: 1, "Registered Issue ID: \(id)")
+                    default: break
                     }
                 }
             }
@@ -239,8 +279,10 @@ extension Actions {
                 userWantsPrs ? [Repo.prIdsFragment] :
                 userWantsIssues ? [Repo.issueIdsFragment] :
                 []
-            let itemQueries = Query.batching("Item IDs", fields: fields, idList: repoIds, perNodeBlock: itemIdParser)
-            try await Query.attempt(itemQueries)
+            if !fields.isEmpty {
+                let queries = Query.batching("Item IDs", idList: repoIds, perNode: itemIdParser) { fields }
+                try await run(queries)
+            }
         } else {
             log(level: .info, "[*Item IDs*] (Skipped)")
         }
@@ -259,10 +301,10 @@ extension Actions {
 
         ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-        if prIdList.count > 0 {
-            let fragment = userWantsComments ? PullRequest.fragmentWithComments : PullRequest.fragment
-            let prQueries = Query.batching("PRs", fields: [fragment], idList: Array(prIdList.keys))
-            try await Query.attempt(prQueries)
+        if !prIdList.isEmpty {
+            try await run(Query.batching("PRs", idList: Array(prIdList.keys), perNode: parse) {
+                userWantsComments ? PullRequest.fragmentWithComments : PullRequest.fragment
+            })
 
             if !userWantsRepos { // revitalise links to parent repos for updated items
                 let updatedPrs = PullRequest.allItems.values.filter { $0.syncState == .updated }
@@ -297,12 +339,12 @@ extension Actions {
         if userWantsPrs, userWantsComments {
             let reviewIdsWithComments = Review.allItems.values.compactMap { $0.syncState == .none || !$0.syncNeedsComments ? nil : $0.id }
 
-            if reviewIdsWithComments.count > 0 {
-                try await Query.attempt(Query.batching("PR Review Comments", fields: [
-                    Review.commentsFragment,
-                    PullRequest.commentsFragment,
+            if !reviewIdsWithComments.isEmpty {
+                try await run(Query.batching("PR Review Comments", idList: reviewIdsWithComments, perNode: parse) {
+                    Review.commentsFragment
+                    PullRequest.commentsFragment
                     Issue.commentsFragment
-                ], idList: reviewIdsWithComments))
+                })
             } else {
                 log(level: .info, "[*PR Review Comments*] (Skipped)")
             }
@@ -319,10 +361,10 @@ extension Actions {
 
         ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-        if issueIdList.count > 0 {
-            let fragment = userWantsComments ? Issue.fragmentWithComments : Issue.fragment
-            let issueQueries = Query.batching("Issues", fields: [fragment], idList: Array(issueIdList.keys))
-            try await Query.attempt(issueQueries)
+        if !issueIdList.isEmpty {
+            try await run(Query.batching("Issues", idList: Array(issueIdList.keys), perNode: parse) {
+                userWantsComments ? Issue.fragmentWithComments : Issue.fragment
+            })
 
             if !userWantsRepos { // revitalise links to parent repos for updated items
                 let updatedIssues = Issue.allItems.values.filter { $0.syncState == .updated }
@@ -393,12 +435,12 @@ extension Actions {
                 itemIdsWithReactions += Issue.allItems.keys
             }
 
-            try await Query.attempt(Query.batching("Reactions", fields: [
-                Comment.pullRequestReviewCommentReactionFragment,
-                Comment.issueCommentReactionFragment,
-                PullRequest.reactionsFragment,
+            try await run(Query.batching("Reactions", idList: itemIdsWithReactions, perNode: parse) {
+                Comment.pullRequestReviewCommentReactionFragment
+                Comment.issueCommentReactionFragment
+                PullRequest.reactionsFragment
                 Issue.reactionsFragment
-            ], idList: itemIdsWithReactions))
+            })
 
         } else {
             log(level: .info, "[*Reactions*] (Skipped)")
@@ -432,17 +474,17 @@ extension Actions {
         let userWantsComments = CommandLine.argument(exists: "-comments")
         if let pr = item.pullRequest {
             let fragment = userWantsComments ? PullRequest.fragmentWithComments : PullRequest.fragment
-            let queries = Query.batching("PR", fields: [fragment], idList: [pr.id])
-            try await Query.attempt(queries)
+            let queries = Query.batching("PR", idList: [pr.id], perNode: parse) { fragment }
+            try await run(queries)
 
             if userWantsComments {
                 let reviewIdsWithComments = pr.reviews.compactMap { $0.syncState == .none || !$0.syncNeedsComments ? nil : $0.id }
-                if reviewIdsWithComments.count > 0 {
-                    try await Query.attempt(Query.batching("PR Review Comments", fields: [
-                        Review.commentsFragment,
-                        PullRequest.commentsFragment,
+                if !reviewIdsWithComments.isEmpty {
+                    try await run(Query.batching("PR Review Comments", idList: reviewIdsWithComments, perNode: parse) {
+                        Review.commentsFragment
+                        PullRequest.commentsFragment
                         Issue.commentsFragment
-                    ], idList: reviewIdsWithComments))
+                    })
                 }
             }
 
@@ -453,32 +495,110 @@ extension Actions {
                     itemIdsWithReactions.append(contentsOf: review.comments.compactMap { ($0.syncState == .none || !$0.syncNeedsReactions) ? nil : $0.id })
                 }
             }
-            try await Query.attempt(Query.batching("Reactions", fields: [
-                Comment.pullRequestReviewCommentReactionFragment,
+            try await run(Query.batching("Reactions", idList: itemIdsWithReactions, perNode: parse) {
+                Comment.pullRequestReviewCommentReactionFragment
                 PullRequest.reactionsFragment
-            ], idList: itemIdsWithReactions))
+            })
 
             await DB.save(purgeUntouchedItems: false, notificationMode: .none)
             return ListableItem.pullRequest(PullRequest.allItems[pr.id]!)
 
         } else if let issue = item.issue {
             let fragment = userWantsComments ? Issue.fragmentWithComments : Issue.fragment
-            let queries = Query.batching("Issue", fields: [fragment], idList: [issue.id])
-            try await Query.attempt(queries)
+            let queries = Query.batching("Issue", idList: [issue.id], perNode: parse) { fragment }
+            try await run(queries)
 
             var itemIdsWithReactions = [issue.id]
             if userWantsComments {
                 itemIdsWithReactions += issue.comments.compactMap { ($0.syncState == .none || !$0.syncNeedsReactions) ? nil : $0.id }
             }
 
-            try await Query.attempt(Query.batching("Reactions", fields: [
-                Comment.pullRequestReviewCommentReactionFragment,
+            try await run(Query.batching("Reactions", idList: itemIdsWithReactions, perNode: parse) {
+                Comment.pullRequestReviewCommentReactionFragment
                 PullRequest.reactionsFragment
-            ], idList: itemIdsWithReactions))
+            })
 
             await DB.save(purgeUntouchedItems: false, notificationMode: .none)
             return ListableItem.issue(Issue.allItems[issue.id]!)
         }
         return item
+    }
+    
+    private static func run(_ query: Query, shouldRetry: Int = 5, asSubQuery: Bool = false) async throws {
+        func retryOrFail(_ message: String) async throws {
+            if shouldRetry > 1 {
+                log(level: .verbose, "[*\(query.name)*] \(message)")
+                log(level: .verbose, "[*\(query.name)*] Retrying")
+                try await run(query, shouldRetry: shouldRetry - 1)
+            } else {
+                log("[*\(query.name)*] \(message)")
+                throw NSError(domain: "build.bru.trailer-cli.query", code: 1, userInfo: [NSLocalizedDescriptionKey: message])
+            }
+        }
+        
+        func extractRateLimit(from json: JSON) -> JSON? {
+            if let data = json["data"] as? JSON {
+                return data["rateLimit"] as? JSON
+            }
+            return nil
+        }
+        
+        if shouldRetry == 5, !asSubQuery {
+            log("[*\(query.name)*] Fetching")
+        }
+        
+        let info: Data
+        do {
+            let Q = query.queryText
+            log(level: .debug, "[*\(query.name)*] \(Q)")
+            let body = try JSONEncoder().encode(["query": Q])
+            let req = Network.Request(url: config.server.absoluteString, method: .post, body: body)
+            info = try await Network.getData(for: req)
+        } catch {
+            try await retryOrFail("Query error: \(error.localizedDescription)")
+            return
+        }
+        
+        guard let json = try info.asJsonObject() else {
+            try await retryOrFail("No JSON in API response: \(String(data: info, encoding: .utf8) ?? "")")
+            return
+        }
+        
+        let extraQueries: TrailerQL.List<Query>
+        do {
+            extraQueries = try await query.processResponse(from: json)
+            
+        } catch {
+            let serverError: String?
+            if let errors = json["errors"] as? [JSON] {
+                serverError = errors.first?["message"] as? String
+            } else {
+                serverError = json["message"] as? String
+            }
+            let resolved = serverError ?? error.localizedDescription
+            try await retryOrFail("Failed with error: '\(resolved)'")
+            return
+        }
+        
+        if let rateLimit = extractRateLimit(from: json), let cost = rateLimit["cost"] as? Int, let remaining = rateLimit["remaining"] as? Int, let nodeCount = rateLimit["nodeCount"] as? Int {
+            config.totalQueryCosts += cost
+            config.totalApiRemaining = min(config.totalApiRemaining, remaining)
+            log(level: .verbose, "[*\(query.name)*] Processed page (Cost: [!\(cost)!], Remaining: [!\(remaining)!] - Node Count: [!\(nodeCount)!])")
+        } else {
+            log(level: .verbose, "[*\(query.name)*] Processed page")
+        }
+                
+        if extraQueries.count == 0 {
+            return
+        }
+        
+        log(level: .debug, "[*\(query.name)*] Needs more page data")
+        try await run(extraQueries, asSubQueries: true)
+    }
+    
+    private static func run(_ queries: TrailerQL.List<Query>, asSubQueries: Bool = false) async throws {
+        for query in queries {
+            try await run(query, asSubQuery: asSubQueries)
+        }
     }
 }
