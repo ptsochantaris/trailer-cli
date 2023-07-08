@@ -1,5 +1,4 @@
 import Foundation
-import TrailerJson
 
 enum PagingStyle {
     case none, onlyLast, largePage, smallPage

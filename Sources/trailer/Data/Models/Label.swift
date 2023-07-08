@@ -1,5 +1,4 @@
 import Foundation
-import TrailerJson
 
 struct Label: Item {
     var id: String

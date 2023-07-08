@@ -1,5 +1,4 @@
 import Foundation
-import TrailerJson
 
 struct ReviewRequest: Item {
     var id: String

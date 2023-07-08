@@ -1,5 +1,4 @@
 import Foundation
-import TrailerJson
 
 enum StatusState: String, Codable {
     case expected, error, failure, pending, success, empty, neutral, actionRequired, cancelled, skipped

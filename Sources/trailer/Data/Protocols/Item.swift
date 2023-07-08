@@ -1,5 +1,4 @@
 import Foundation
-import TrailerJson
 
 typealias JSON = [String: Any]
 

@@ -1,5 +1,4 @@
 import Foundation
-import TrailerJson
 
 struct Fragment: Ingesting {
     let name: String

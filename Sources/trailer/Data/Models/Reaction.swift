@@ -1,5 +1,4 @@
 import Foundation
-import TrailerJson
 
 struct Reaction: Item {
     var id: String

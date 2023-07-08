@@ -1,5 +1,4 @@
 import Foundation
-import TrailerJson
 
 struct BatchGroup: Ingesting {
     let name = "nodes"

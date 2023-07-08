@@ -1,5 +1,4 @@
 import Foundation
-import TrailerJson
 
 enum RepoVisibility: String, Codable {
     case hidden, visible, onlyPrs, onlyIssues

@@ -1,5 +1,4 @@
 import Foundation
-import TrailerJson
 
 struct Issue: Item, Announceable, Closeable, Sortable {
     var id: String

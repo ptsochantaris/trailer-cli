@@ -1,5 +1,4 @@
 import Foundation
-import TrailerJson
 
 struct Comment: Item, Announceable {
     var id: String

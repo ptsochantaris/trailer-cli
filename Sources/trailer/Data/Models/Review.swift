@@ -1,5 +1,4 @@
 import Foundation
-import TrailerJson
 
 enum ReviewState: String, Codable {
     case pending, commented, approved, changes_requested, dismissed

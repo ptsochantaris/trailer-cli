@@ -1,5 +1,4 @@
 import Foundation
-import TrailerJson
 
 struct Milestone: Item {
     var id: String

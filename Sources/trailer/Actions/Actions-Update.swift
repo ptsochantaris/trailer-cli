@@ -1,5 +1,4 @@
 import Foundation
-import TrailerJson
 
 enum UpdateType {
     case repos, prs, issues, comments, reactions

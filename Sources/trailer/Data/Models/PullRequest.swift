@@ -1,5 +1,4 @@
 import Foundation
-import TrailerJson
 
 enum MergeableState: String, Codable {
     case mergeable, conflicting, unknown
