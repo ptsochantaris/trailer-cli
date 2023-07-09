@@ -1,5 +1,6 @@
 import Foundation
 import TrailerQL
+import Lista
 
 enum MergeableState: String, Codable {
     case mergeable, conflicting, unknown
@@ -26,7 +27,7 @@ protocol Sortable {
 
 struct PullRequest: Item, Announceable, Closeable, Sortable {
     var id: String
-    var parents: [String: LinkedList<Relationship>]
+    var parents: [String: Lista<Relationship>]
     var syncState: SyncState
     var elementType: String
     
@@ -67,7 +68,7 @@ struct PullRequest: Item, Announceable, Closeable, Sortable {
     init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         id = try c.decode(String.self, forKey: .id)
-        parents = try c.decode([String: LinkedList<Relationship>].self, forKey: .parents)
+        parents = try c.decode([String: Lista<Relationship>].self, forKey: .parents)
         elementType = try c.decode(String.self, forKey: .elementType)
         mergeable = try c.decode(MergeableState.self, forKey: .mergeable)
         bodyText = try c.decode(String.self, forKey: .bodyText)
@@ -122,7 +123,7 @@ struct PullRequest: Item, Announceable, Closeable, Sortable {
     
     init?(id: String, type: String, node: JSON) {
         self.id = id
-        parents = [String: LinkedList<Relationship>]()
+        parents = [String: Lista<Relationship>]()
         elementType = type
         syncState = .new
         if !apply(node) {
@@ -218,7 +219,7 @@ struct PullRequest: Item, Announceable, Closeable, Sortable {
         }
         line += "*]"
         
-        let components = LinkedList<String>(value: line)
+        let components = Lista<String>(value: line)
         
         if listFieldsDefinition.type {
             components.push("PR")

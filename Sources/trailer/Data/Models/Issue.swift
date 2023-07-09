@@ -1,9 +1,10 @@
 import Foundation
 import TrailerQL
+import Lista
 
 struct Issue: Item, Announceable, Closeable, Sortable {
     var id: String
-    var parents: [String: LinkedList<Relationship>]
+    var parents: [String: Lista<Relationship>]
     var syncState = SyncState.none
     var elementType: String
 
@@ -52,7 +53,7 @@ struct Issue: Item, Announceable, Closeable, Sortable {
 
     init?(id: String, type: String, node: JSON) {
         self.id = id
-        parents = [String: LinkedList<Relationship>]()
+        parents = [String: Lista<Relationship>]()
         elementType = type
         syncState = .new
         if !apply(node) {
@@ -119,7 +120,7 @@ struct Issue: Item, Announceable, Closeable, Sortable {
         }
         line += "*]"
 
-        let components = LinkedList<String>(value: line)
+        let components = Lista<String>(value: line)
 
         if listFieldsDefinition.type {
             components.push("Issue")

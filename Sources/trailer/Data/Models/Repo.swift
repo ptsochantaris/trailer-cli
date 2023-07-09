@@ -1,5 +1,6 @@
 import Foundation
 import TrailerQL
+import Lista
 
 enum RepoVisibility: String, Codable {
     case hidden, visible, onlyPrs, onlyIssues
@@ -7,7 +8,7 @@ enum RepoVisibility: String, Codable {
 
 struct Repo: Item, Announceable {
     var id: String
-    var parents: [String: LinkedList<Relationship>]
+    var parents: [String: Lista<Relationship>]
     var syncState = SyncState.none
     var elementType: String
 
@@ -47,7 +48,7 @@ struct Repo: Item, Announceable {
 
     init?(id: String, type: String, node: JSON) {
         self.id = id
-        parents = [String: LinkedList<Relationship>]()
+        parents = [String: Lista<Relationship>]()
         elementType = type
         syncState = .new
         visibility = config.defaultRepoVisibility

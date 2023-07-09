@@ -1,4 +1,5 @@
 import Foundation
+import Lista
 
 typealias JSON = [String: Any]
 
@@ -9,7 +10,7 @@ protocol Item: Identifiable, Databaseable, Equatable {
 
     init?(id: String, type: String, node: JSON)
 
-    var parents: [String: LinkedList<Relationship>] { get set }
+    var parents: [String: Lista<Relationship>] { get set }
     mutating func apply(_ node: JSON) -> Bool
     mutating func setChildrenSyncStatus(_ status: SyncState)
 }
@@ -29,8 +30,8 @@ extension Item {
 
     mutating func setSyncStatus(_ status: SyncState, andChildren: Bool) {
         syncState = status
-        parents = parents.mapValues { relationshipsToAType -> LinkedList<Relationship> in
-            let res = LinkedList<Relationship>()
+        parents = parents.mapValues { relationshipsToAType -> Lista<Relationship> in
+            let res = Lista<Relationship>()
             for n in relationshipsToAType {
                 var n = n
                 n.syncState = status
@@ -59,7 +60,7 @@ extension Item {
                 let parentTypeName = String(P.first!)
                 let parentField = String(P.last!)
 
-                let newRelationships = LinkedList<Relationship>()
+                let newRelationships = Lista<Relationship>()
                 for relationship in previousRelationships {
                     if relationship.syncState == .none {
                         log(level: .debug, "Removing stale relationship from \(item.typeName) \(item.id) to parent ID \(relationship.parentId)")
@@ -162,7 +163,7 @@ extension Item {
                 if !quiet { log(level: .debug, indent: level, "Adding another link to the existing parent(s) in relationship '\(parent.field)'") }
             }
         } else {
-            parents[storedField] = LinkedList(value: relationship)
+            parents[storedField] = Lista(value: relationship)
             DB.addChild(id: id, to: parent)
             if !quiet { log(level: .debug, indent: level, "Linking to parent through relationship '\(parent.field)'") }
         }

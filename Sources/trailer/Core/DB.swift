@@ -1,5 +1,6 @@
 import Foundation
 import TrailerQL
+import Lista
 
 enum NotificationMode {
     case none, standard, consoleCommentsAndReviews
@@ -41,9 +42,9 @@ enum DB {
 
     //////////////////////////////////// Child lookup
 
-    private static var parents2fields2children = [String: [String: LinkedList<String>]]()
+    private static var parents2fields2children = [String: [String: Lista<String>]]()
 
-    static func idsForChildren(of itemId: String, field: String) -> LinkedList<String>? {
+    static func idsForChildren(of itemId: String, field: String) -> Lista<String>? {
         parents2fields2children[itemId]?[field]
     }
 
@@ -56,12 +57,12 @@ enum DB {
                     listOfChildren.append(id)
                 }
             } else {
-                field2children[fieldName] = LinkedList(value: id)
+                field2children[fieldName] = Lista(value: id)
                 parents2fields2children[parentId] = field2children
             }
         } else {
-            var field2children = [String: LinkedList<String>]()
-            field2children[fieldName] = LinkedList(value: id)
+            var field2children = [String: Lista<String>]()
+            field2children[fieldName] = Lista(value: id)
             parents2fields2children[parentId] = field2children
         }
     }
@@ -150,11 +151,11 @@ enum DB {
         if FileManager.default.fileExists(atPath: l.path) {
             do {
                 let d = try Data(contentsOf: l)
-                let temp = try decoder.decode([String: [String: LinkedList<String>]].self, from: d)
+                let temp = try decoder.decode([String: [String: Lista<String>]].self, from: d)
                 for (parent, var fields2children) in temp {
                     for (field, children) in fields2children {
                         var ids = Set<String>()
-                        let clist = LinkedList<String>()
+                        let clist = Lista<String>()
                         for c in children where ids.insert(c).inserted {
                             clist.append(c)
                         }

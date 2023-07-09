@@ -1,9 +1,10 @@
 import Foundation
 import TrailerQL
+import Lista
 
 struct Label: Item {
     var id: String
-    var parents: [String: LinkedList<Relationship>]
+    var parents: [String: Lista<Relationship>]
     var syncState = SyncState.none
     var elementType: String
 
@@ -27,7 +28,7 @@ struct Label: Item {
 
     init?(id: String, type: String, node: JSON) {
         self.id = id
-        parents = [String: LinkedList<Relationship>]()
+        parents = [String: Lista<Relationship>]()
         elementType = type
         syncState = .new
         if !apply(node) {

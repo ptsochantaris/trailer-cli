@@ -1,5 +1,6 @@
 import Foundation
 import TrailerQL
+import Lista
 
 enum ReviewState: String, Codable {
     case pending, commented, approved, changes_requested, dismissed
@@ -16,7 +17,7 @@ enum ReviewState: String, Codable {
 
 struct Review: Item, Announceable {
     var id: String
-    var parents: [String: LinkedList<Relationship>]
+    var parents: [String: Lista<Relationship>]
     var syncState = SyncState.none
     var elementType: String
 
@@ -61,7 +62,7 @@ struct Review: Item, Announceable {
 
     init?(id: String, type: String, node: JSON) {
         self.id = id
-        parents = [String: LinkedList<Relationship>]()
+        parents = [String: Lista<Relationship>]()
         elementType = type
         syncState = .new
         if !apply(node) {

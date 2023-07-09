@@ -1,4 +1,5 @@
 import Foundation
+import Lista
 
 struct Notifications {
     struct Notification {
@@ -29,7 +30,7 @@ struct Notifications {
         }
     }
 
-    private static let notificationQueue = LinkedList<Notification>()
+    private static let notificationQueue = Lista<Notification>()
 
     static func notify(title: String?, subtitle: String?, details: String?, relatedDate: Date) {
         let n = Notification(title: title, subtitle: subtitle, details: details, relatedDate: relatedDate)
