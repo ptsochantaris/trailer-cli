@@ -20,7 +20,7 @@ let package = Package(
         .executableTarget(name: "trailer", dependencies: [
             .product(name: "AsyncHTTPClient", package: "async-http-client"),
             .product(name: "TrailerJson", package: "trailer-json"),
-            .product(name: "AsyncHTTPClient", package: "lista"),
+            .product(name: "Lista", package: "lista"),
         ])
     ]
 )
