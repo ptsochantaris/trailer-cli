@@ -1,6 +1,7 @@
 import Foundation
 import TrailerQL
 import TrailerJson
+import Lista
 
 enum UpdateType {
     case repos, prs, issues, comments, reactions
@@ -564,7 +565,7 @@ extension Actions {
             return
         }
         
-        let extraQueries: TrailerQL.List<Query>
+        let extraQueries: Lista<Query>
         do {
             extraQueries = try await query.processResponse(from: json)
             
@@ -596,7 +597,7 @@ extension Actions {
         try await run(extraQueries, asSubQueries: true)
     }
     
-    private static func run(_ queries: TrailerQL.List<Query>, asSubQueries: Bool = false) async throws {
+    private static func run(_ queries: Lista<Query>, asSubQueries: Bool = false) async throws {
         for query in queries {
             try await run(query, asSubQuery: asSubQueries)
         }

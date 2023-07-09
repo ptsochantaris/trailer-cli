@@ -160,7 +160,7 @@ struct Comment: Item, Announceable {
 
     @TrailerQL.ElementsBuilder
     private static func commentFields() -> [any Element] {
-        TQL.idField
+        Field.id
         Field("body")
         Field("viewerDidAuthor")
         Field("createdAt")
@@ -173,12 +173,12 @@ struct Comment: Item, Announceable {
     static let fragmentForReviews = Fragment(on: "PullRequestReviewComment", elements: commentFields)
 
     static let pullRequestReviewCommentReactionFragment = Fragment(on: "PullRequestReviewComment") {
-        TQL.idField // not using fragment, no need to re-parse
+        Field.id // not using fragment, no need to re-parse
         Group("reactions", paging: .first(count: 100, paging: true)) { Reaction.fragment }
     }
 
     static let issueCommentReactionFragment = Fragment(on: "IssueComment") {
-        TQL.idField // not using fragment, no need to re-parse
+        Field.id // not using fragment, no need to re-parse
         Group("reactions", paging: .first(count: 100, paging: true)) { Reaction.fragment }
     }
 }

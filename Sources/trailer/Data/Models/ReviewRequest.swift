@@ -50,7 +50,7 @@ struct ReviewRequest: Item {
     }
 
     static let fragment = Fragment(on: "ReviewRequest") {
-        TQL.idField
+        Field.id
         Group("requestedReviewer") { User.fragment }
     }
 }

@@ -291,7 +291,7 @@ struct Issue: Item, Announceable, Closeable, Sortable {
     }
 
     static let fragment = Fragment(on: "Issue") {
-        TQL.idField
+        Field.id
         Field("bodyText")
         Field("createdAt")
         Field("updatedAt")
@@ -309,12 +309,12 @@ struct Issue: Item, Announceable, Closeable, Sortable {
     }
 
     static let reactionsFragment = Fragment(on: "Issue") {
-        TQL.idField // not using fragment, no need to re-parse
+        Field.id // not using fragment, no need to re-parse
         Group("reactions", paging: .first(count: 100, paging: true)) { Reaction.fragment }
     }
 
     static let commentsFragment = Fragment(on: "Issue") {
-        TQL.idField // not using fragment, no need to re-parse
+        Field.id // not using fragment, no need to re-parse
         Group("comments", paging: .first(count: 100, paging: true)) { Comment.fragmentForItems }
     }
 

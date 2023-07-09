@@ -62,7 +62,7 @@ struct Reaction: Item {
     }
 
     static let fragment = Fragment(on: "Reaction") {
-        TQL.idField
+        Field.id
         Field("content")
         Group("user") {
             User.fragment

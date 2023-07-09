@@ -532,7 +532,7 @@ struct PullRequest: Item, Announceable, Closeable, Sortable {
     }
     
     static let fragment = Fragment(on: "PullRequest") {
-        TQL.idField
+        Field.id
         Field("updatedAt")
         Field("mergeable")
         Field("mergedAt")
@@ -579,12 +579,12 @@ struct PullRequest: Item, Announceable, Closeable, Sortable {
     }
     
     static let reactionsFragment = Fragment(on: "PullRequest") {
-        TQL.idField // not using fragment, no need to re-parse
+        Field.id // not using fragment, no need to re-parse
         Group("reactions", paging: .first(count: 100, paging: true)) { Reaction.fragment }
     }
     
     static let commentsFragment = Fragment(on: "PullRequest") {
-        TQL.idField // not using fragment, no need to re-parse
+        Field.id // not using fragment, no need to re-parse
         Group("comments", paging: .first(count: 100, paging: true)) { Comment.fragmentForItems }
     }
 }

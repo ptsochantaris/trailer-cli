@@ -44,7 +44,7 @@ struct User: Item {
     mutating func setChildrenSyncStatus(_: SyncState) {}
 
     static let fragment = Fragment(on: "User") {
-        TQL.idField
+        Field.id
         Field("login")
         Field("avatarUrl")
     }

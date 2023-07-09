@@ -148,7 +148,7 @@ struct Review: Item, Announceable {
     }
 
     static let fragment = Fragment(on: "PullRequestReview") {
-        TQL.idField
+        Field.id
         Field("body")
         Field("state")
         Field("viewerDidAuthor")
@@ -159,7 +159,7 @@ struct Review: Item, Announceable {
     }
 
     static let commentsFragment = Fragment(on: "PullRequestReview") {
-        TQL.idField // not using fragment, no need to re-parse
+        Field.id // not using fragment, no need to re-parse
         Group("comments", paging: .first(count: 100, paging: true)) {
             Comment.fragmentForReviews
         }

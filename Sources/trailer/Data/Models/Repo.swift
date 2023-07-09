@@ -158,7 +158,7 @@ struct Repo: Item, Announceable {
     }
 
     static let fragment = Fragment(on: "Repository") {
-        TQL.idField
+        Field.id
         Field("nameWithOwner")
         Field("isFork")
         Field("url")
@@ -167,18 +167,18 @@ struct Repo: Item, Announceable {
     }
 
     static let prAndIssueIdsFragment = Fragment(on: "Repository") {
-        TQL.idField
-        Group("pullRequests", ("states", "[OPEN]"), paging: .first(count: 100, paging: true)) { TQL.idField }
-        Group("issues", ("states", "[OPEN]"), paging: .first(count: 100, paging: true)) { TQL.idField }
+        Field.id
+        Group("pullRequests", ("states", "[OPEN]"), paging: .first(count: 100, paging: true)) { Field.id }
+        Group("issues", ("states", "[OPEN]"), paging: .first(count: 100, paging: true)) { Field.id }
     }
 
     static let prIdsFragment = Fragment(on: "Repository") {
-        TQL.idField
-        Group("pullRequests", ("states", "[OPEN]"), paging: .first(count: 100, paging: true)) { TQL.idField }
+        Field.id
+        Group("pullRequests", ("states", "[OPEN]"), paging: .first(count: 100, paging: true)) { Field.id }
     }
 
     static let issueIdsFragment = Fragment(on: "Repository") {
-        TQL.idField
-        Group("issues", ("states", "[OPEN]"), paging: .first(count: 100, paging: true)) { TQL.idField }
+        Field.id
+        Group("issues", ("states", "[OPEN]"), paging: .first(count: 100, paging: true)) { Field.id }
     }
 }

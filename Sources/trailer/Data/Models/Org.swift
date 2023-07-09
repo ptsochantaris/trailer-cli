@@ -49,7 +49,7 @@ struct Org: Item {
     }
     
     static let fragmentWithRepos = Fragment(on: "Organization") {
-        TQL.idField
+        Field.id
         Field("name")
         Group("repositories", paging: .first(count: 100, paging: true)) { Repo.fragment }
     }

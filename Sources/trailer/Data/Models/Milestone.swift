@@ -39,7 +39,7 @@ struct Milestone: Item {
     mutating func setChildrenSyncStatus(_: SyncState) {}
 
     static let fragment = Fragment(on: "Milestone") {
-        TQL.idField
+        Field.id
         Field("title")
     }
 }

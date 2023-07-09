@@ -85,7 +85,7 @@ struct Status: Item {
     }
 
     static var fragmentForStatus = Fragment(on: "StatusContext") {
-        TQL.idField
+        Field.id
         Field("context")
         Field("description")
         Field("state")
@@ -94,7 +94,7 @@ struct Status: Item {
     }
 
     static let fragmentForCheck = Fragment(on: "CheckRun") {
-        TQL.idField
+        Field.id
         Field("name")
         Field("conclusion")
         Field("startedAt")
