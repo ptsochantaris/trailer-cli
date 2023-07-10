@@ -10,6 +10,15 @@
       }
     },
     {
+      "identity" : "lista",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/ptsochantaris/lista",
+      "state" : {
+        "branch" : "main",
+        "revision" : "ad424d40614defc548e4028a38dc0216b24c7ae9"
+      }
+    },
+    {
       "identity" : "swift-atomics",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/apple/swift-atomics.git",
@@ -88,6 +97,15 @@
       "state" : {
         "branch" : "main",
         "revision" : "6c65cd80696e3ce46fa72d586b427d61bb96a31a"
+      }
+    },
+    {
+      "identity" : "trailer-ql",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/ptsochantaris/trailer-ql",
+      "state" : {
+        "branch" : "main",
+        "revision" : "cf147f8949c42dfb74f975a40d92a37bae111f42"
       }
     }
   ],

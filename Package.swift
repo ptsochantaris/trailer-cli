@@ -19,6 +19,7 @@ let package = Package(
     targets: [
         .executableTarget(name: "trailer", dependencies: [
             .product(name: "AsyncHTTPClient", package: "async-http-client"),
+            .product(name: "TrailerQL", package: "trailer-ql"),
             .product(name: "TrailerJson", package: "trailer-json"),
             .product(name: "Lista", package: "lista"),
         ])
