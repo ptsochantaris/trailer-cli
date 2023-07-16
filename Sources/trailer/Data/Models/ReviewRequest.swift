@@ -10,6 +10,7 @@ struct ReviewRequest: Item {
 
     static var allItems = [String: ReviewRequest]()
     static let idField = "id"
+    static let typeName = "ReviewRequest"
 
     private enum CodingKeys: CodingKey {
         case id

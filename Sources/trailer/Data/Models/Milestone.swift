@@ -10,6 +10,7 @@ struct Milestone: Item {
 
     static var allItems = [String: Milestone]()
     static let idField = "id"
+    static let typeName = "Milestone"
 
     var title = ""
 

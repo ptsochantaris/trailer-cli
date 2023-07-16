@@ -12,7 +12,8 @@ struct Org: Item {
     
     static var allItems = [String: Org]()
     static let idField = "id"
-    
+    static let typeName = "Org"
+
     private enum CodingKeys: CodingKey {
         case id
         case name

@@ -14,6 +14,7 @@ struct User: Item {
 
     static var allItems = [String: User]()
     static let idField = "id"
+    static let typeName = "User"
 
     private enum CodingKeys: CodingKey {
         case id

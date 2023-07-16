@@ -10,6 +10,7 @@ struct Reaction: Item {
 
     var content = ""
     static let idField = "id"
+    static let typeName = "Reaction"
 
     static var allItems = [String: Reaction]()
 

@@ -23,6 +23,7 @@ struct Review: Item, Announceable {
 
     static var allItems = [String: Review]()
     static let idField = "id"
+    static let typeName = "Review"
 
     var state = ReviewState.pending
     var body = ""

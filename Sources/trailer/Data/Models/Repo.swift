@@ -14,6 +14,7 @@ struct Repo: Item, Announceable {
 
     static var allItems = [String: Repo]()
     static let idField = "id"
+    static let typeName = "Repo"
 
     var createdAt = Date.distantPast
     var updatedAt = Date.distantPast

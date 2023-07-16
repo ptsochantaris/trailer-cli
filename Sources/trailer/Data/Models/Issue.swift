@@ -10,6 +10,7 @@ struct Issue: Item, Announceable, Closeable, Sortable {
 
     static var allItems = [String: Issue]()
     static let idField = "id"
+    static let typeName = "Issue"
 
     var bodyText = ""
     var createdAt = Date.distantPast

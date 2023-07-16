@@ -10,6 +10,7 @@ struct Label: Item {
 
     static var allItems = [String: Label]()
     static let idField = "name"
+    static let typeName = "Label"
 
     var color = ""
 
