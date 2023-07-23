@@ -1,6 +1,6 @@
 import Foundation
-import TrailerQL
 import Lista
+import TrailerQL
 
 struct Issue: Item, Announceable, Closeable, Sortable {
     var id: String
@@ -301,7 +301,7 @@ struct Issue: Item, Announceable, Closeable, Sortable {
         Field("url")
         Field("state")
         Field("viewerDidAuthor")
-        
+
         Group("milestone") { Milestone.fragment }
         Group("author") { User.fragment }
         Group("labels", paging: .first(count: 20, paging: true)) { Label.fragment }

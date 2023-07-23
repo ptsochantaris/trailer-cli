@@ -1,6 +1,6 @@
 import Foundation
-import TrailerQL
 import Lista
+import TrailerQL
 
 enum RepoVisibility: String, Codable {
     case hidden, visible, onlyPrs, onlyIssues

@@ -1,6 +1,6 @@
 import Foundation
-import TrailerQL
 import Lista
+import TrailerQL
 
 enum StatusState: String, Codable {
     case expected, error, failure, pending, success, empty, neutral, actionRequired, cancelled, skipped

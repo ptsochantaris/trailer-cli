@@ -1,6 +1,6 @@
 import Foundation
-import TrailerQL
 import Lista
+import TrailerQL
 
 struct Label: Item {
     var id: String

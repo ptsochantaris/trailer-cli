@@ -1,6 +1,6 @@
 import Foundation
-import TrailerQL
 import Lista
+import TrailerQL
 
 enum NotificationMode {
     case none, standard, consoleCommentsAndReviews
@@ -80,7 +80,7 @@ enum DB {
             parents2fields2children[parentId] = field2children
         }
     }
-    
+
     static func lookup(type: String, id: String) -> (any Item)? {
         switch type {
         case "Org": return Org.allItems[id]
@@ -98,14 +98,14 @@ enum DB {
         default: return nil
         }
     }
-    
+
     static func getParentField(for node: Node) -> String? {
         guard let parent = node.parent,
               let fieldMap = parents2fields2children[parent.id]
         else {
             return nil
         }
-        
+
         for (field, childIdList) in fieldMap where childIdList.contains(node.id) {
             return field
         }

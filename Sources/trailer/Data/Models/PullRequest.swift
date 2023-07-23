@@ -1,6 +1,6 @@
 import Foundation
-import TrailerQL
 import Lista
+import TrailerQL
 
 enum MergeableState: String, Codable {
     case mergeable, conflicting, unknown
@@ -30,7 +30,7 @@ struct PullRequest: Item, Announceable, Closeable, Sortable {
     var parents: [String: Lista<Relationship>]
     var syncState: SyncState
     var elementType: String
-    
+
     static var allItems = [String: PullRequest]()
     static let idField = "id"
     static let typeName = "PullRequest"
@@ -46,9 +46,9 @@ struct PullRequest: Item, Announceable, Closeable, Sortable {
     var headRefName = ""
     var url = emptyURL
     var viewerDidAuthor = false
-    
+
     var syncNeedsReactions = false
-    
+
     private enum CodingKeys: CodingKey {
         case id
         case parents
@@ -65,7 +65,7 @@ struct PullRequest: Item, Announceable, Closeable, Sortable {
         case mergedAt
         case headRefName
     }
-    
+
     init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         id = try c.decode(String.self, forKey: .id)
@@ -84,7 +84,7 @@ struct PullRequest: Item, Announceable, Closeable, Sortable {
         headRefName = try c.decodeIfPresent(String.self, forKey: .headRefName) ?? ""
         syncState = .none
     }
-    
+
     func encode(to encoder: Encoder) throws {
         var c = encoder.container(keyedBy: CodingKeys.self)
         try c.encode(id, forKey: .id)
@@ -102,12 +102,12 @@ struct PullRequest: Item, Announceable, Closeable, Sortable {
         try c.encode(viewerDidAuthor, forKey: .viewerDidAuthor)
         try c.encode(headRefName, forKey: .headRefName)
     }
-    
+
     mutating func apply(_ node: JSON) -> Bool {
         guard node.keys.count > 9 else { return false }
-        
+
         syncNeedsReactions = (node["reactions"] as? JSON)?["totalCount"] as? Int ?? 0 > 0
-        
+
         mergeable = MergeableState(rawValue: node["mergeable"] as? String ?? "UNKNOWN") ?? MergeableState.unknown
         bodyText = node["bodyText"] as? String ?? ""
         headRefName = node["headRefName"] as? String ?? ""
@@ -121,7 +121,7 @@ struct PullRequest: Item, Announceable, Closeable, Sortable {
         viewerDidAuthor = node["viewerDidAuthor"] as? Bool ?? false
         return true
     }
-    
+
     init?(id: String, type: String, node: JSON) {
         self.id = id
         parents = [String: Lista<Relationship>]()
@@ -131,45 +131,45 @@ struct PullRequest: Item, Announceable, Closeable, Sortable {
             return nil
         }
     }
-    
+
     var type: Int {
         0
     }
-    
+
     var shouldAnnounceClosure: Bool {
         state == .closed || state == .merged
     }
-    
+
     func announceClosure() {
         printSummaryLine(closing: true)
     }
-    
+
     var commentedByMe: Bool {
         comments.contains(where: \.viewerDidAuthor)
     }
-    
+
     var mentionsMe: Bool {
         if bodyText.localizedCaseInsensitiveContains(config.myLogin) {
             return true
         }
         return comments.contains { $0.mentionsMe } || reviews.contains { $0.mentionsMe }
     }
-    
+
     var isAssignedToMe: Bool {
         if let u = config.myUser {
             return assignees.contains(u)
         }
         return false
     }
-    
+
     var hasNewComments: Bool {
         comments.contains(where: { $0.syncState == .new && !$0.viewerDidAuthor })
     }
-    
+
     var hasNewReviews: Bool {
         reviews.contains(where: { $0.syncState == .new && !$0.viewerDidAuthor })
     }
-    
+
     func commentsOrReviewsInclude(text: String) -> Bool {
         if comments.contains(where: { $0.includes(text: text) }) {
             return true
@@ -179,19 +179,19 @@ struct PullRequest: Item, Announceable, Closeable, Sortable {
         }
         return false
     }
-    
+
     var isRed: Bool {
         latestStatuses.contains(where: { $0.state == .error || $0.state == .failure })
     }
-    
+
     var isGreen: Bool {
         !latestStatuses.contains(where: { $0.state != .success })
     }
-    
+
     func printSummaryLine() {
         printSummaryLine(closing: false)
     }
-    
+
     func printSummaryLine(closing: Bool) {
         var line = "[!"
         if closing, state == .closed {
@@ -219,9 +219,9 @@ struct PullRequest: Item, Announceable, Closeable, Sortable {
             }
         }
         line += "*]"
-        
+
         let components = Lista<String>(value: line)
-        
+
         if listFieldsDefinition.type {
             components.push("PR")
         }
@@ -231,10 +231,10 @@ struct PullRequest: Item, Announceable, Closeable, Sortable {
         if listFieldsDefinition.title {
             components.push(title)
         }
-        
+
         let x = components.pop()! + "!]"
         components.push(x)
-        
+
         if listFieldsDefinition.labels, labels.hasItems {
             let l = labels.map(\.id).joined(separator: "] [")
             components.push("[\(l)]")
@@ -259,14 +259,14 @@ struct PullRequest: Item, Announceable, Closeable, Sortable {
         if listFieldsDefinition.url {
             components.push("[C*\(url.absoluteString)*]")
         }
-        
+
         log(components.reversed().joined(separator: " "))
     }
-    
+
     var parentIsNew: Bool {
         (repo?.syncState ?? .new) == .new
     }
-    
+
     func announceIfNeeded(notificationMode: NotificationMode) {
         if let r = repo, r.syncState == .updated {
             if syncState == .new {
@@ -281,7 +281,7 @@ struct PullRequest: Item, Announceable, Closeable, Sortable {
             }
         }
     }
-    
+
     private var latestReviews: [Review] {
         var author2latestReview = [String: Review]()
         let revs = reviews.sorted { $0.createdAt < $1.createdAt }
@@ -292,25 +292,25 @@ struct PullRequest: Item, Announceable, Closeable, Sortable {
         }
         return author2latestReview.values.sorted { $0.createdAt < $1.createdAt }
     }
-    
+
     var pendingReview: Bool {
         let requests = reviewRequests
         if requests.isEmpty { return false }
-        
+
         let latestReviewResults = latestReviews.filter { $0.state == .approved || $0.state == .changes_requested }.compactMap { $0.author?.login }
         let waitingFor = requests.compactMap { $0.reviewer?.login }.filter { !latestReviewResults.contains($0) }
         return waitingFor.count > 0
     }
-    
+
     var allReviewersApprove: Bool {
         let r = latestReviews
         return r.count > 0 && !(r.contains { $0.state != .approved })
     }
-    
+
     var someReviewersBlock: Bool {
         latestReviews.contains { $0.state == .changes_requested }
     }
-    
+
     func printDetails() {
         log()
         let ra = TTY.rightAlign("#\(number)")
@@ -329,7 +329,7 @@ struct PullRequest: Item, Announceable, Closeable, Sortable {
         log("            [$URL!] \(url.absoluteString)")
         log(agoFormat(prefix: "        [$Created!] ", since: createdAt) + " by @" + (author?.login ?? ""))
         log(agoFormat(prefix: "        [$Updated!] ", since: updatedAt))
-        
+
         if mergedAt == Date.distantPast {
             var mergeLine = "    [$Merge check!] [!"
             switch mergeable {
@@ -346,11 +346,11 @@ struct PullRequest: Item, Announceable, Closeable, Sortable {
         } else {
             log("         [![G*Merged \(agoFormat(prefix: "", since: mergedAt))*]!]")
         }
-        
+
         if let m = milestone {
             log("      [$Milestone!] \(m.title)")
         }
-        
+
         let rs = reviews
         let reviewComments = rs.reduce([]) { $0 + $1.comments }
         let reviewsWithText = rs.filter { !($0.state == .commented && $0.body.isEmpty) }
@@ -358,9 +358,9 @@ struct PullRequest: Item, Announceable, Closeable, Sortable {
         if commentItems.count > 0 {
             log("       [$Comments!] \(commentItems.count)")
         }
-        
+
         log()
-        
+
         let react = reactions
         if react.hasItems {
             log("[!Reactions!]")
@@ -368,7 +368,7 @@ struct PullRequest: Item, Announceable, Closeable, Sortable {
             log(line)
             log()
         }
-        
+
         let st = latestStatuses
         if st.hasItems {
             log("[!Statuses")
@@ -386,7 +386,7 @@ struct PullRequest: Item, Announceable, Closeable, Sortable {
             }
             log("!]")
         }
-        
+
         let latest = latestReviews
         if latest.hasItems {
             let approvingReviewers = latest.filter { $0.state == .approved }.compactMap { $0.author?.login }.map { "@" + $0 }
@@ -414,7 +414,7 @@ struct PullRequest: Item, Announceable, Closeable, Sortable {
                 log("*]!]")
             }
         }
-        
+
         if CommandLine.argument(exists: "-body") {
             let b = bodyText.trimmingCharacters(in: .whitespacesAndNewlines)
             if b.count > 0 {
@@ -423,7 +423,7 @@ struct PullRequest: Item, Announceable, Closeable, Sortable {
                 log()
             }
         }
-        
+
         if CommandLine.argument(exists: "-comments") {
             let co = commentItems.sorted(by: { $0.createdAt < $1.createdAt })
             if co.hasItems {
@@ -434,7 +434,7 @@ struct PullRequest: Item, Announceable, Closeable, Sortable {
             }
         }
     }
-    
+
     var latestStatuses: [Status] {
         var res = [String: Status]()
         for s in statuses {
@@ -442,50 +442,50 @@ struct PullRequest: Item, Announceable, Closeable, Sortable {
         }
         return res.values.sorted { $0.createdAt < $1.createdAt }
     }
-    
+
     var reactions: [Reaction] {
         children(field: "reactions")
     }
-    
+
     var comments: [Comment] {
         children(field: "comments")
     }
-    
+
     var labels: [Label] {
         children(field: "labels")
     }
-    
+
     var statuses: [Status] {
         children(field: "contexts") + children(field: "checkRuns")
     }
-    
+
     var reviews: [Review] {
         children(field: "reviews")
     }
-    
+
     var assignees: [User] {
         children(field: "assignees")
     }
-    
+
     var reviewRequests: [ReviewRequest] {
         children(field: "reviewRequests")
     }
-    
+
     var repo: Repo? {
         if let repoId = parents["Repo:pullRequests"]?.first?.parentId {
             return Repo.allItems[repoId]
         }
         return nil
     }
-    
+
     var milestone: Milestone? {
         children(field: "milestone").first
     }
-    
+
     var author: User? {
         children(field: "author").first
     }
-    
+
     mutating func setChildrenSyncStatus(_ status: SyncState) {
         for c in reviews {
             var C = c
@@ -531,7 +531,7 @@ struct PullRequest: Item, Announceable, Closeable, Sortable {
             User.allItems[c.id] = c
         }
     }
-    
+
     static let fragment = Fragment(on: "PullRequest") {
         Field.id
         Field("updatedAt")
@@ -546,17 +546,17 @@ struct PullRequest: Item, Announceable, Closeable, Sortable {
         Field("url")
         Field("headRefName")
         Field("viewerDidAuthor")
-        
+
         Group("milestone") { Milestone.fragment }
         Group("author") { User.fragment }
-        
+
         Group("labels", paging: .first(count: 20, paging: true)) { Label.fragment }
         Group("assignees", paging: .first(count: 20, paging: true)) { User.fragment }
         Group("reviews", paging: .first(count: 100, paging: true)) { Review.fragment }
         Group("reviewRequests", paging: .first(count: 20, paging: true)) { ReviewRequest.fragment }
-        
+
         Group("reactions") { Field("totalCount") }
-        
+
         Group("commits", paging: .last(count: 1)) {
             Group("commit") {
                 Group("status") {
@@ -572,18 +572,18 @@ struct PullRequest: Item, Announceable, Closeable, Sortable {
             }
         }
     }
-    
+
     static var fragmentWithComments: Fragment {
         fragment.addingElement(
             Group("comments", paging: .first(count: 100, paging: true)) { Comment.fragmentForItems }
         )
     }
-    
+
     static let reactionsFragment = Fragment(on: "PullRequest") {
         Field.id // not using fragment, no need to re-parse
         Group("reactions", paging: .first(count: 100, paging: true)) { Reaction.fragment }
     }
-    
+
     static let commentsFragment = Fragment(on: "PullRequest") {
         Field.id // not using fragment, no need to re-parse
         Group("comments", paging: .first(count: 100, paging: true)) { Comment.fragmentForItems }

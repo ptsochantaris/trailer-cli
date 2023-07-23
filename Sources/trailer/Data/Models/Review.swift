@@ -1,6 +1,6 @@
 import Foundation
-import TrailerQL
 import Lista
+import TrailerQL
 
 enum ReviewState: String, Codable {
     case pending, commented, approved, changes_requested, dismissed

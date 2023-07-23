@@ -1,6 +1,6 @@
 import Foundation
-import TrailerQL
 import Lista
+import TrailerQL
 
 struct Comment: Item, Announceable {
     var id: String
@@ -169,7 +169,7 @@ struct Comment: Item, Announceable {
         Group("reactions") { Field("totalCount") }
         Group("author") { User.fragment }
     }
-    
+
     static let fragmentForItems = Fragment(on: "IssueComment", elements: commentFields)
     static let fragmentForReviews = Fragment(on: "PullRequestReviewComment", elements: commentFields)
 

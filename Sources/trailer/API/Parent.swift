@@ -12,11 +12,11 @@ struct Parent {
         else {
             return nil
         }
-        
+
         self.item = item
         self.field = field
     }
-    
+
     init?(item: Identifiable?, field: String?) {
         if let item {
             self.item = item

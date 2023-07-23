@@ -1,7 +1,7 @@
 import Foundation
-import TrailerQL
-import TrailerJson
 import Lista
+import TrailerJson
+import TrailerQL
 
 enum UpdateType {
     case repos, prs, issues, comments, reactions
@@ -41,8 +41,8 @@ extension Actions {
             let versionRequest = Network.Request(url: "https://api.github.com/repos/ptsochantaris/trailer-cli/releases/latest", method: .get, body: nil)
             if
                 let data = try? await Network.getData(for: versionRequest),
-                let json = try? data.asJsonObject(),
-                let tagName = json["tag_name"] as? String {
+                let json = try? data.asTypedJson(),
+                let tagName = json["tag_name"]?.asString {
                 success = true
                 if config.isNewer(tagName) {
                     newVersion = tagName
@@ -117,18 +117,18 @@ extension Actions {
         let parent = Parent(of: node)
         let info = node.jsonPayload
         let level = 1
-        
+
         guard let typeName = info["__typename"] as? String else {
             log(level: .debug, indent: level, "+ Warning: no typename in info to parse")
             return
         }
-        
+
         if let parent {
             log(level: .debug, indent: level, "Scanning \(typeName) with parent \(parent.item.typeName) \(parent.item.id)")
         } else {
             log(level: .debug, indent: level, "Scanning \(typeName)")
         }
-        
+
         switch typeName {
         case "Repository":
             Repo.parse(parent: parent, elementType: typeName, node: info, level: level)
@@ -166,7 +166,7 @@ extension Actions {
             log(level: .debug, indent: level, "+ Warning: unhandled type '\(typeName)'")
         }
     }
-    
+
     private static func update(_ typesToSync: [UpdateType], limitToRepoNames: String?, keepOnlyNewItems: Bool) async throws {
         let repoFilters = RepoFilterArgs()
         let itemFilters = ItemFilterArgs()
@@ -244,12 +244,12 @@ extension Actions {
                 guard let parent = node.parent, parent.elementType == "Repository" else {
                     return
                 }
-                
+
                 let repoId = parent.id
                 guard let repo = Repo.allItems[repoId], repo.syncState != .none, repo.visibility != .hidden else {
                     return
                 }
-                                
+
                 if node.elementType == "PullRequest" {
                     switch repo.visibility {
                     case .onlyPrs, .visible:
@@ -524,7 +524,7 @@ extension Actions {
         }
         return item
     }
-    
+
     private static func run(_ query: Query, shouldRetry: Int = 5, asSubQuery: Bool = false) async throws {
         func retryOrFail(_ message: String) async throws {
             if shouldRetry > 1 {
@@ -536,18 +536,18 @@ extension Actions {
                 throw NSError(domain: "build.bru.trailer-cli.query", code: 1, userInfo: [NSLocalizedDescriptionKey: message])
             }
         }
-        
+
         func extractRateLimit(from json: JSON) -> JSON? {
             if let data = json["data"] as? JSON {
                 return data["rateLimit"] as? JSON
             }
             return nil
         }
-        
+
         if shouldRetry == 5, !asSubQuery {
             log("[*\(query.name)*] Fetching")
         }
-        
+
         let info: Data
         do {
             let Q = query.queryText
@@ -559,16 +559,16 @@ extension Actions {
             try await retryOrFail("Query error: \(error.localizedDescription)")
             return
         }
-        
+
         guard let json = try info.asJsonObject() else {
             try await retryOrFail("No JSON in API response: \(String(data: info, encoding: .utf8) ?? "")")
             return
         }
-        
+
         let extraQueries: Lista<Query>
         do {
             extraQueries = try await query.processResponse(from: json)
-            
+
         } catch {
             let serverError: String?
             if let errors = json["errors"] as? [JSON] {
@@ -580,7 +580,7 @@ extension Actions {
             try await retryOrFail("Failed with error: '\(resolved)'")
             return
         }
-        
+
         if let rateLimit = extractRateLimit(from: json), let cost = rateLimit["cost"] as? Int, let remaining = rateLimit["remaining"] as? Int, let nodeCount = rateLimit["nodeCount"] as? Int {
             config.totalQueryCosts += cost
             config.totalApiRemaining = min(config.totalApiRemaining, remaining)
@@ -588,15 +588,15 @@ extension Actions {
         } else {
             log(level: .verbose, "[*\(query.name)*] Processed page")
         }
-                
+
         if extraQueries.count == 0 {
             return
         }
-        
+
         log(level: .debug, "[*\(query.name)*] Needs more page data")
         try await run(extraQueries, asSubQueries: true)
     }
-    
+
     private static func run(_ queries: Lista<Query>, asSubQueries: Bool = false) async throws {
         for query in queries {
             try await run(query, asSubQuery: asSubQueries)
