@@ -42,7 +42,7 @@ extension Actions {
             if
                 let data = try? await Network.getData(for: versionRequest),
                 let json = try? data.asTypedJson(),
-                let tagName = json["tag_name"]?.asString {
+                let tagName = try? json["tag_name"].asString {
                 success = true
                 if config.isNewer(tagName) {
                     newVersion = tagName
