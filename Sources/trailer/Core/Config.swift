@@ -3,43 +3,30 @@ import Foundation
 struct Config {
     var server = URL(string: "https://api.github.com/graphql")!
 
-    var pageSize = 50
-
+    var maxNodeCost = 10000
     var monochrome = false
     var dryRun = false
 
-    let versionMajor = 1
-    let versionMinor = 4
-    let versionPatch = 0
-    var versionString: String {
-        [versionMajor, versionMinor, versionPatch].map { String($0) }.joined(separator: ".")
-    }
+    private static let versionNumbers = [1, 5, 0]
+    let versionString = versionNumbers.map { String($0) }.joined(separator: ".")
 
-    func isNewer(_ version: String) -> Bool {
-        var local = [0, 0, 0]
-        let components = version.split(separator: ".")
-        for i in 0 ..< components.count {
-            if let n = Int(String(components[i])) {
-                local[i] = n
+    static func isNewer(_ version: String) -> Bool {
+        let components = version
+            .split(separator: ".")
+            .compactMap { Int($0) }
+
+        guard components.count == 3 else {
+            return false
+        }
+
+        for check in versionNumbers.enumerated() {
+            let v = check.element
+            let i = check.offset
+            if v < versionNumbers[i] {
+                return true
+            } else if v > versionNumbers[i] {
+                return false
             }
-        }
-
-        if versionMajor < local[0] {
-            return true
-        } else if versionMajor > local[0] {
-            return false
-        }
-
-        if versionMinor < local[1] {
-            return true
-        } else if versionMinor > local[1] {
-            return false
-        }
-
-        if versionPatch < local[2] {
-            return true
-        } else if versionPatch > local[2] {
-            return false
         }
 
         return false
@@ -52,17 +39,18 @@ struct Config {
             let variant = "Release"
         #endif
 
-        #if os(OSX)
+        #if os(macOS)
             let OS = "macOS"
         #elseif os(Linux)
             let OS = "Linux"
         #elseif os(Windows)
-            let OS = "Linux"
+            let OS = "Windows"
         #endif
 
         return [
             ("Authorization", "bearer \(token)"),
-            ("User-Agent", "Trailer-CLI-v\(versionString)-\(OS)-\(variant)")
+            ("User-Agent", "Trailer-CLI-v\(versionString)-\(OS)-\(variant)"),
+            ("X-Github-Next-Global-ID", usingNewIds ? "1" : "0")
         ]
     }
 
@@ -89,6 +77,21 @@ struct Config {
             let tokenFileURL = saveLocation.appendingPathComponent("token")
             try! newValue.data(using: .utf8)?.write(to: tokenFileURL)
             try! FileManager.default.setAttributes([.posixPermissions: NSNumber(0o600)], ofItemAtPath: tokenFileURL.path)
+        }
+    }
+
+    var usingNewIds: Bool {
+        get {
+            let path = saveLocation.appendingPathComponent("using-new-ids").path
+            return FileManager.default.fileExists(atPath: path)
+        }
+        set {
+            let path = saveLocation.appendingPathComponent("using-new-ids").path
+            if newValue {
+                FileManager.default.createFile(atPath: path, contents: nil)
+            } else {
+                try? FileManager.default.removeItem(atPath: path)
+            }
         }
     }
 

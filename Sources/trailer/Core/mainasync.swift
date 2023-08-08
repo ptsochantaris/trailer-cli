@@ -54,15 +54,15 @@ struct MainApp {
             Actions.reportAndExit(message: "Provided server URL is invalid")
         }
 
-        if let p = CommandLine.value(for: "-page-size") {
+        if let p = CommandLine.value(for: "-max-node-cost") {
             if let i = Int(p) {
-                if i < 10 || i > 100 {
-                    Actions.reportAndExit(message: "Provided page size '\(p)' is invalid, must be from 10 to 100")
+                if i < 0 {
+                    Actions.reportAndExit(message: "Provided max node cost '\(p)' must be a positive number")
                 } else {
-                    config.pageSize = i
+                    config.maxNodeCost = i
                 }
             } else {
-                Actions.reportAndExit(message: "Provided page size '\(p)' isn't a number")
+                Actions.reportAndExit(message: "Provided max node cost '\(p)' isn't a number")
             }
         }
 

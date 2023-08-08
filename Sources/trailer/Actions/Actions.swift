@@ -19,7 +19,7 @@ enum Actions {
         let invalidArguments = CommandLine.arguments.filter { $0.hasPrefix("-") }.map { $0.lowercased() }.filter { arg in
             switch arg {
             case "-a", "-active", "-approved", "-b", "-before", "-blocked", "-body", "-c", "-comments", "-conflict", "-debug", "-dryrun", "-e", "-fields", "-fresh", "-from", "-green",
-                 "-h", "-inactive", "-l", "-m", "-mentioned", "-mergeable", "-mine", "-mono", "-n", "-number", "-o", "-page-size", "-participated", "-purge",
+                 "-h", "-inactive", "-l", "-m", "-max-node-cost", "-mentioned", "-mergeable", "-mine", "-mono", "-n", "-number", "-o", "-participated", "-purge",
                  "-r", "-red", "-refresh", "-server", "-set-default", "-sort", "-t", "-token", "-unreviewed", "-v", "-version", "-within":
                 return false
             default:
@@ -250,7 +250,7 @@ enum Actions {
         printOption(name: "-server <URL>", description: "Full URL to the API endpoint of the GitHub server you want to query. Defaults to 'https://api.github.com/graphql'.")
         printOption(name: "-token <token>", description: "Auth API token to use when accessing the default or selected server. The value given here is persisted and doesn't need to be repeated. '-token display' shows the stored token. '-token test' tests the stored token.")
         printOption(name: "-v / -debug", description: "Enable verbose output, -debug provides a debug trace.")
-        printOption(name: "-page-size", description: "Minimum items fetched per API call (default: 50). If you get errors about queries failing, reduce this to a lower value. Must be between 10 and 100.")
+        printOption(name: "-max-node-cost", description: "Maximum GraphQL node cost per query. If you get errors about queries failing, reduce this to a lower value. The theoretical maximum is 500000 but in practise this should be much lower. The default is 10000.")
         printOption(name: "-mono", description: "Generate monochrome text output.")
         log()
 

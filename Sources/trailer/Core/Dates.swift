@@ -1,7 +1,7 @@
 import Foundation
 
 struct GHDateFormatter {
-    #if os(OSX)
+    #if os(macOS)
         private static var timeData = tm()
         private static var dateParserHolder = "                   +0000".cString(using: String.Encoding.ascii)!
         static func parseGH8601(_ iso8601: String?) -> Date? {
@@ -30,7 +30,7 @@ struct GHDateFormatter {
     #endif
 }
 
-#if os(OSX)
+#if os(macOS)
     private let agoFormatter: DateComponentsFormatter = {
         let f = DateComponentsFormatter()
         f.allowedUnits = [.year, .month, .weekOfMonth, .day, .hour, .minute, .second]

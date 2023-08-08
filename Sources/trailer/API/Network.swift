@@ -8,12 +8,12 @@ enum Network {
         enum Method: String {
             case post, get
         }
-        
+
         let url: String
         let method: Method
         let body: Data?
     }
-    
+
     private static let urlSession: URLSession = {
         let c = URLSessionConfiguration.default
         c.httpMaximumConnectionsPerHost = 1
@@ -21,7 +21,7 @@ enum Network {
         c.httpAdditionalHeaders = [String: String](uniqueKeysWithValues: config.httpHeaders)
         return URLSession(configuration: c, delegate: nil, delegateQueue: nil)
     }()
-    
+
     static func getData(for request: Request) async throws -> Data {
         var req = URLRequest(url: URL(string: request.url)!)
         req.httpMethod = request.method.rawValue

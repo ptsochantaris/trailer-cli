@@ -44,7 +44,7 @@ extension Actions {
                 let json = try? data.asTypedJson(),
                 let tagName = try? json["tag_name"].asString {
                 success = true
-                if config.isNewer(tagName) {
+                if Config.isNewer(tagName) {
                     newVersion = tagName
                 }
             }
@@ -281,7 +281,7 @@ extension Actions {
                 userWantsIssues ? [Repo.issueIdsFragment] :
                 []
             if !fields.isEmpty {
-                let queries = Query.batching("Item IDs", groupName: "nodes", idList: repoIds, perNode: itemIdParser) { fields }
+                let queries = Query.batching("Item IDs", groupName: "nodes", idList: repoIds, maxCost: config.maxNodeCost, perNode: itemIdParser) { fields }
                 try await run(queries)
             }
         } else {
@@ -303,7 +303,7 @@ extension Actions {
         ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
         if !prIdList.isEmpty {
-            try await run(Query.batching("PRs", groupName: "nodes", idList: Array(prIdList.keys), perNode: parse) {
+            try await run(Query.batching("PRs", groupName: "nodes", idList: Array(prIdList.keys), maxCost: config.maxNodeCost, perNode: parse) {
                 userWantsComments ? PullRequest.fragmentWithComments : PullRequest.fragment
             })
 
@@ -341,7 +341,7 @@ extension Actions {
             let reviewIdsWithComments = Review.allItems.values.compactMap { $0.syncState == .none || !$0.syncNeedsComments ? nil : $0.id }
 
             if !reviewIdsWithComments.isEmpty {
-                try await run(Query.batching("PR Review Comments", groupName: "nodes", idList: reviewIdsWithComments, perNode: parse) {
+                try await run(Query.batching("PR Review Comments", groupName: "nodes", idList: reviewIdsWithComments, maxCost: config.maxNodeCost, perNode: parse) {
                     Review.commentsFragment
                     PullRequest.commentsFragment
                     Issue.commentsFragment
@@ -363,7 +363,7 @@ extension Actions {
         ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
         if !issueIdList.isEmpty {
-            try await run(Query.batching("Issues", groupName: "nodes", idList: Array(issueIdList.keys), perNode: parse) {
+            try await run(Query.batching("Issues", groupName: "nodes", idList: Array(issueIdList.keys), maxCost: config.maxNodeCost, perNode: parse) {
                 userWantsComments ? Issue.fragmentWithComments : Issue.fragment
             })
 
@@ -436,7 +436,7 @@ extension Actions {
                 itemIdsWithReactions += Issue.allItems.keys
             }
 
-            try await run(Query.batching("Reactions", groupName: "nodes", idList: itemIdsWithReactions, perNode: parse) {
+            try await run(Query.batching("Reactions", groupName: "nodes", idList: itemIdsWithReactions, maxCost: config.maxNodeCost, perNode: parse) {
                 Comment.pullRequestReviewCommentReactionFragment
                 Comment.issueCommentReactionFragment
                 PullRequest.reactionsFragment
@@ -475,13 +475,13 @@ extension Actions {
         let userWantsComments = CommandLine.argument(exists: "-comments")
         if let pr = item.pullRequest {
             let fragment = userWantsComments ? PullRequest.fragmentWithComments : PullRequest.fragment
-            let queries = Query.batching("PR", groupName: "nodes", idList: [pr.id], perNode: parse) { fragment }
+            let queries = Query.batching("PR", groupName: "nodes", idList: [pr.id], maxCost: config.maxNodeCost, perNode: parse) { fragment }
             try await run(queries)
 
             if userWantsComments {
                 let reviewIdsWithComments = pr.reviews.compactMap { $0.syncState == .none || !$0.syncNeedsComments ? nil : $0.id }
                 if !reviewIdsWithComments.isEmpty {
-                    try await run(Query.batching("PR Review Comments", groupName: "nodes", idList: reviewIdsWithComments, perNode: parse) {
+                    try await run(Query.batching("PR Review Comments", groupName: "nodes", idList: reviewIdsWithComments, maxCost: config.maxNodeCost, perNode: parse) {
                         Review.commentsFragment
                         PullRequest.commentsFragment
                         Issue.commentsFragment
@@ -496,7 +496,7 @@ extension Actions {
                     itemIdsWithReactions.append(contentsOf: review.comments.compactMap { ($0.syncState == .none || !$0.syncNeedsReactions) ? nil : $0.id })
                 }
             }
-            try await run(Query.batching("Reactions", groupName: "nodes", idList: itemIdsWithReactions, perNode: parse) {
+            try await run(Query.batching("Reactions", groupName: "nodes", idList: itemIdsWithReactions, maxCost: config.maxNodeCost, perNode: parse) {
                 Comment.pullRequestReviewCommentReactionFragment
                 PullRequest.reactionsFragment
             })
@@ -506,7 +506,7 @@ extension Actions {
 
         } else if let issue = item.issue {
             let fragment = userWantsComments ? Issue.fragmentWithComments : Issue.fragment
-            let queries = Query.batching("Issue", groupName: "nodes", idList: [issue.id], perNode: parse) { fragment }
+            let queries = Query.batching("Issue", groupName: "nodes", idList: [issue.id], maxCost: config.maxNodeCost, perNode: parse) { fragment }
             try await run(queries)
 
             var itemIdsWithReactions = [issue.id]
@@ -514,7 +514,7 @@ extension Actions {
                 itemIdsWithReactions += issue.comments.compactMap { ($0.syncState == .none || !$0.syncNeedsReactions) ? nil : $0.id }
             }
 
-            try await run(Query.batching("Reactions", groupName: "nodes", idList: itemIdsWithReactions, perNode: parse) {
+            try await run(Query.batching("Reactions", groupName: "nodes", idList: itemIdsWithReactions, maxCost: config.maxNodeCost, perNode: parse) {
                 Comment.pullRequestReviewCommentReactionFragment
                 PullRequest.reactionsFragment
             })

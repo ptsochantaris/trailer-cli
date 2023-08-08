@@ -7,34 +7,74 @@ struct TTY {
         return spaces + message
     }
 
-    static func postProcess(_ message: String) -> String {
-        if config.monochrome {
-            return message
-                .replacingOccurrences(of: "[R*", with: "")
-                .replacingOccurrences(of: "[G*", with: "")
-                .replacingOccurrences(of: "[*", with: "")
-                .replacingOccurrences(of: "[B*", with: "")
-                .replacingOccurrences(of: "[C*", with: "")
-                .replacingOccurrences(of: "*]", with: "")
-                .replacingOccurrences(of: "[!", with: "")
-                .replacingOccurrences(of: "[$", with: "")
-                .replacingOccurrences(of: "!]", with: "")
-                .replacingOccurrences(of: "[&", with: "")
-                .replacingOccurrences(of: "&]", with: "")
+    private static let colourMap = [
+        "[R*": "\u{1b}[31m",
+        "[G*": "\u{1b}[32m",
+        "[B*": "\u{1b}[34m",
+        "[C*": "\u{1b}[36m",
+        "[*": "\u{1b}[33m",
+        "[!": "\u{1b}[1m",
+        "[$": "\u{1b}[2m",
+        "[&": "\u{1b}[5m",
+        "*]": "\u{1b}[39m",
+        "!]": "\u{1b}[22m",
+        "&]": "\u{1b}[25m"
+    ]
 
-        } else {
-            return message
-                .replacingOccurrences(of: "[R*", with: "\u{1b}[31m")
-                .replacingOccurrences(of: "[G*", with: "\u{1b}[32m")
-                .replacingOccurrences(of: "[*", with: "\u{1b}[33m")
-                .replacingOccurrences(of: "[B*", with: "\u{1b}[34m")
-                .replacingOccurrences(of: "[C*", with: "\u{1b}[36m")
-                .replacingOccurrences(of: "*]", with: "\u{1b}[39m")
-                .replacingOccurrences(of: "[!", with: "\u{1b}[1m")
-                .replacingOccurrences(of: "[$", with: "\u{1b}[2m")
-                .replacingOccurrences(of: "!]", with: "\u{1b}[22m")
-                .replacingOccurrences(of: "[&", with: "\u{1b}[5m")
-                .replacingOccurrences(of: "&]", with: "\u{1b}[25m")
+    private enum PostProcessState {
+        case one, two, three
+    }
+
+    static func postProcess(_ message: String) -> String {
+        let colour = !config.monochrome
+
+        var output = ""
+        output.reserveCapacity(message.count)
+
+        var pending = ""
+        pending.reserveCapacity(3)
+
+        var state = PostProcessState.one
+        for c in message {
+            switch state {
+            case .one:
+                switch c {
+                case "!", "[", "*", "&":
+                    pending.append(c)
+                    state = .two
+                default:
+                    output.append(c)
+                }
+            case .two:
+                switch c {
+                case "B", "C", "G", "R":
+                    pending.append(c)
+                    state = .three
+                case "!", "]", "*", "&", "$":
+                    pending.append(c)
+                    if colour, let replacement = colourMap[pending] {
+                        output.append(replacement)
+                    }
+                    pending = ""
+                    state = .one
+                default:
+                    output.append(pending)
+                    pending = ""
+                    state = .one
+                }
+            case .three:
+                if c == "*" {
+                    pending.append(c)
+                    if colour, let replacement = colourMap[pending] {
+                        output.append(replacement)
+                    }
+                } else {
+                    output.append(pending)
+                }
+                pending = ""
+                state = .one
+            }
         }
+        return output
     }
 }

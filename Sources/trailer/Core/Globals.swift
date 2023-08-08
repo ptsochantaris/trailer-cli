@@ -3,7 +3,7 @@ import Foundation
 let emptyURL = URL(string: "http://github.com")!
 
 enum LogLevel: Int {
-    case debug = 0, verbose = 1, info = 2
+    case debug, verbose, info
 }
 
 var globalLogLevel = LogLevel.info
@@ -30,7 +30,7 @@ func open(url: URL) {
     log("Opening url: [*\(url)*]")
     let p = Process()
     p.arguments = [url.absoluteString]
-    #if os(OSX)
+    #if os(macOS)
         p.launchPath = "/usr/bin/open"
         p.launch()
     #else
