@@ -308,5 +308,12 @@ trailer -s local.server.my.net list items
 
 The `-s` command switches the context of trailer to another server. For instance, a local GitHub Enterprise server. All commands work identically, but will apply to this context. You can have as many parallel `-s` contexts as you like.
 
+## Packages
+Parts of Trailer are being split off into their own Swift Packages to make them more reusable and self-contained.
+- [Trailer-QL](https://github.com/ptsochantaris/trailer-ql)
+- [Trailer-Json](https://github.com/ptsochantaris/trailer-json)
+- [Lista](https://github.com/ptsochantaris/lista)
+- [Semalot](https://github.com/ptsochantaris/semalot)
+
 ---
 *Copyright (c) 2017-2023 Paul Tsochantaris. Released under the terms of the MIT licence, see the file LICENCE for details.*
