@@ -2,6 +2,7 @@ import Foundation
 #if canImport(FoundationNetworking)
     import FoundationNetworking
 #endif
+import Semalot
 
 enum Network {
     struct Request {
@@ -21,11 +22,17 @@ enum Network {
         c.httpAdditionalHeaders = [String: String](uniqueKeysWithValues: config.httpHeaders)
         return URLSession(configuration: c, delegate: nil, delegateQueue: nil)
     }()
+    
+    static let networkGate = Semalot(tickets: 2)
 
     static func getData(for request: Request) async throws -> Data {
         var req = URLRequest(url: URL(string: request.url)!)
         req.httpMethod = request.method.rawValue
         req.httpBody = request.body
+        await networkGate.takeTicket()
+        defer {
+            networkGate.returnTicket()
+        }
         return try await urlSession.data(for: req).0
     }
 }

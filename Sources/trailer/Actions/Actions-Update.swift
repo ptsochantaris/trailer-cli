@@ -598,8 +598,13 @@ extension Actions {
     }
 
     private static func run(_ queries: Lista<Query>, asSubQueries: Bool = false) async throws {
-        for query in queries {
-            try await run(query, asSubQuery: asSubQueries)
+        try await withThrowingTaskGroup(of: Void.self) { group in
+            for query in queries {
+                group.addTask {
+                    try await run(query, asSubQuery: asSubQueries)
+                }
+            }
+            try await group.waitForAll()
         }
     }
 }
