@@ -22,7 +22,7 @@ enum Network {
         c.httpAdditionalHeaders = [String: String](uniqueKeysWithValues: config.httpHeaders)
         return URLSession(configuration: c, delegate: nil, delegateQueue: nil)
     }()
-    
+
     static let networkGate = Semalot(tickets: 2)
 
     static func getData(for request: Request) async throws -> Data {

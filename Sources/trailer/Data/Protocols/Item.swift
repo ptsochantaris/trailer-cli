@@ -171,9 +171,9 @@ extension Item {
 
     @discardableResult
     static func parse(parent: Parent?, elementType: String, node: JSON, level: Int) -> Self? {
-        guard let id = node[Self.idField] as? String else { return nil }
+        guard let id = node[idField] as? String else { return nil }
 
-        if var ret = Self.allItems[id] {
+        if var ret = allItems[id] {
             log(level: .debug, indent: level, "Existing \(typeName) ID \(ret.id)")
             if let parent {
                 ret.makeChild(of: parent, indent: level)
