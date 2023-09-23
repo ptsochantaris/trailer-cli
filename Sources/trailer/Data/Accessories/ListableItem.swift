@@ -50,14 +50,14 @@ enum ListableItem: Equatable, Sortable {
         case let .pullRequest(pr1):
             switch rhs {
             case let .pullRequest(pr2):
-                return pr1 == pr2
-            default: return false
+                pr1 == pr2
+            default: false
             }
         case let .issue(issue1):
             switch rhs {
             case let .issue(issue2):
-                return issue1 == issue2
-            default: return false
+                issue1 == issue2
+            default: false
             }
         }
     }
@@ -65,18 +65,18 @@ enum ListableItem: Equatable, Sortable {
     var pullRequest: PullRequest? {
         switch self {
         case let .pullRequest(p):
-            return p
+            p
         default:
-            return nil
+            nil
         }
     }
 
     var issue: Issue? {
         switch self {
         case let .issue(i):
-            return i
+            i
         default:
-            return nil
+            nil
         }
     }
 

@@ -113,7 +113,11 @@ extension Actions {
         log("Token for server [*\(config.server.absoluteString)*] is valid: Account is [*\(config.myLogin)*]")
     }
 
-    private static func parse(node: Node) {
+    private static func parse(output: ParseOutput) {
+        guard case let .node(node) = output else {
+            return
+        }
+
         let parent = Parent(of: node)
         let info = node.jsonPayload
         let level = 1
@@ -240,8 +244,9 @@ extension Actions {
         }
 
         if userWantsPrs || userWantsIssues, !filtersRequested { // detect new items
-            let itemIdParser: Query.PerNodeBlock = { node in
-                guard let parent = node.parent, parent.elementType == "Repository" else {
+            let itemIdParser: Query.PerNodeBlock = { output in
+                guard case let .node(node) = output,
+                      let parent = node.parent, parent.elementType == "Repository" else {
                     return
                 }
 
@@ -269,11 +274,10 @@ extension Actions {
                 }
             }
 
-            let repoIds: [String]
-            if let rf = limitToRepoNames {
-                repoIds = Repo.allItems.values.compactMap { ($0.visibility == .hidden || !$0.nameWithOwner.localizedCaseInsensitiveContains(rf)) ? nil : $0.id }
+            let repoIds: [String] = if let rf = limitToRepoNames {
+                Repo.allItems.values.compactMap { ($0.visibility == .hidden || !$0.nameWithOwner.localizedCaseInsensitiveContains(rf)) ? nil : $0.id }
             } else {
-                repoIds = Repo.allItems.values.compactMap { $0.visibility == .hidden ? nil : $0.id }
+                Repo.allItems.values.compactMap { $0.visibility == .hidden ? nil : $0.id }
             }
             let fields =
                 (userWantsPrs && userWantsIssues) ? [Repo.prAndIssueIdsFragment] :

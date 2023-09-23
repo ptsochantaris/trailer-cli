@@ -21,9 +21,9 @@ enum Actions {
             case "-a", "-active", "-approved", "-b", "-before", "-blocked", "-body", "-c", "-comments", "-conflict", "-debug", "-dryrun", "-e", "-fields", "-fresh", "-from", "-green",
                  "-h", "-inactive", "-l", "-m", "-max-node-cost", "-mentioned", "-mergeable", "-mine", "-mono", "-n", "-number", "-o", "-participated", "-purge",
                  "-r", "-red", "-refresh", "-server", "-set-default", "-sort", "-t", "-token", "-unreviewed", "-v", "-version", "-within":
-                return false
+                false
             default:
-                return true
+                true
             }
         }
         if invalidArguments.count > 0 {

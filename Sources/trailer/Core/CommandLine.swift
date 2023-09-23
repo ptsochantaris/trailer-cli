@@ -85,7 +85,7 @@ private struct ListSortDefinition {
         sortFunctions = criteria.map { sortCriterion -> ((Sortable, Sortable) -> Bool?) in
             switch sortCriterion {
             case .number:
-                return {
+                {
                     let n1 = $0.number
                     let n2 = $1.number
                     if n1 < n2 { return true }
@@ -93,7 +93,7 @@ private struct ListSortDefinition {
                     return nil
                 }
             case .author:
-                return {
+                {
                     let a1 = $0.author?.login ?? ""
                     let a2 = $1.author?.login ?? ""
                     let res = a1.localizedCaseInsensitiveCompare(a2)
@@ -104,7 +104,7 @@ private struct ListSortDefinition {
                     }
                 }
             case .branch:
-                return {
+                {
                     let a1 = $0.headRefName
                     let a2 = $1.headRefName
                     let res = a1.localizedCaseInsensitiveCompare(a2)
@@ -115,7 +115,7 @@ private struct ListSortDefinition {
                     }
                 }
             case .created:
-                return {
+                {
                     let d1 = $0.createdAt
                     let d2 = $1.createdAt
                     if d1 < d2 { return true }
@@ -123,7 +123,7 @@ private struct ListSortDefinition {
                     return nil
                 }
             case .updated:
-                return {
+                {
                     let u1 = $0.updatedAt
                     let u2 = $1.updatedAt
                     if u1 < u2 { return true }
@@ -131,7 +131,7 @@ private struct ListSortDefinition {
                     return nil
                 }
             case .repo:
-                return {
+                {
                     let a1 = $0.repo?.nameWithOwner ?? ""
                     let a2 = $1.repo?.nameWithOwner ?? ""
                     let res = a1.localizedCaseInsensitiveCompare(a2)
@@ -142,7 +142,7 @@ private struct ListSortDefinition {
                     }
                 }
             case .title:
-                return {
+                {
                     let a1 = $0.title
                     let a2 = $1.title
                     let res = a1.localizedCaseInsensitiveCompare(a2)
@@ -153,7 +153,7 @@ private struct ListSortDefinition {
                     }
                 }
             case .type:
-                return {
+                {
                     let t1 = $0.type
                     let t2 = $1.type
                     if t1 < t2 { return true }

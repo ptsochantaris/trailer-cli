@@ -50,15 +50,15 @@ struct Reaction: Item {
 
     var emoji: String {
         switch content {
-        case "THUMBS_UP": return "👍"
-        case "THUMBS_DOWN": return "👎"
-        case "LAUGH": return "😄"
-        case "HOORAY": return "🎉"
-        case "CONFUSED": return "😕"
-        case "HEART": return "❤️"
-        case "ROCKET": return "🚀"
+        case "THUMBS_UP": "👍"
+        case "THUMBS_DOWN": "👎"
+        case "LAUGH": "😄"
+        case "HOORAY": "🎉"
+        case "CONFUSED": "😕"
+        case "HEART": "❤️"
+        case "ROCKET": "🚀"
         default:
-            return "?"
+            "?"
         }
     }
 
