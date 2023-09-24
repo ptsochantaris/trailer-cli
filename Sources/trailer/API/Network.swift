@@ -33,6 +33,18 @@ enum Network {
         defer {
             networkGate.returnTicket()
         }
+        #if canImport(FoundationNetworking)
+        return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Data, Error>) in
+            _ = urlSession.dataTask(with: req) { data, _, error in
+                if let error {
+                    continuation.resume(throwing: error)
+                } else {
+                    continuation.resume(returning: data ?? Data())
+                }
+            }
+        }
+        #else
         return try await urlSession.data(for: req).0
+        #endif
     }
 }
