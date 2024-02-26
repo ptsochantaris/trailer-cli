@@ -529,7 +529,7 @@ extension Actions {
         return item
     }
 
-    private static func run(_ query: Query, shouldRetry: Int = 5, asSubQuery: Bool = false) async throws {
+    private static func run(_ query: Query, shouldRetry: Int = 5) async throws {
         func retryOrFail(_ message: String) async throws {
             if shouldRetry > 1 {
                 log(level: .verbose, "[*\(query.name)*] \(message)")
@@ -546,10 +546,6 @@ extension Actions {
                 return data["rateLimit"] as? JSON
             }
             return nil
-        }
-
-        if shouldRetry == 5, !asSubQuery {
-            log("[*\(query.name)*] Fetching")
         }
 
         let info: Data
@@ -601,11 +597,20 @@ extension Actions {
         try await run(extraQueries, asSubQueries: true)
     }
 
-    private static func run(_ queries: Lista<Query>, asSubQueries: Bool = false) async throws {
+    private static var lastRunTitle = ""
+    private static func run(_ queries: Lista<Query>, asSubQueries _: Bool = false) async throws {
+        guard let firstQuery = queries.first else {
+            return
+        }
+        let title = "[*\(firstQuery.name)*] Fetching"
+        if lastRunTitle != title {
+            lastRunTitle = title
+            log(title)
+        }
         try await withThrowingTaskGroup(of: Void.self) { group in
             for query in queries {
                 group.addTask {
-                    try await run(query, asSubQuery: asSubQueries)
+                    try await run(query)
                 }
             }
             try await group.waitForAll()
