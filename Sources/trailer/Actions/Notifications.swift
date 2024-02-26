@@ -1,7 +1,7 @@
 import Foundation
 import Lista
 
-struct Notifications {
+enum Notifications {
     struct Notification {
         let title: String?
         let subtitle: String?

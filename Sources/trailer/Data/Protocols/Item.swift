@@ -105,8 +105,8 @@ extension Item {
     }
 
     static func processAnnouncements(notificationMode: NotificationMode) {
-        allItems.values.forEach {
-            if let i = $0 as? Announceable {
+        for value in allItems.values {
+            if let i = value as? Announceable {
                 i.announceIfNeeded(notificationMode: notificationMode)
             }
         }
@@ -203,9 +203,9 @@ extension Item {
 
     func children<T: Item>(field: String) -> [T] {
         if let childrenIds = DB.idsForChildren(of: id, field: field) {
-            return childrenIds.compactMap { T.allItems[$0] }
+            childrenIds.compactMap { T.allItems[$0] }
         } else {
-            return []
+            []
         }
     }
 

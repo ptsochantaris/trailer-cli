@@ -1,6 +1,6 @@
 import Foundation
 
-struct TTY {
+enum TTY {
     static func rightAlign(_ message: String) -> String {
         let c = max(0, 15 - message.count)
         let spaces = String(repeating: " ", count: c)

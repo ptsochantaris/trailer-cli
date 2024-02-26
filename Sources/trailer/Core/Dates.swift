@@ -1,6 +1,6 @@
 import Foundation
 
-struct GHDateFormatter {
+enum GHDateFormatter {
     #if os(macOS)
         private static var timeData = tm()
         private static var dateParserHolder = "                   +0000".cString(using: String.Encoding.ascii)!

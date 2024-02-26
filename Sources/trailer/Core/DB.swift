@@ -83,19 +83,19 @@ enum DB {
 
     static func lookup(type: String, id: String) -> (any Item)? {
         switch type {
-        case "Org": return Org.allItems[id]
-        case "Repo": return Repo.allItems[id]
-        case "Comment": return Comment.allItems[id]
-        case "User": return User.allItems[id]
-        case "Reaction": return Reaction.allItems[id]
-        case "PullRequest": return PullRequest.allItems[id]
-        case "Issue": return Issue.allItems[id]
-        case "Label": return Label.allItems[id]
-        case "Review": return Review.allItems[id]
-        case "ReviewRequest": return ReviewRequest.allItems[id]
-        case "Status": return Status.allItems[id]
-        case "Milestone": return Milestone.allItems[id]
-        default: return nil
+        case "Org": Org.allItems[id]
+        case "Repo": Repo.allItems[id]
+        case "Comment": Comment.allItems[id]
+        case "User": User.allItems[id]
+        case "Reaction": Reaction.allItems[id]
+        case "PullRequest": PullRequest.allItems[id]
+        case "Issue": Issue.allItems[id]
+        case "Label": Label.allItems[id]
+        case "Review": Review.allItems[id]
+        case "ReviewRequest": ReviewRequest.allItems[id]
+        case "Status": Status.allItems[id]
+        case "Milestone": Milestone.allItems[id]
+        default: nil
         }
     }
 

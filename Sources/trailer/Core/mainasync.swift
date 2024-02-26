@@ -5,6 +5,7 @@ import TrailerQL
 #endif
 
 @main
+@MainActor
 struct MainApp {
     static func main() async {
         TQL.debugLog = { log(level: .debug, indent: 0, $0) }
