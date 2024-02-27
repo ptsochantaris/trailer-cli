@@ -113,7 +113,7 @@ extension Actions {
         log("Token for server [*\(config.server.absoluteString)*] is valid: Account is [*\(config.myLogin)*]")
     }
 
-    private static func parse(output: ParseOutput) {
+    private static func parse(output: ParseOutput, isViewer: Bool = false) {
         guard case let .node(node) = output else {
             return
         }
@@ -149,8 +149,7 @@ extension Actions {
         case "Reaction":
             Reaction.parse(parent: parent, elementType: typeName, node: info, level: level)
         case "User":
-            let u = User.parse(parent: parent, elementType: typeName, node: info, level: level)
-            guard parent == nil, var me = u else {
+            guard isViewer, parent == nil, var me = User.parse(parent: parent, elementType: typeName, node: info, level: level) else {
                 return
             }
             me.isMe = true
@@ -207,7 +206,7 @@ extension Actions {
                 Group("repositories", paging: .first(count: 100, paging: true)) { Repo.fragment }
                 Group("watching", paging: .first(count: 100, paging: true)) { Repo.fragment }
             }
-            let repositoryListQuery = Query(name: "Repos", rootElement: root, perNode: { await parse(output: $0) })
+            let repositoryListQuery = Query(name: "Repos", rootElement: root, perNode: { await parse(output: $0, isViewer: true) })
             try await run(repositoryListQuery)
         } else {
             log(level: .info, "[*Repos*] (Skipped)")
