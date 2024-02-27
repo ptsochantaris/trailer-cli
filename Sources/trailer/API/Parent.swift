@@ -17,12 +17,8 @@ struct Parent {
         self.field = field
     }
 
-    init?(item: Identifiable?, field: String?) {
-        if let item {
-            self.item = item
-            self.field = field ?? "NOFIELD"
-        } else {
-            return nil
-        }
+    init(item: Identifiable, field: String) {
+        self.item = item
+        self.field = field
     }
 }

@@ -106,6 +106,8 @@ enum DB {
             return nil
         }
 
+        // TODO: This fails if the relationship has not already been established
+
         for (field, childIdList) in fieldMap where childIdList.contains(node.id) {
             return field
         }

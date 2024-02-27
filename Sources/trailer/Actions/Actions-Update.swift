@@ -313,7 +313,8 @@ extension Actions {
             if !userWantsRepos { // revitalise links to parent repos for updated items
                 let updatedPrs = PullRequest.allItems.values.filter { $0.syncState == .updated }
                 for pr in updatedPrs {
-                    if let repo = pr.repo, let parent = Parent(item: repo, field: "pullRequests") {
+                    if let repo = pr.repo {
+                        let parent = Parent(item: repo, field: "pullRequests")
                         var newPr = pr
                         newPr.makeChild(of: parent, indent: 1, quiet: true)
                         PullRequest.allItems[pr.id] = newPr
@@ -327,11 +328,11 @@ extension Actions {
                 log(level: .debug, indent: 1, "Detected missing parent for PR ID '\(prId)'")
                 if let repoIdForPr = prIdList[prId], let repo = Repo.allItems[repoIdForPr] {
                     log(level: .debug, indent: 1, "Determined parent should be Repo ID '\(repoIdForPr)'")
-                    if let parent = Parent(item: repo, field: "pullRequests") {
-                        var newPr = pr
-                        newPr.makeChild(of: parent, indent: 1)
-                        PullRequest.allItems[prId] = newPr
-                    }
+                    let parent = Parent(item: repo, field: "pullRequests")
+                    var newPr = pr
+                    newPr.makeChild(of: parent, indent: 1)
+                    PullRequest.allItems[prId] = newPr
+
                 }
             }
         } else {
@@ -373,7 +374,8 @@ extension Actions {
             if !userWantsRepos { // revitalise links to parent repos for updated items
                 let updatedIssues = Issue.allItems.values.filter { $0.syncState == .updated }
                 for issue in updatedIssues {
-                    if let repo = issue.repo, let parent = Parent(item: repo, field: "issues") {
+                    if let repo = issue.repo {
+                        let parent = Parent(item: repo, field: "issues")
                         var newIssue = issue
                         newIssue.makeChild(of: parent, indent: 1, quiet: true)
                         Issue.allItems[issue.id] = newIssue
@@ -387,11 +389,10 @@ extension Actions {
                 log(level: .debug, indent: 1, "Detected missing parent for Issue ID '\(issueId)'")
                 if let repoIdForIssue = issueIdList[issueId], let repo = Repo.allItems[repoIdForIssue] {
                     log(level: .debug, indent: 1, "Determined parent should be Repo ID '\(repoIdForIssue)'")
-                    if let parent = Parent(item: repo, field: "issues") {
-                        var newIssue = issue
-                        newIssue.makeChild(of: parent, indent: 1)
-                        Issue.allItems[issueId] = newIssue
-                    }
+                    let parent = Parent(item: repo, field: "issues")
+                    var newIssue = issue
+                    newIssue.makeChild(of: parent, indent: 1)
+                    Issue.allItems[issueId] = newIssue
                 }
             }
         } else {
