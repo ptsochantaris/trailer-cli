@@ -9,7 +9,6 @@ struct Label: Item {
     var elementType: String
 
     static var allItems = [String: Label]()
-    static let idField = "name"
     static let typeName = "Label"
 
     var color = ""
@@ -54,6 +53,7 @@ struct Label: Item {
     mutating func setChildrenSyncStatus(_: SyncState) {}
 
     static let fragment = Fragment(on: "Label") {
+        Field.id
         Field("name")
         Field("color")
     }

@@ -9,7 +9,6 @@ struct Issue: Item, Announceable, Closeable, Sortable {
     var elementType: String
 
     static var allItems = [String: Issue]()
-    static let idField = "id"
     static let typeName = "Issue"
 
     var bodyText = ""

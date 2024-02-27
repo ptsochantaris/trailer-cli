@@ -28,7 +28,6 @@ struct Status: Item {
     var elementType: String
 
     static var allItems = [String: Status]()
-    static let idField = "id"
     static let typeName = "Status"
 
     var context = ""

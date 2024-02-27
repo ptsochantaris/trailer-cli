@@ -6,7 +6,6 @@ typealias JSON = [String: Any]
 protocol Item: Identifiable, Databaseable, Equatable {
     static var allItems: [String: Self] { get set }
     static func parse(parent: Parent?, elementType: String, node: JSON, level: Int) -> Self?
-    static var idField: String { get }
 
     init?(id: String, type: String, node: JSON)
 
@@ -171,12 +170,14 @@ extension Item {
 
     @discardableResult
     static func parse(parent: Parent?, elementType: String, node: JSON, level: Int) -> Self? {
-        guard let id = node[idField] as? String else { return nil }
+        guard let id = node["id"] as? String else { return nil }
 
         if var ret = allItems[id] {
             log(level: .debug, indent: level, "Existing \(typeName) ID \(ret.id)")
             if let parent {
                 ret.makeChild(of: parent, indent: level)
+            } else {
+                log(level: .debug, indent: level, "Does not have parent, no need to update relationship")
             }
             if !ret.apply(node) {
                 log(level: .debug, indent: level, "Was placeholder data, skipped update")

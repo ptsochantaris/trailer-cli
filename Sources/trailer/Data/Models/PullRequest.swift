@@ -32,7 +32,6 @@ struct PullRequest: Item, Announceable, Closeable, Sortable {
     var elementType: String
 
     static var allItems = [String: PullRequest]()
-    static let idField = "id"
     static let typeName = "PullRequest"
 
     var mergeable = MergeableState.unknown

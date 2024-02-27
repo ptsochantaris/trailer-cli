@@ -22,7 +22,6 @@ struct Review: Item, Announceable {
     var elementType: String
 
     static var allItems = [String: Review]()
-    static let idField = "id"
     static let typeName = "Review"
 
     var state = ReviewState.pending

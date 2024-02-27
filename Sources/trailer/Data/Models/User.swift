@@ -13,7 +13,6 @@ struct User: Item {
     var isMe = false
 
     static var allItems = [String: User]()
-    static let idField = "id"
     static let typeName = "User"
 
     private enum CodingKeys: CodingKey {

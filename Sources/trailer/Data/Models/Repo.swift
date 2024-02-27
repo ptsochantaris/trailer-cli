@@ -13,7 +13,6 @@ struct Repo: Item, Announceable {
     var elementType: String
 
     static var allItems = [String: Repo]()
-    static let idField = "id"
     static let typeName = "Repo"
 
     var createdAt = Date.distantPast
@@ -96,11 +95,11 @@ struct Repo: Item, Announceable {
         }
         switch visibility {
         case .hidden:
-            line += " [Hidden]"
+            line += " (Hidden)"
         case .onlyIssues:
-            line += " [Issues Only]"
+            line += " (Issues Only)"
         case .onlyPrs:
-            line += " [PRs Only]"
+            line += " (PRs Only)"
         case .visible:
             break
         }

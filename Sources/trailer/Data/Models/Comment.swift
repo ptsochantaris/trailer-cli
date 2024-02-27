@@ -9,7 +9,6 @@ struct Comment: Item, Announceable {
     var elementType: String
 
     static var allItems = [String: Comment]()
-    static let idField = "id"
     static let typeName = "Comment"
 
     var syncNeedsReactions = false

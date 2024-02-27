@@ -9,7 +9,6 @@ struct ReviewRequest: Item {
     var elementType: String
 
     static var allItems = [String: ReviewRequest]()
-    static let idField = "id"
     static let typeName = "ReviewRequest"
 
     private enum CodingKeys: CodingKey {
