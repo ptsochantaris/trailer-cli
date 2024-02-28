@@ -18,6 +18,7 @@ struct Label: Item {
         case id
         case parents
         case elementType
+        case name
         case color
     }
 
