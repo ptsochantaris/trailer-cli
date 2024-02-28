@@ -61,12 +61,12 @@ extension Actions {
     private static func listLabels() {
         var uniquedIds = Set<String>()
         for p in pullRequestsToScan() {
-            for id in p.labels.map(\.id) {
+            for id in p.labels.map(\.name) {
                 uniquedIds.insert(id)
             }
         }
         for i in issuesToScan() {
-            for id in i.labels.map(\.id) {
+            for id in i.labels.map(\.name) {
                 uniquedIds.insert(id)
             }
         }

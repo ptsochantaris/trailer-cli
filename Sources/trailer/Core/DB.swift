@@ -99,21 +99,6 @@ enum DB {
         }
     }
 
-    static func getParentField(for node: Node) -> String? {
-        guard let parent = node.parent,
-              let fieldMap = parents2fields2children[parent.id]
-        else {
-            return nil
-        }
-
-        // TODO: This fails if the relationship has not already been established
-
-        for (field, childIdList) in fieldMap where childIdList.contains(node.id) {
-            return field
-        }
-        return nil
-    }
-
     static func removeParent(_ item: some Item) {
         let id = item.id
         type(of: item).allItems[id] = nil

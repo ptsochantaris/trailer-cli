@@ -7,8 +7,8 @@ struct Parent {
 
     init?(of node: Node) {
         guard let parent = node.parent,
-              let item = DB.lookup(type: parent.elementType, id: parent.id),
-              let field = DB.getParentField(for: node)
+              let field = node.relationship,
+              let item = DB.lookup(type: parent.elementType, id: parent.id)
         else {
             return nil
         }

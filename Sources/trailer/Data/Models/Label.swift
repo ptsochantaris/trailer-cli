@@ -12,6 +12,7 @@ struct Label: Item {
     static let typeName = "Label"
 
     var color = ""
+    var name = ""
 
     private enum CodingKeys: CodingKey {
         case id
@@ -22,6 +23,7 @@ struct Label: Item {
 
     mutating func apply(_ node: JSON) -> Bool {
         guard node.keys.count > 1 else { return false }
+        name = node["name"] as? String ?? ""
         color = node["color"] as? String ?? ""
         return true
     }

@@ -235,7 +235,7 @@ struct PullRequest: Item, Announceable, Closeable, Sortable {
         components.push(x)
 
         if listFieldsDefinition.labels, labels.hasItems {
-            let l = labels.map(\.id).joined(separator: "] [")
+            let l = labels.map(\.name).joined(separator: "] [")
             components.push("[\(l)]")
         }
         if listFieldsDefinition.repo, let r = repo {
@@ -316,7 +316,7 @@ struct PullRequest: Item, Announceable, Closeable, Sortable {
         log("[![*\(ra)*] \(title)!]")
         let l = labels
         if l.count > 0 {
-            log("\t\t[" + l.map(\.id).joined(separator: "] [") + "]")
+            log("\t\t[" + l.map(\.name).joined(separator: "] [") + "]")
         }
         log()
         if let r = repo {
