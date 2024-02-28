@@ -35,13 +35,14 @@ enum Network {
         }
         #if canImport(FoundationNetworking)
             return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Data, Error>) in
-                _ = urlSession.dataTask(with: req) { data, _, error in
+                let task = urlSession.dataTask(with: req) { data, _, error in
                     if let error {
                         continuation.resume(throwing: error)
                     } else {
                         continuation.resume(returning: data ?? Data())
                     }
                 }
+                task.resume()
             }
         #else
             return try await urlSession.data(for: req).0
