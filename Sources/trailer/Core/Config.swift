@@ -7,7 +7,7 @@ struct Config {
     var monochrome = false
     var dryRun = false
 
-    private static let versionNumbers = [1, 5, 0]
+    private static let versionNumbers = [1, 5, 1]
     let versionString = versionNumbers.map { String($0) }.joined(separator: ".")
 
     static func isNewer(_ version: String) -> Bool {
