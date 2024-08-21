@@ -77,19 +77,16 @@ extension Actions {
                 updateTypes.append(.issues)
                 updateTypes.append(.comments)
                 updateTypes.append(.reactions)
-
             case "repos": updateTypes.append(.repos)
             case "prs": updateTypes.append(.prs)
             case "issues": updateTypes.append(.issues)
             case "items": updateTypes.append(.prs); updateTypes.append(.issues)
             case "comments": updateTypes.append(.comments)
             case "reactions": updateTypes.append(.reactions)
-
             case "help":
                 log()
                 failUpdate(nil)
                 return
-
             default:
                 failUpdate("Unknown argmument: \(param)")
                 return
@@ -170,6 +167,36 @@ extension Actions {
         }
     }
 
+    private static func itemIdParser(output: ParseOutput, prIdList: inout [String: String], issueIdList: inout [String: String]) {
+        guard case let .node(node) = output,
+              let parent = node.parent, parent.elementType == "Repository" else {
+            return
+        }
+
+        let repoId = parent.id
+        guard let repo = Repo.allItems[repoId], repo.syncState != .none, repo.visibility != .hidden else {
+            return
+        }
+
+        if node.elementType == "PullRequest" {
+            switch repo.visibility {
+            case .onlyPrs, .visible:
+                let id = node.id
+                prIdList[id] = repoId
+                log(level: .debug, indent: 1, "Registered PR ID: \(id)")
+            default: break
+            }
+        } else if node.elementType == "Issue" {
+            switch repo.visibility {
+            case .onlyIssues, .visible:
+                let id = node.id
+                issueIdList[id] = repoId
+                log(level: .debug, indent: 1, "Registered Issue ID: \(id)")
+            default: break
+            }
+        }
+    }
+
     private static func update(_ typesToSync: [UpdateType], limitToRepoNames: String?, keepOnlyNewItems: Bool) async throws {
         let repoFilters = RepoFilterArgs()
         let itemFilters = ItemFilterArgs()
@@ -206,7 +233,7 @@ extension Actions {
                 Group("repositories", paging: .first(count: 100, paging: true)) { Repo.fragment }
                 Group("watching", paging: .first(count: 100, paging: true)) { Repo.fragment }
             }
-            let repositoryListQuery = Query(name: "Repos", rootElement: root, perNode: { await parse(output: $0, isViewer: true) })
+            let repositoryListQuery = Query(name: "Repos", rootElement: root, perNode: { parse(output: $0, isViewer: true) })
             try await run(repositoryListQuery)
         } else {
             log(level: .info, "[*Repos*] (Skipped)")
@@ -243,36 +270,6 @@ extension Actions {
         }
 
         if userWantsPrs || userWantsIssues, !filtersRequested { // detect new items
-            func itemIdParser(output: ParseOutput) {
-                guard case let .node(node) = output,
-                      let parent = node.parent, parent.elementType == "Repository" else {
-                    return
-                }
-
-                let repoId = parent.id
-                guard let repo = Repo.allItems[repoId], repo.syncState != .none, repo.visibility != .hidden else {
-                    return
-                }
-
-                if node.elementType == "PullRequest" {
-                    switch repo.visibility {
-                    case .onlyPrs, .visible:
-                        let id = node.id
-                        prIdList[id] = repoId
-                        log(level: .debug, indent: 1, "Registered PR ID: \(id)")
-                    default: break
-                    }
-                } else if node.elementType == "Issue" {
-                    switch repo.visibility {
-                    case .onlyIssues, .visible:
-                        let id = node.id
-                        issueIdList[id] = repoId
-                        log(level: .debug, indent: 1, "Registered Issue ID: \(id)")
-                    default: break
-                    }
-                }
-            }
-
             let repoIds: [String] = if let rf = limitToRepoNames {
                 Repo.allItems.values.compactMap { ($0.visibility == .hidden || !$0.nameWithOwner.localizedCaseInsensitiveContains(rf)) ? nil : $0.id }
             } else {
@@ -284,8 +281,14 @@ extension Actions {
                 userWantsIssues ? [Repo.issueIdsFragment] :
                 []
             if !fields.isEmpty {
-                let queries = Query.batching("Item IDs", groupName: "nodes", idList: repoIds, maxCost: config.maxNodeCost, perNode: { await itemIdParser(output: $0) }) { fields }
+                nonisolated(unsafe) var prList = prIdList
+                nonisolated(unsafe) var issueList = issueIdList
+                let queries = Query.batching("Item IDs", groupName: "nodes", idList: repoIds, maxCost: config.maxNodeCost, perNode: {
+                    itemIdParser(output: $0, prIdList: &prList, issueIdList: &issueList)
+                }) { fields }
                 try await run(queries)
+                prIdList = prList
+                issueIdList = issueList
             }
         } else {
             log(level: .info, "[*Item IDs*] (Skipped)")
@@ -306,7 +309,7 @@ extension Actions {
         ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
         if !prIdList.isEmpty {
-            try await run(Query.batching("PRs", groupName: "nodes", idList: Array(prIdList.keys), maxCost: config.maxNodeCost, perNode: { await parse(output: $0) }) {
+            try await run(Query.batching("PRs", groupName: "nodes", idList: Array(prIdList.keys), maxCost: config.maxNodeCost, perNode: { parse(output: $0) }) {
                 userWantsComments ? PullRequest.fragmentWithComments : PullRequest.fragment
             })
 
@@ -332,7 +335,6 @@ extension Actions {
                     var newPr = pr
                     newPr.makeChild(of: parent, indent: 1)
                     PullRequest.allItems[prId] = newPr
-
                 }
             }
         } else {
@@ -345,7 +347,7 @@ extension Actions {
             let reviewIdsWithComments = Review.allItems.values.compactMap { $0.syncState == .none || !$0.syncNeedsComments ? nil : $0.id }
 
             if !reviewIdsWithComments.isEmpty {
-                try await run(Query.batching("PR Review Comments", groupName: "nodes", idList: reviewIdsWithComments, maxCost: config.maxNodeCost, perNode: { await parse(output: $0) }) {
+                try await run(Query.batching("PR Review Comments", groupName: "nodes", idList: reviewIdsWithComments, maxCost: config.maxNodeCost, perNode: { parse(output: $0) }) {
                     Review.commentsFragment
                     PullRequest.commentsFragment
                     Issue.commentsFragment
@@ -367,7 +369,7 @@ extension Actions {
         ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
         if !issueIdList.isEmpty {
-            try await run(Query.batching("Issues", groupName: "nodes", idList: Array(issueIdList.keys), maxCost: config.maxNodeCost, perNode: { await parse(output: $0) }) {
+            try await run(Query.batching("Issues", groupName: "nodes", idList: Array(issueIdList.keys), maxCost: config.maxNodeCost, perNode: { parse(output: $0) }) {
                 userWantsComments ? Issue.fragmentWithComments : Issue.fragment
             })
 
@@ -440,7 +442,7 @@ extension Actions {
                 itemIdsWithReactions += Issue.allItems.keys
             }
 
-            try await run(Query.batching("Reactions", groupName: "nodes", idList: itemIdsWithReactions, maxCost: config.maxNodeCost, perNode: { await parse(output: $0) }) {
+            try await run(Query.batching("Reactions", groupName: "nodes", idList: itemIdsWithReactions, maxCost: config.maxNodeCost, perNode: { parse(output: $0) }) {
                 Comment.pullRequestReviewCommentReactionFragment
                 Comment.issueCommentReactionFragment
                 PullRequest.reactionsFragment
@@ -479,13 +481,13 @@ extension Actions {
         let userWantsComments = CommandLine.argument(exists: "-comments")
         if let pr = item.pullRequest {
             let fragment = userWantsComments ? PullRequest.fragmentWithComments : PullRequest.fragment
-            let queries = Query.batching("PR", groupName: "nodes", idList: [pr.id], maxCost: config.maxNodeCost, perNode: { await parse(output: $0) }) { fragment }
+            let queries = Query.batching("PR", groupName: "nodes", idList: [pr.id], maxCost: config.maxNodeCost, perNode: { parse(output: $0) }) { fragment }
             try await run(queries)
 
             if userWantsComments {
                 let reviewIdsWithComments = pr.reviews.compactMap { $0.syncState == .none || !$0.syncNeedsComments ? nil : $0.id }
                 if !reviewIdsWithComments.isEmpty {
-                    try await run(Query.batching("PR Review Comments", groupName: "nodes", idList: reviewIdsWithComments, maxCost: config.maxNodeCost, perNode: { await parse(output: $0) }) {
+                    try await run(Query.batching("PR Review Comments", groupName: "nodes", idList: reviewIdsWithComments, maxCost: config.maxNodeCost, perNode: { parse(output: $0) }) {
                         Review.commentsFragment
                         PullRequest.commentsFragment
                         Issue.commentsFragment
@@ -500,7 +502,7 @@ extension Actions {
                     itemIdsWithReactions.append(contentsOf: review.comments.compactMap { ($0.syncState == .none || !$0.syncNeedsReactions) ? nil : $0.id })
                 }
             }
-            try await run(Query.batching("Reactions", groupName: "nodes", idList: itemIdsWithReactions, maxCost: config.maxNodeCost, perNode: { await parse(output: $0) }) {
+            try await run(Query.batching("Reactions", groupName: "nodes", idList: itemIdsWithReactions, maxCost: config.maxNodeCost, perNode: { parse(output: $0) }) {
                 Comment.pullRequestReviewCommentReactionFragment
                 PullRequest.reactionsFragment
             })
@@ -510,7 +512,7 @@ extension Actions {
 
         } else if let issue = item.issue {
             let fragment = userWantsComments ? Issue.fragmentWithComments : Issue.fragment
-            let queries = Query.batching("Issue", groupName: "nodes", idList: [issue.id], maxCost: config.maxNodeCost, perNode: { await parse(output: $0) }) { fragment }
+            let queries = Query.batching("Issue", groupName: "nodes", idList: [issue.id], maxCost: config.maxNodeCost, perNode: { parse(output: $0) }) { fragment }
             try await run(queries)
 
             var itemIdsWithReactions = [issue.id]
@@ -518,7 +520,7 @@ extension Actions {
                 itemIdsWithReactions += issue.comments.compactMap { ($0.syncState == .none || !$0.syncNeedsReactions) ? nil : $0.id }
             }
 
-            try await run(Query.batching("Reactions", groupName: "nodes", idList: itemIdsWithReactions, maxCost: config.maxNodeCost, perNode: { await parse(output: $0) }) {
+            try await run(Query.batching("Reactions", groupName: "nodes", idList: itemIdsWithReactions, maxCost: config.maxNodeCost, perNode: { parse(output: $0) }) {
                 Comment.pullRequestReviewCommentReactionFragment
                 PullRequest.reactionsFragment
             })
@@ -570,11 +572,10 @@ extension Actions {
             extraQueries = try await query.processResponse(from: json)
 
         } catch {
-            let serverError: String?
-            if let errors = json["errors"] as? [JSON] {
-                serverError = errors.first?["message"] as? String
+            let serverError: String? = if let errors = json["errors"] as? [JSON] {
+                errors.first?["message"] as? String
             } else {
-                serverError = json["message"] as? String
+                json["message"] as? String
             }
             let resolved = serverError ?? error.localizedDescription
             try await retryOrFail("Failed with error: '\(resolved)'")
