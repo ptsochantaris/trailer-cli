@@ -1,5 +1,6 @@
 import Foundation
 import Lista
+import TrailerJson
 import TrailerQL
 
 struct Label: Item {
@@ -22,14 +23,14 @@ struct Label: Item {
         case color
     }
 
-    mutating func apply(_ node: JSON) -> Bool {
-        guard node.keys.count > 1 else { return false }
-        name = node["name"] as? String ?? ""
-        color = node["color"] as? String ?? ""
+    mutating func apply(_ node: TypedJson.Entry) -> Bool {
+        guard ((try? node.keys)?.count ?? 0) > 1 else { return false }
+        name = node.potentialString(named: "name") ?? ""
+        color = node.potentialString(named: "color") ?? ""
         return true
     }
 
-    init?(id: String, type: String, node: JSON) {
+    init?(id: String, type: String, node: TypedJson.Entry) {
         self.id = id
         parents = [String: Lista<Relationship>]()
         elementType = type

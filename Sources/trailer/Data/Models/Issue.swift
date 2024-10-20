@@ -1,5 +1,6 @@
 import Foundation
 import Lista
+import TrailerJson
 import TrailerQL
 
 struct Issue: Item, Announceable, Closeable, Sortable {
@@ -35,23 +36,23 @@ struct Issue: Item, Announceable, Closeable, Sortable {
         case viewerDidAuthor
     }
 
-    mutating func apply(_ node: JSON) -> Bool {
-        guard node.keys.count > 8 else { return false }
+    mutating func apply(_ node: TypedJson.Entry) -> Bool {
+        guard ((try? node.keys)?.count ?? 0) > 8 else { return false }
 
-        syncNeedsReactions = (node["reactions"] as? JSON)?["totalCount"] as? Int ?? 0 > 0
+        syncNeedsReactions = node.potentialObject(named: "reactions")?.potentialInt(named: "totalCount") ?? 0 > 0
 
-        bodyText = node["bodyText"] as? String ?? ""
-        createdAt = GHDateFormatter.parseGH8601(node["createdAt"] as? String) ?? Date.distantPast
-        updatedAt = GHDateFormatter.parseGH8601(node["updatedAt"] as? String) ?? Date.distantPast
-        number = node["number"] as? Int ?? 0
-        title = node["title"] as? String ?? ""
-        url = URL(string: node["url"] as? String ?? "") ?? emptyURL
-        state = ItemState(rawValue: node["state"] as? String ?? "CLOSED") ?? ItemState.closed
-        viewerDidAuthor = node["viewerDidAuthor"] as? Bool ?? false
+        bodyText = node.potentialString(named: "bodyText") ?? ""
+        createdAt = GHDateFormatter.parseGH8601(node.potentialString(named: "createdAt")) ?? .distantPast
+        updatedAt = GHDateFormatter.parseGH8601(node.potentialString(named: "updatedAt")) ?? .distantPast
+        number = node.potentialInt(named: "number") ?? 0
+        title = node.potentialString(named: "title") ?? ""
+        url = URL(string: node.potentialString(named: "url") ?? "") ?? emptyURL
+        state = ItemState(rawValue: node.potentialString(named: "state") ?? "CLOSED") ?? ItemState.closed
+        viewerDidAuthor = node.potentialBool(named: "viewerDidAuthor") ?? false
         return true
     }
 
-    init?(id: String, type: String, node: JSON) {
+    init?(id: String, type: String, node: TypedJson.Entry) {
         self.id = id
         parents = [String: Lista<Relationship>]()
         elementType = type

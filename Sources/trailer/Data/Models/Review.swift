@@ -1,5 +1,6 @@
 import Foundation
 import Lista
+import TrailerJson
 import TrailerQL
 
 enum ReviewState: String, Codable {
@@ -47,20 +48,20 @@ struct Review: Item, Announceable {
         case updatedAt
     }
 
-    mutating func apply(_ node: JSON) -> Bool {
-        guard node.keys.count > 5 else { return false }
+    mutating func apply(_ node: TypedJson.Entry) -> Bool {
+        guard ((try? node.keys)?.count ?? 0) > 5 else { return false }
 
-        syncNeedsComments = (node["comments"] as? JSON)?["totalCount"] as? Int ?? 0 > 0
+        syncNeedsComments = node.potentialObject(named: "comments")?.potentialInt(named: "totalCount") ?? 0 > 0
 
-        state = ReviewState(rawValue: node["state"] as? String ?? "PENDING")
-        body = node["body"] as? String ?? ""
-        createdAt = GHDateFormatter.parseGH8601(node["createdAt"] as? String) ?? Date.distantPast
-        updatedAt = GHDateFormatter.parseGH8601(node["updatedAt"] as? String) ?? Date.distantPast
-        viewerDidAuthor = node["viewerDidAuthor"] as? Bool ?? false
+        state = ReviewState(rawValue: node.potentialString(named: "state") ?? "PENDING")
+        body = node.potentialString(named: "body") ?? ""
+        createdAt = GHDateFormatter.parseGH8601(node.potentialString(named: "createdAt")) ?? .distantPast
+        updatedAt = GHDateFormatter.parseGH8601(node.potentialString(named: "updatedAt")) ?? .distantPast
+        viewerDidAuthor = node.potentialBool(named: "viewerDidAuthor") ?? false
         return true
     }
 
-    init?(id: String, type: String, node: JSON) {
+    init?(id: String, type: String, node: TypedJson.Entry) {
         self.id = id
         parents = [String: Lista<Relationship>]()
         elementType = type

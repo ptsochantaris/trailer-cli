@@ -1,5 +1,6 @@
 import Foundation
 import Lista
+import TrailerJson
 import TrailerQL
 
 struct User: Item {
@@ -24,14 +25,14 @@ struct User: Item {
         case isMe
     }
 
-    mutating func apply(_ node: JSON) -> Bool {
-        guard node.keys.count > 2 else { return false }
-        avatarUrl = URL(string: node["avatarUrl"] as? String ?? "") ?? emptyURL
-        login = node["login"] as? String ?? ""
+    mutating func apply(_ node: TypedJson.Entry) -> Bool {
+        guard ((try? node.keys)?.count ?? 0) > 2 else { return false }
+        avatarUrl = URL(string: node.potentialString(named: "avatarUrl") ?? "") ?? emptyURL
+        login = node.potentialString(named: "login") ?? ""
         return true
     }
 
-    init?(id: String, type: String, node: JSON) {
+    init?(id: String, type: String, node: TypedJson.Entry) {
         self.id = id
         parents = [String: Lista<Relationship>]()
         elementType = type

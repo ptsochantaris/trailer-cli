@@ -119,7 +119,7 @@ extension Actions {
         let info = node.jsonPayload
         let level = 1
 
-        guard let typeName = info["__typename"] as? String else {
+        guard let typeName = info.potentialString(named: "__typename") else {
             log(level: .debug, indent: level, "+ Warning: no typename in info to parse")
             return
         }
@@ -543,11 +543,12 @@ extension Actions {
             }
         }
 
-        func extractRateLimit(from json: JSON) -> JSON? {
-            if let data = json["data"] as? JSON {
-                return data["rateLimit"] as? JSON
+        func extractRateLimit(from json: TypedJson.Entry) -> TypedJson.Entry? {
+            if let data = json.potentialObject(named: "data") {
+                data.potentialObject(named: "rateLimit")
+            } else {
+                nil
             }
-            return nil
         }
 
         let info: Data
@@ -562,7 +563,7 @@ extension Actions {
             return
         }
 
-        guard let json = try info.asJsonObject() else {
+        guard let json = try info.asTypedJson() else {
             try await retryOrFail("No JSON in API response: \(String(data: info, encoding: .utf8) ?? "")")
             return
         }
@@ -572,17 +573,20 @@ extension Actions {
             extraQueries = try await query.processResponse(from: json)
 
         } catch {
-            let serverError: String? = if let errors = json["errors"] as? [JSON] {
-                errors.first?["message"] as? String
+            let serverError: String? = if let errors = json.potentialArray(named: "errors") {
+                errors.first?.potentialString(named: "message")
             } else {
-                json["message"] as? String
+                json.potentialString(named: "message")
             }
             let resolved = serverError ?? error.localizedDescription
             try await retryOrFail("Failed with error: '\(resolved)'")
             return
         }
 
-        if let rateLimit = extractRateLimit(from: json), let cost = rateLimit["cost"] as? Int, let remaining = rateLimit["remaining"] as? Int, let nodeCount = rateLimit["nodeCount"] as? Int {
+        if let rateLimit = extractRateLimit(from: json),
+           let cost = rateLimit.potentialInt(named: "cost"),
+           let remaining = rateLimit.potentialInt(named: "remaining"),
+           let nodeCount = rateLimit.potentialInt(named: "nodeCount") {
             config.totalQueryCosts += cost
             config.totalApiRemaining = min(config.totalApiRemaining, remaining)
             log(level: .verbose, "[*\(query.name)*] Processed page (Cost: [!\(cost)!], Remaining: [!\(remaining)!] - Node Count: [!\(nodeCount)!])")

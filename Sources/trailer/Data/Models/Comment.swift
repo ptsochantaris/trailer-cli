@@ -1,5 +1,6 @@
 import Foundation
 import Lista
+import TrailerJson
 import TrailerQL
 
 struct Comment: Item, Announceable {
@@ -28,18 +29,18 @@ struct Comment: Item, Announceable {
         case updatedAt
     }
 
-    mutating func apply(_ node: JSON) -> Bool {
-        guard node.keys.count > 5 else { return false }
+    mutating func apply(_ node: TypedJson.Entry) -> Bool {
+        guard ((try? node.keys)?.count ?? 0) > 5 else { return false }
 
-        syncNeedsReactions = (node["reactions"] as? JSON)?["totalCount"] as? Int ?? 0 > 0
-        body = node["body"] as? String ?? ""
-        viewerDidAuthor = node["viewerDidAuthor"] as? Bool ?? false
-        createdAt = GHDateFormatter.parseGH8601(node["createdAt"] as? String) ?? Date.distantPast
-        updatedAt = GHDateFormatter.parseGH8601(node["updatedAt"] as? String) ?? Date.distantPast
+        syncNeedsReactions = node.potentialObject(named: "reactions")?.potentialInt(named: "totalCount") ?? 0 > 0
+        body = node.potentialString(named: "body") ?? ""
+        viewerDidAuthor = node.potentialBool(named: "viewerDidAuthor") ?? false
+        createdAt = GHDateFormatter.parseGH8601(node.potentialString(named: "createdAt")) ?? .distantPast
+        updatedAt = GHDateFormatter.parseGH8601(node.potentialString(named: "updatedAt")) ?? .distantPast
         return true
     }
 
-    init?(id: String, type: String, node: JSON) {
+    init?(id: String, type: String, node: TypedJson.Entry) {
         self.id = id
         syncState = .new
         parents = [String: Lista<Relationship>]()

@@ -1,5 +1,6 @@
 import Foundation
 import Lista
+import TrailerJson
 import TrailerQL
 
 enum RepoVisibility: String, Codable {
@@ -34,19 +35,19 @@ struct Repo: Item, Announceable {
         case visibility
     }
 
-    mutating func apply(_ node: JSON) -> Bool {
-        guard node.keys.count > 5 else { return false }
+    mutating func apply(_ node: TypedJson.Entry) -> Bool {
+        guard ((try? node.keys)?.count ?? 0) > 5 else { return false }
 
-        createdAt = GHDateFormatter.parseGH8601(node["createdAt"] as? String) ?? Date.distantPast
-        updatedAt = GHDateFormatter.parseGH8601(node["updatedAt"] as? String) ?? Date.distantPast
-        isFork = node["isFork"] as? Bool ?? false
-        url = URL(string: node["url"] as? String ?? "") ?? emptyURL
-        nameWithOwner = node["nameWithOwner"] as? String ?? ""
+        createdAt = GHDateFormatter.parseGH8601(node.potentialString(named: "createdAt")) ?? .distantPast
+        updatedAt = GHDateFormatter.parseGH8601(node.potentialString(named: "updatedAt")) ?? .distantPast
+        isFork = node.potentialBool(named: "isFork") ?? false
+        url = URL(string: node.potentialString(named: "url") ?? "") ?? emptyURL
+        nameWithOwner = node.potentialString(named: "nameWithOwner") ?? ""
 
         return true
     }
 
-    init?(id: String, type: String, node: JSON) {
+    init?(id: String, type: String, node: TypedJson.Entry) {
         self.id = id
         parents = [String: Lista<Relationship>]()
         elementType = type

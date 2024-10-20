@@ -1,16 +1,15 @@
 import Foundation
 import Lista
-
-typealias JSON = [String: Any]
+import TrailerJson
 
 protocol Item: Identifiable, Databaseable, Equatable {
     static var allItems: [String: Self] { get set }
-    static func parse(parent: Parent?, elementType: String, node: JSON, level: Int) -> Self?
+    static func parse(parent: Parent?, elementType: String, node: TypedJson.Entry, level: Int) -> Self?
 
-    init?(id: String, type: String, node: JSON)
+    init?(id: String, type: String, node: TypedJson.Entry)
 
     var parents: [String: Lista<Relationship>] { get set }
-    mutating func apply(_ node: JSON) -> Bool
+    mutating func apply(_ node: TypedJson.Entry) -> Bool
     mutating func setChildrenSyncStatus(_ status: SyncState)
 }
 
@@ -169,8 +168,8 @@ extension Item {
     }
 
     @discardableResult
-    static func parse(parent: Parent?, elementType: String, node: JSON, level: Int) -> Self? {
-        guard let id = node["id"] as? String else { return nil }
+    static func parse(parent: Parent?, elementType: String, node: TypedJson.Entry, level: Int) -> Self? {
+        guard let id = node.potentialString(named: "id") else { return nil }
 
         if var ret = allItems[id] {
             log(level: .debug, indent: level, "Existing \(typeName) ID \(ret.id)")

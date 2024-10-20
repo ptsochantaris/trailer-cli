@@ -1,5 +1,6 @@
 import Foundation
 import Lista
+import TrailerJson
 import TrailerQL
 
 struct ReviewRequest: Item {
@@ -17,11 +18,11 @@ struct ReviewRequest: Item {
         case elementType
     }
 
-    mutating func apply(_: JSON) -> Bool {
+    mutating func apply(_: TypedJson.Entry) -> Bool {
         true
     }
 
-    init?(id: String, type: String, node: JSON) {
+    init?(id: String, type: String, node: TypedJson.Entry) {
         self.id = id
         parents = [String: Lista<Relationship>]()
         elementType = type

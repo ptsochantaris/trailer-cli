@@ -1,5 +1,6 @@
 import Foundation
 import Lista
+import TrailerJson
 import TrailerQL
 
 enum StatusState: String, Codable {
@@ -47,20 +48,20 @@ struct Status: Item {
         case targetUrl
     }
 
-    mutating func apply(_ node: JSON) -> Bool {
-        guard node.keys.count > 6 else { return false }
+    mutating func apply(_ node: TypedJson.Entry) -> Bool {
+        guard ((try? node.keys)?.count ?? 0) > 6 else { return false }
 
-        createdAt = GHDateFormatter.parseGH8601(node["createdAt"] as? String) ?? .distantPast
-        targetUrl = URL(string: node["targetUrl"] as? String ?? "") ?? emptyURL
+        createdAt = GHDateFormatter.parseGH8601(node.potentialString(named: "createdAt")) ?? .distantPast
+        targetUrl = URL(string: node.potentialString(named: "targetUrl") ?? "") ?? emptyURL
 
-        if let nodeContext = node["context"] as? String {
+        if let nodeContext = node.potentialString(named: "context") {
             context = nodeContext
-            state = StatusState(rawValue: node["state"] as? String ?? "EXPECTED") ?? .expected
-            description = node["description"] as? String ?? ""
+            state = StatusState(rawValue: node.potentialString(named: "state") ?? "EXPECTED") ?? .expected
+            description = node.potentialString(named: "description") ?? ""
         } else {
             context = Notifications.Notification.formatter.string(from: createdAt)
-            state = StatusState(rawValue: node["conclusion"] as? String ?? "EXPECTED") ?? .expected
-            description = node["name"] as? String ?? ""
+            state = StatusState(rawValue: node.potentialString(named: "conclusion") ?? "EXPECTED") ?? .expected
+            description = node.potentialString(named: "name") ?? ""
         }
         return true
     }
@@ -74,7 +75,7 @@ struct Status: Item {
 
     mutating func setChildrenSyncStatus(_: SyncState) {}
 
-    init?(id: String, type: String, node: JSON) {
+    init?(id: String, type: String, node: TypedJson.Entry) {
         self.id = id
         parents = [String: Lista<Relationship>]()
         elementType = type
