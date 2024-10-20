@@ -1,6 +1,7 @@
 import Foundation
 import TrailerQL
 
+@MainActor
 struct Parent {
     let item: Identifiable
     let field: String

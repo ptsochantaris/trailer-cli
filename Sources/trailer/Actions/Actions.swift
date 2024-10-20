@@ -13,6 +13,7 @@ enum Action: String {
     case stats
 }
 
+@MainActor
 enum Actions {
     private static func checkArguments() -> [String]? {
         // Very rough sanity check to catch typos, should be more fine-grained per action

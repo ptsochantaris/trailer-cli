@@ -15,6 +15,7 @@ enum MergeableState: String, Codable {
     }
 }
 
+@MainActor
 protocol Sortable {
     var title: String { get }
     var createdAt: Date { get }
@@ -26,6 +27,7 @@ protocol Sortable {
     var type: Int { get }
 }
 
+@MainActor
 struct PullRequest: Item, Announceable, Closeable, Sortable {
     var id: String
     var parents: [String: Lista<Relationship>]
@@ -66,7 +68,7 @@ struct PullRequest: Item, Announceable, Closeable, Sortable {
         case headRefName
     }
 
-    init(from decoder: Decoder) throws {
+    nonisolated init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         id = try c.decode(String.self, forKey: .id)
         parents = try c.decode([String: Lista<Relationship>].self, forKey: .parents)
@@ -85,7 +87,7 @@ struct PullRequest: Item, Announceable, Closeable, Sortable {
         syncState = .none
     }
 
-    func encode(to encoder: Encoder) throws {
+    nonisolated func encode(to encoder: Encoder) throws {
         var c = encoder.container(keyedBy: CodingKeys.self)
         try c.encode(id, forKey: .id)
         try c.encode(parents, forKey: .parents)
@@ -479,11 +481,13 @@ struct PullRequest: Item, Announceable, Closeable, Sortable {
     }
 
     var milestone: Milestone? {
-        children(field: "milestone").first
+        let c: [Milestone] = children(field: "milestone")
+        return c.first
     }
 
     var author: User? {
-        children(field: "author").first
+        let c: [User] = children(field: "author")
+        return c.first
     }
 
     mutating func setChildrenSyncStatus(_ status: SyncState) {

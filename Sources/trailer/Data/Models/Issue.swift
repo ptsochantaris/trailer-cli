@@ -246,11 +246,13 @@ struct Issue: Item, Announceable, Closeable, Sortable {
     }
 
     var milestone: Milestone? {
-        children(field: "milestone").first
+        let c: [Milestone] = children(field: "milestone")
+        return c.first
     }
 
     var author: User? {
-        children(field: "author").first
+        let c: [User] = children(field: "author")
+        return c.first
     }
 
     mutating func setChildrenSyncStatus(_ status: SyncState) {

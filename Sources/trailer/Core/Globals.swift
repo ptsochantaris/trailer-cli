@@ -6,8 +6,10 @@ enum LogLevel: Int {
     case debug, verbose, info
 }
 
+@MainActor
 var globalLogLevel = LogLevel.info
 
+@MainActor
 func log(level: LogLevel = .info, indent: Int = 0, _ message: @autoclosure () -> String = "", unformatted: Bool = false) {
     if globalLogLevel.rawValue > level.rawValue { return }
     if indent > 0 {
@@ -26,6 +28,7 @@ func log(level: LogLevel = .info, indent: Int = 0, _ message: @autoclosure () ->
     }
 }
 
+@MainActor
 func open(url: URL) {
     log("Opening url: [*\(url)*]")
     let p = Process()

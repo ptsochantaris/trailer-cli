@@ -1,5 +1,6 @@
 import Foundation
 
+@MainActor
 protocol Databaseable {
     static func saveAll(using encoder: JSONEncoder)
     static func loadAll(using decoder: JSONDecoder)

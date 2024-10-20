@@ -5,10 +5,21 @@ swift package reset
 
 echo "*** Building"
 if [ "$(uname)" == "Darwin" ]; then
-	swift build -c release --arch arm64 --arch x86_64 -Xswiftc -O -Xswiftc -Ounchecked -Xswiftc -whole-module-optimization -Xswiftc -enforce-exclusivity=unchecked -Xlinker -dead_strip
+	swift build -c release \
+        --arch arm64 --arch x86_64 \
+        -Xswiftc -O \
+        -Xswiftc -Ounchecked \
+        -Xswiftc -whole-module-optimization \
+        -Xswiftc -enforce-exclusivity=unchecked \
+        -Xlinker -dead_strip
 	SRC="$(swift build -c release --arch arm64 --arch x86_64 --show-bin-path)/trailer"
 else
-	swift build -c release                            -Xswiftc -O -Xswiftc -Ounchecked -Xswiftc -whole-module-optimization -Xswiftc -enforce-exclusivity=unchecked -Xlinker -dead_strip
+	swift build -c release \
+        -Xswiftc -O \
+        -Xswiftc -Ounchecked \
+        -Xswiftc -whole-module-optimization \
+        -Xswiftc -enforce-exclusivity=unchecked \
+        -Xlinker -dead_strip
 	SRC="$(swift build -c release --show-bin-path)/trailer"
 fi
 

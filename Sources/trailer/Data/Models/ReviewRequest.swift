@@ -40,7 +40,8 @@ struct ReviewRequest: Item {
     }
 
     var reviewer: User? {
-        children(field: "requestedReviewer").first
+        let c: [User] = children(field: "requestedReviewer")
+        return c.first
     }
 
     var pullRequest: PullRequest? {

@@ -161,4 +161,5 @@ struct Config {
     }
 }
 
+@MainActor
 var config = Config()

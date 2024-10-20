@@ -5,9 +5,16 @@ import TrailerQL
 #endif
 
 @main
+@MainActor
 struct MainApp {
     static func main() async {
-        TQL.debugLog = { log(level: .debug, indent: 0, $0) }
+        Task { @LogActor in
+            TQL.debugLog = { message in
+                Task { @MainActor in
+                    log(level: .debug, indent: 0, message)
+                }
+            }
+        }
 
         let app = MainApp()
         try? await app.go()

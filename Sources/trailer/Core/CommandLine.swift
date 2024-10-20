@@ -64,6 +64,7 @@ struct ListFieldsDefinition {
     }
 }
 
+@MainActor
 private struct ListSortDefinition {
     enum Criterion: String {
         case number, title, repo, branch, author, created, updated, type
@@ -165,9 +166,11 @@ private struct ListSortDefinition {
     }
 }
 
+@MainActor
 private let listSortDefinition = ListSortDefinition()
 
 extension Array where Element: Sortable {
+    @MainActor
     var sortedByCriteria: [Element] {
         sorted {
             for sf in listSortDefinition.sortFunctions {

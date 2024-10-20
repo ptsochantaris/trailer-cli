@@ -38,7 +38,8 @@ struct Reaction: Item {
     }
 
     var user: User? {
-        children(field: "user").first
+        let c: [User] = children(field: "user")
+        return c.first
     }
 
     mutating func setChildrenSyncStatus(_ status: SyncState) {

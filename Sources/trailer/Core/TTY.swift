@@ -1,5 +1,6 @@
 import Foundation
 
+@MainActor
 enum TTY {
     static func rightAlign(_ message: String) -> String {
         let c = max(0, 15 - message.count)

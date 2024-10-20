@@ -4,6 +4,7 @@ import Foundation
 #endif
 import Semalot
 
+@MainActor
 enum Network {
     struct Request {
         enum Method: String {

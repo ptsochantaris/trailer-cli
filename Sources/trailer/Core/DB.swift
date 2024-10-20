@@ -6,6 +6,7 @@ enum NotificationMode {
     case none, standard, consoleCommentsAndReviews
 }
 
+@MainActor
 enum DB {
     private static let allTypes: [Databaseable.Type] = [
         Org.self,
@@ -81,6 +82,7 @@ enum DB {
         }
     }
 
+    @MainActor
     static func lookup(type: String, id: String) -> (any Item)? {
         switch type {
         case "Org": Org.allItems[id]
@@ -112,11 +114,11 @@ enum DB {
         await withTaskGroup(of: Void.self) { group in
             let e = JSONDecoder()
             for type in allTypes {
-                group.addTask {
+                group.addTask { @MainActor in
                     type.loadAll(using: e)
                 }
             }
-            group.addTask {
+            group.addTask { @MainActor in
                 loadRelationships(using: e)
             }
         }
@@ -177,11 +179,11 @@ enum DB {
         await withTaskGroup(of: Void.self) { group in
             let e = JSONEncoder()
             for type in allTypes {
-                group.addTask {
+                group.addTask { @MainActor in
                     type.saveAll(using: e)
                 }
             }
-            group.addTask {
+            group.addTask { @MainActor in
                 saveRelationships(using: e)
             }
         }

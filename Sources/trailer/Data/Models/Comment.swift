@@ -144,7 +144,8 @@ struct Comment: Item, Announceable {
     }
 
     var author: User? {
-        children(field: "author").first
+        let c: [User] = children(field: "author")
+        return c.first
     }
 
     mutating func setChildrenSyncStatus(_ status: SyncState) {

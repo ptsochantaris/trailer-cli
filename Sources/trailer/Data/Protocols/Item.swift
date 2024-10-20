@@ -2,8 +2,10 @@ import Foundation
 import Lista
 import TrailerJson
 
+@MainActor
 protocol Item: Identifiable, Databaseable, Equatable {
     static var allItems: [String: Self] { get set }
+
     static func parse(parent: Parent?, elementType: String, node: TypedJson.Entry, level: Int) -> Self?
 
     init?(id: String, type: String, node: TypedJson.Entry)
@@ -50,6 +52,7 @@ extension Item {
         DB.lookup(type: type, id: id) != nil
     }
 
+    @MainActor
     static func purgeStaleRelationships() {
         allItems = allItems.mapValues { item in
             var newItem = item
@@ -209,7 +212,7 @@ extension Item {
         }
     }
 
-    static func == (lhs: Self, rhs: Self) -> Bool {
+    nonisolated static func == (lhs: Self, rhs: Self) -> Bool {
         lhs.id == rhs.id
     }
 }

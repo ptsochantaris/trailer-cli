@@ -1,7 +1,9 @@
 import Foundation
 import Lista
 
+@MainActor
 enum Notifications {
+    @MainActor
     struct Notification {
         let title: String?
         let subtitle: String?
