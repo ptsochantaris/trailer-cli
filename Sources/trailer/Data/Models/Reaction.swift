@@ -3,6 +3,7 @@ import Lista
 import TrailerJson
 import TrailerQL
 
+@MainActor
 struct Reaction: Item {
     var id: String
     var parents: [String: Lista<Relationship>]

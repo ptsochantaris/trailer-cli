@@ -7,6 +7,7 @@ enum RepoVisibility: String, Codable {
     case hidden, visible, onlyPrs, onlyIssues
 }
 
+@MainActor
 struct Repo: Item, Announceable {
     var id: String
     var parents: [String: Lista<Relationship>]

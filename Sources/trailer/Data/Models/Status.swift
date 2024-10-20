@@ -22,6 +22,7 @@ enum StatusState: String, Codable {
     }
 }
 
+@MainActor
 struct Status: Item {
     var id: String
     var parents: [String: Lista<Relationship>]

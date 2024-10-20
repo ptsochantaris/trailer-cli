@@ -3,6 +3,7 @@ import Lista
 import TrailerJson
 import TrailerQL
 
+@MainActor
 struct Comment: Item, Announceable {
     var id: String
     var parents: [String: Lista<Relationship>]

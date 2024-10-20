@@ -1,4 +1,5 @@
 {
+  "originHash" : "9fe45cd2ad3e441daf683e6f8b4706e24a5e8f60466d542c8195939136e42b69",
   "pins" : [
     {
       "identity" : "lista",
@@ -6,7 +7,7 @@
       "location" : "https://github.com/ptsochantaris/lista",
       "state" : {
         "branch" : "main",
-        "revision" : "7d6cf8bd6aea70c08a077083474ef94bfd1e1d57"
+        "revision" : "c11f05c3ba6c56c1eecb09663815408d3b11771a"
       }
     },
     {
@@ -15,7 +16,7 @@
       "location" : "https://github.com/ptsochantaris/semalot",
       "state" : {
         "branch" : "main",
-        "revision" : "0ae24abfce7152cda9ef2e15eea6ca5516700eee"
+        "revision" : "1073882d28e2c4f51233d74ab485513161762d60"
       }
     },
     {
@@ -24,7 +25,7 @@
       "location" : "https://github.com/ptsochantaris/trailer-json",
       "state" : {
         "branch" : "main",
-        "revision" : "d74d6c1b7a6d59546602a8262a6cdb522dede11a"
+        "revision" : "87c0f9442759f561cbb1dbdc2abc9d095a946159"
       }
     },
     {
@@ -33,9 +34,9 @@
       "location" : "https://github.com/ptsochantaris/trailer-ql",
       "state" : {
         "branch" : "main",
-        "revision" : "000637fccc2743d69915b8e67e1426a756ba0846"
+        "revision" : "a6ad7e6f55210e4069ce7da14e8cdc1cf972e44a"
       }
     }
   ],
-  "version" : 2
+  "version" : 3
 }
