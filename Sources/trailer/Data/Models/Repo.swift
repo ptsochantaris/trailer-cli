@@ -20,7 +20,7 @@ struct Repo: Item, Announceable {
     var createdAt = Date.distantPast
     var updatedAt = Date.distantPast
     var isFork = false
-    var url = emptyURL
+    var url = Config.emptyURL
     var nameWithOwner = ""
     var visibility = RepoVisibility.visible
 
@@ -42,7 +42,7 @@ struct Repo: Item, Announceable {
         createdAt = GHDateFormatter.parseGH8601(node.potentialString(named: "createdAt")) ?? .distantPast
         updatedAt = GHDateFormatter.parseGH8601(node.potentialString(named: "updatedAt")) ?? .distantPast
         isFork = node.potentialBool(named: "isFork") ?? false
-        url = URL(string: node.potentialString(named: "url") ?? "") ?? emptyURL
+        url = URL(string: node.potentialString(named: "url") ?? "") ?? Config.emptyURL
         nameWithOwner = node.potentialString(named: "nameWithOwner") ?? ""
 
         return true

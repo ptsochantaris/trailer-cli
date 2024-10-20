@@ -1,17 +1,8 @@
 import Foundation
 
-let emptyURL = URL(string: "http://github.com")!
-
-enum LogLevel: Int {
-    case debug, verbose, info
-}
-
 @MainActor
-var globalLogLevel = LogLevel.info
-
-@MainActor
-func log(level: LogLevel = .info, indent: Int = 0, _ message: @autoclosure () -> String = "", unformatted: Bool = false) {
-    if globalLogLevel.rawValue > level.rawValue { return }
+func log(level: Config.LogLevel = .info, indent: Int = 0, _ message: @autoclosure () -> String = "", unformatted: Bool = false) {
+    if config.globalLogLevel > level { return }
     if indent > 0 {
         let spaces = String(repeating: " ", count: indent)
         print(spaces, terminator: "")

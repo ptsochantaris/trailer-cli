@@ -18,7 +18,7 @@ struct Issue: Item, Announceable, Closeable, Sortable {
     var updatedAt = Date.distantPast
     var number = 0
     var title = ""
-    var url = emptyURL
+    var url = Config.emptyURL
     var state = ItemState.closed
     var viewerDidAuthor = false
     var syncNeedsReactions = false
@@ -47,7 +47,7 @@ struct Issue: Item, Announceable, Closeable, Sortable {
         updatedAt = GHDateFormatter.parseGH8601(node.potentialString(named: "updatedAt")) ?? .distantPast
         number = node.potentialInt(named: "number") ?? 0
         title = node.potentialString(named: "title") ?? ""
-        url = URL(string: node.potentialString(named: "url") ?? "") ?? emptyURL
+        url = URL(string: node.potentialString(named: "url") ?? "") ?? Config.emptyURL
         state = ItemState(rawValue: node.potentialString(named: "state") ?? "CLOSED") ?? ItemState.closed
         viewerDidAuthor = node.potentialBool(named: "viewerDidAuthor") ?? false
         return true

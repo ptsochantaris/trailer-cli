@@ -46,7 +46,7 @@ struct PullRequest: Item, Announceable, Closeable, Sortable {
     var number = 0
     var title = ""
     var headRefName = ""
-    var url = emptyURL
+    var url = Config.emptyURL
     var viewerDidAuthor = false
 
     var syncNeedsReactions = false
@@ -119,7 +119,7 @@ struct PullRequest: Item, Announceable, Closeable, Sortable {
         mergedAt = GHDateFormatter.parseGH8601(node.potentialString(named: "mergedAt")) ?? .distantPast
         number = node.potentialInt(named: "number") ?? 0
         title = node.potentialString(named: "title") ?? ""
-        url = URL(string: node.potentialString(named: "url") ?? "") ?? emptyURL
+        url = URL(string: node.potentialString(named: "url") ?? "") ?? Config.emptyURL
         viewerDidAuthor = node.potentialBool(named: "viewerDidAuthor") ?? false
         return true
     }

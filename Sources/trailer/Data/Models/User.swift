@@ -10,7 +10,7 @@ struct User: Item {
     var syncState = SyncState.none
     var elementType: String
 
-    var avatarUrl = emptyURL
+    var avatarUrl = Config.emptyURL
     var login = ""
     var isMe = false
 
@@ -28,7 +28,7 @@ struct User: Item {
 
     mutating func apply(_ node: TypedJson.Entry) -> Bool {
         guard ((try? node.keys)?.count ?? 0) > 2 else { return false }
-        avatarUrl = URL(string: node.potentialString(named: "avatarUrl") ?? "") ?? emptyURL
+        avatarUrl = URL(string: node.potentialString(named: "avatarUrl") ?? "") ?? Config.emptyURL
         login = node.potentialString(named: "login") ?? ""
         return true
     }

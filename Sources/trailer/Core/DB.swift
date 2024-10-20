@@ -114,8 +114,8 @@ enum DB {
         await withTaskGroup(of: Void.self) { group in
             let e = JSONDecoder()
             for type in allTypes {
-                group.addTask { @MainActor in
-                    type.loadAll(using: e)
+                group.addTask {
+                    await type.loadAll(using: e)
                 }
             }
             group.addTask { @MainActor in
@@ -179,8 +179,8 @@ enum DB {
         await withTaskGroup(of: Void.self) { group in
             let e = JSONEncoder()
             for type in allTypes {
-                group.addTask { @MainActor in
-                    type.saveAll(using: e)
+                group.addTask {
+                    await type.saveAll(using: e)
                 }
             }
             group.addTask { @MainActor in

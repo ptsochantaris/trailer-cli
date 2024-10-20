@@ -113,7 +113,7 @@ extension Item {
         }
     }
 
-    static func saveAll(using encoder: JSONEncoder) {
+    static func saveAll(using encoder: JSONEncoder) async {
         var newItemCount = 0
         allItems = allItems.mapValues {
             if $0.syncState == .new {
@@ -130,17 +130,22 @@ extension Item {
             log(level: .verbose, "Created \(newItemCount) \(typeName) item(s) after update")
         }
 
-        do {
-            let data = try encoder.encode(allItems)
-            try data.write(to: dataURL)
-        } catch {
-            log("Error saving to \(dataURL)")
-        }
+        let items = allItems
+        let url = dataURL
+        await Task.detached {
+            do {
+                let data = try encoder.encode(items)
+                try data.write(to: url)
+            } catch {
+                await log("Error saving to \(url)")
+            }
+        }.value
     }
 
-    static func loadAll(using decoder: JSONDecoder) {
+    static func loadAll(using decoder: JSONDecoder) async {
         allItems.removeAll()
-        guard let d = try? Data(contentsOf: dataURL) else {
+        let url = dataURL
+        guard let d = await Task.detached(operation: { try? Data(contentsOf: url) }).value else {
             return
         }
         do {

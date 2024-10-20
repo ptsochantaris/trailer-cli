@@ -579,7 +579,11 @@ extension Actions {
                 json.potentialString(named: "message")
             }
             let resolved = serverError ?? error.localizedDescription
-            try await retryOrFail("Failed with error: '\(resolved)'")
+            if config.globalLogLevel < .info {
+                try await retryOrFail("Failed with error: '\(resolved)' - query was: \(query.queryText)")
+            } else {
+                try await retryOrFail("Failed with error: '\(resolved)'")
+            }
             return
         }
 

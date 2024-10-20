@@ -1,13 +1,29 @@
 import Foundation
 
 struct Config {
+    enum LogLevel: Int, Comparable {
+        case debug, verbose, info
+
+        static func < (lhs: LogLevel, rhs: LogLevel) -> Bool {
+            lhs.rawValue < rhs.rawValue
+        }
+
+        static func > (lhs: LogLevel, rhs: LogLevel) -> Bool {
+            lhs.rawValue > rhs.rawValue
+        }
+    }
+
+    var globalLogLevel = LogLevel.info
+
     var server = URL(string: "https://api.github.com/graphql")!
 
     var maxNodeCost = 10000
     var monochrome = false
     var dryRun = false
 
-    private static let versionNumbers = [1, 5, 2]
+    static let emptyURL = URL(string: "http://github.com")!
+
+    private static let versionNumbers = [1, 6, 0]
     let versionString = versionNumbers.map { String($0) }.joined(separator: ".")
 
     static func isNewer(_ version: String) -> Bool {

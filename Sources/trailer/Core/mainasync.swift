@@ -74,10 +74,10 @@ struct MainApp {
         }
 
         if CommandLine.argument(exists: "-debug") {
-            globalLogLevel = .debug
+            config.globalLogLevel = .debug
             log("Will be verbose [*(debug)*]")
         } else if CommandLine.argument(exists: "-v") {
-            globalLogLevel = .verbose
+            config.globalLogLevel = .verbose
             log("Will be verbose")
         }
 

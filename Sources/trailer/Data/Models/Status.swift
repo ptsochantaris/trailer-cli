@@ -36,7 +36,7 @@ struct Status: Item {
     var createdAt = Date.distantPast
     var description = ""
     var state = StatusState.expected
-    var targetUrl = emptyURL
+    var targetUrl = Config.emptyURL
 
     private enum CodingKeys: CodingKey {
         case id
@@ -53,7 +53,7 @@ struct Status: Item {
         guard ((try? node.keys)?.count ?? 0) > 6 else { return false }
 
         createdAt = GHDateFormatter.parseGH8601(node.potentialString(named: "createdAt")) ?? .distantPast
-        targetUrl = URL(string: node.potentialString(named: "targetUrl") ?? "") ?? emptyURL
+        targetUrl = URL(string: node.potentialString(named: "targetUrl") ?? "") ?? Config.emptyURL
 
         if let nodeContext = node.potentialString(named: "context") {
             context = nodeContext
