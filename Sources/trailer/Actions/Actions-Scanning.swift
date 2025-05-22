@@ -110,7 +110,6 @@ extension Actions {
         }
 
         return Repo.allItems.values.filter { r in
-
             if let s = a.searchForOrg {
                 if let on = r.org?.name {
                     if !on.localizedCaseInsensitiveContains(s) {
@@ -153,7 +152,6 @@ extension Actions {
         }
 
         return allItems.filter { p in
-
             if a.red || a.green {
                 if a.red, !p.isRed {
                     return false
@@ -258,7 +256,6 @@ extension Actions {
         }
 
         return allItems.filter { i in
-
             if let number, i.number != number {
                 return false
             }
