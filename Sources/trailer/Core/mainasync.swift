@@ -140,7 +140,7 @@ struct MainApp {
         try await Actions.performAction(action, listSequence: actionSequence)
     }
 
-    // With thanks to: https://stackoverflow.com/questions/2275550/change-stack-size-for-a-c-application-in-linux-during-compilation-with-gnu-com#2284691
+    /// With thanks to: https://stackoverflow.com/questions/2275550/change-stack-size-for-a-c-application-in-linux-during-compilation-with-gnu-com#2284691
     private func extendStackSizeIfNeeded() {
         #if os(Windows)
         // is done with editbin /stack:24117248
