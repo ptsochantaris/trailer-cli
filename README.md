@@ -17,21 +17,52 @@ Please refer to the "cookbook" section below for an introduction to various feat
 
 ## Installing
 
+Pre-built binaries for macOS, Linux, and Windows are on the [Releases](../../releases) page.
+
 ### macOS
-If you have Xcode command line tools, the easiest way to install trailer-cli is via Homebrew:
+The easiest way to install trailer-cli is via Homebrew:
 ```
 brew install ptsochantaris/tap/trailer-cli
 ```
-Alternatively you can get a pre-built macOS build from the [Releases](../../releases) page and put it into `/usr/local/bin`.
+Otherwise put the downloaded binary into `/usr/local/bin`.
 
 ### Linux
-It's very hard to maintain builds for various distros, as Swift currently can't produce static binaries, although it's quite simple to install the latest Swift version and run `./install.sh` to create the binary in your favourite distro.
+Put the downloaded binary into `/usr/local/bin`.
 
 ### Windows
-An experimental build is available for Windows in the [Releases](../../releases) page. It does seem to require a few DLLs to be in the same directory, which are bundled into the ZIP.
+Extract the downloaded ZIP into a directory on your `PATH`. The Swift runtime DLLs are bundled alongside `trailer.exe` and must stay in the same directory as it.
 
-### Source
-You can build the project from source using the simple `./install.sh` script. It requires Swift 6.4 or later to be installed, and macOS 15 or later when building for macOS.
+## Building from source
+
+Every platform needs Swift 6.4 or later.
+
+### macOS
+You'll need the Swift toolchain from Xcode or the command line tools, and macOS 15 or later.
+```
+swift build -c release -Xswiftc -Ounchecked
+BIN="$(swift build -c release --show-bin-path)/trailer"
+strip "$BIN"
+sudo install "$BIN" /usr/local/bin/trailer
+```
+
+### Linux
+Install a Swift toolchain from [swift.org](https://www.swift.org/install/linux/), then:
+```
+swift build -c release -Xswiftc -Ounchecked
+BIN="$(swift build -c release --show-bin-path)/trailer"
+strip "$BIN"
+sudo install "$BIN" /usr/local/bin/trailer
+```
+
+### Windows
+You'll need the Swift toolchain from [swift.org](https://www.swift.org/install/windows/), plus Visual Studio 2022 with the **Desktop development with C++** workload including its **Windows SDK** component.
+
+Build from an **x64 Native Tools Command Prompt for VS 2022** — the plain "Developer Command Prompt" and the x86 one both target 32-bit, which compiles but then fails to link:
+```
+swift build -c release -Xswiftc -Ounchecked -Xswiftc -gnone
+swift build -c release --show-bin-path
+```
+Copy `trailer.exe` out of the directory that the second command prints, along with the DLLs from `%LOCALAPPDATA%\Programs\Swift\Runtimes\<version>\usr\bin`, into a directory on your `PATH`. Swift on Windows has no static runtime, so those DLLs need to travel with the executable.
 
 ## Quickstart
 Run Trailer without any arguments for some help. To get started:
