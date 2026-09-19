@@ -156,7 +156,8 @@ struct MainApp {
         #else
             let kStackSize: rlim_t = 32 * 1024 * 1024
             var rl = rlimit()
-            #if os(Linux)
+            // Glibc types RLIMIT_STACK as an enum; musl and Darwin both use a plain Int32.
+            #if canImport(Glibc)
                 let s = Int32(RLIMIT_STACK.rawValue)
             #else
                 let s = RLIMIT_STACK

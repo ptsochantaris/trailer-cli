@@ -47,11 +47,19 @@ struct Config {
             let OS = "Windows"
         #endif
 
-        return [
-            ("Authorization", "bearer \(token)"),
+        var headers = [
             ("User-Agent", "Trailer-CLI-v\(versionString)-\(OS)-\(variant)"),
             ("X-Github-Next-Global-ID", usingNewIds ? "1" : "0")
         ]
+
+        // Sending an empty bearer token makes GitHub reject even the endpoints which accept
+        // anonymous requests, so only send the header once a token has been configured.
+        let currentToken = token
+        if !currentToken.isEmpty {
+            headers.append(("Authorization", "bearer \(currentToken)"))
+        }
+
+        return headers
     }
 
     var myUser: User? {
