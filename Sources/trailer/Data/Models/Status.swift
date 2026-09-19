@@ -22,8 +22,7 @@ enum StatusState: String, Codable {
     }
 }
 
-@MainActor
-struct Status: Item {
+struct Status: @MainActor Item {
     var id: String
     var parents: [String: Lista<Relationship>]
     var syncState = SyncState.none
@@ -50,17 +49,25 @@ struct Status: Item {
     }
 
     mutating func apply(_ node: TypedJson.Entry) -> Bool {
-        guard ((try? node.keys)?.count ?? 0) > 6 else { return false }
-
-        createdAt = GHDateFormatter.parseGH8601(node.potentialString(named: "createdAt")) ?? .distantPast
-        targetUrl = URL(string: node.potentialString(named: "targetUrl") ?? "") ?? Config.emptyURL
+        // Null fields are absent from the parsed keys, so a check run that has started but not
+        // finished (or vice versa) arrives with six rather than seven. A placeholder node only
+        // ever carries `__typename` and `id`, so this still rejects those.
+        guard ((try? node.keys)?.count ?? 0) > 5 else { return false }
 
         if let nodeContext = node.potentialString(named: "context") {
+            // A StatusContext: it carries `createdAt`, `targetUrl` and `state` directly.
+            createdAt = GHDateFormatter.parseGH8601(node.potentialString(named: "createdAt")) ?? .distantPast
+            targetUrl = URL(string: node.potentialString(named: "targetUrl") ?? "") ?? Config.emptyURL
             context = nodeContext
             state = StatusState(rawValue: node.potentialString(named: "state") ?? "EXPECTED") ?? .expected
             description = node.potentialString(named: "description") ?? ""
         } else {
-            context = Notifications.Notification.formatter.string(from: createdAt)
+            // A CheckRun: the equivalent fields are named `startedAt`/`completedAt` and `permalink`.
+            createdAt = GHDateFormatter.parseGH8601(node.potentialString(named: "startedAt"))
+                ?? GHDateFormatter.parseGH8601(node.potentialString(named: "completedAt"))
+                ?? .distantPast
+            targetUrl = URL(string: node.potentialString(named: "permalink") ?? "") ?? Config.emptyURL
+            context = createdAt == .distantPast ? "" : createdAt.formatted(Notifications.Notification.timestampStyle)
             state = StatusState(rawValue: node.potentialString(named: "conclusion") ?? "EXPECTED") ?? .expected
             description = node.potentialString(named: "name") ?? ""
         }
@@ -86,7 +93,7 @@ struct Status: Item {
         }
     }
 
-    static var fragmentForStatus = Fragment(on: "StatusContext") {
+    nonisolated static let fragmentForStatus = Fragment(on: "StatusContext") {
         Field.id
         Field("context")
         Field("description")
@@ -95,7 +102,7 @@ struct Status: Item {
         Field("createdAt")
     }
 
-    static let fragmentForCheck = Fragment(on: "CheckRun") {
+    nonisolated static let fragmentForCheck = Fragment(on: "CheckRun") {
         Field.id
         Field("name")
         Field("conclusion")

@@ -16,8 +16,7 @@ enum ReviewState: String, Codable {
     }
 }
 
-@MainActor
-struct Review: Item, Announceable {
+struct Review: @MainActor Item, Announceable {
     var id: String
     var parents: [String: Lista<Relationship>]
     var syncState = SyncState.none
@@ -84,7 +83,7 @@ struct Review: Item, Announceable {
                 d = "[\(r)] @\(a) reviewed [G*(approving)*]"
             case .changes_requested:
                 d = "[\(r)] @\(a) reviewed [R*(requesting changes)*]"
-            case .commented where body.hasItems:
+            case .commented where !body.isEmpty:
                 d = "[\(r)] @\(a) reviewed"
             default:
                 return
@@ -108,7 +107,7 @@ struct Review: Item, Announceable {
 
     func printDetails() {
         printHeader()
-        if body.hasItems {
+        if !body.isEmpty {
             log(body.trimmingCharacters(in: .whitespacesAndNewlines), unformatted: true)
             log()
         }
@@ -150,7 +149,7 @@ struct Review: Item, Announceable {
         return comments.contains { $0.includes(text: text) }
     }
 
-    static let fragment = Fragment(on: "PullRequestReview") {
+    nonisolated static let fragment = Fragment(on: "PullRequestReview") {
         Field.id
         Field("body")
         Field("state")
@@ -161,7 +160,7 @@ struct Review: Item, Announceable {
         Group("comments") { Field("totalCount") }
     }
 
-    static let commentsFragment = Fragment(on: "PullRequestReview") {
+    nonisolated static let commentsFragment = Fragment(on: "PullRequestReview") {
         Field.id // not using fragment, no need to re-parse
         Group("comments", paging: .first(count: 100, paging: true)) {
             Comment.fragmentForReviews

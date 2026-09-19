@@ -1,9 +1,8 @@
 import Foundation
 import TrailerQL
 
-@MainActor
 struct Parent {
-    let item: Identifiable
+    let item: any ItemIdentity
     let field: String
 
     init?(of node: Node) {
@@ -18,7 +17,7 @@ struct Parent {
         self.field = field
     }
 
-    init(item: Identifiable, field: String) {
+    init(item: any ItemIdentity, field: String) {
         self.item = item
         self.field = field
     }

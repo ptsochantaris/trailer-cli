@@ -1,6 +1,5 @@
 import Foundation
 
-@MainActor
 func log(level: Config.LogLevel = .info, indent: Int = 0, _ message: @autoclosure () -> String = "", unformatted: Bool = false) {
     if config.globalLogLevel > level { return }
     if indent > 0 {
@@ -19,22 +18,14 @@ func log(level: Config.LogLevel = .info, indent: Int = 0, _ message: @autoclosur
     }
 }
 
-@MainActor
 func open(url: URL) {
     log("Opening url: [*\(url)*]")
     let p = Process()
+    p.executableURL = URL(filePath: "/usr/bin/open")
     p.arguments = [url.absoluteString]
-    #if os(macOS)
-        p.launchPath = "/usr/bin/open"
-        p.launch()
-    #else
-        p.executableURL = URL(fileURLWithPath: "/usr/bin/open")
-        try? p.run()
-    #endif
-}
-
-extension Collection {
-    var hasItems: Bool {
-        !isEmpty
+    do {
+        try p.run()
+    } catch {
+        log("[R*Could not open '\(url.absoluteString)': \(error.localizedDescription)*]")
     }
 }

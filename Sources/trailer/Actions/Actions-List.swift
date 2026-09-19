@@ -2,7 +2,7 @@ import Foundation
 
 extension Actions {
     static func failList(_ message: String?) {
-        printErrorMesage(message)
+        printErrorMessage(message)
         printOptionHeader("Please provide one of the following options for 'list'")
         printOption(name: "orgs", description: "List organisations")
         printOption(name: "repos", description: "List repositories")
@@ -54,7 +54,7 @@ extension Actions {
             log()
             failList(nil)
         default:
-            failList("Unknown argmument: \(command)")
+            failList("Unknown argument: \(command)")
         }
     }
 

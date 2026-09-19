@@ -1,31 +1,26 @@
 import Foundation
 import Lista
 
-@MainActor
 enum Notifications {
-    @MainActor
     struct Notification {
         let title: String?
         let subtitle: String?
         let details: String?
         let relatedDate: Date
 
-        static let formatter: DateFormatter = {
-            let f = DateFormatter()
-            f.dateStyle = .short
-            f.timeStyle = .short
-            return f
-        }()
+        /// Short local date and time, e.g. `17/03/2024, 09:41`. Also used for the label on check
+        /// runs, which arrive from the API without a context string.
+        static let timestampStyle = Date.FormatStyle(date: .numeric, time: .shortened)
 
         func go() {
-            if let title, title.hasItems {
-                let d = Notification.formatter.string(from: relatedDate)
+            if let title, !title.isEmpty {
+                let d = relatedDate.formatted(Notification.timestampStyle)
                 log("[!\(d) \(title)!]")
             }
-            if let subtitle, subtitle.hasItems {
+            if let subtitle, !subtitle.isEmpty {
                 log("[*\(subtitle)*]")
             }
-            if let details, details.hasItems {
+            if let details, !details.isEmpty {
                 log(details)
             }
             log()

@@ -2,7 +2,7 @@ import Foundation
 
 extension Actions {
     static func failConfig(_ message: String?) {
-        printErrorMesage(message)
+        printErrorMessage(message)
         printOptionHeader("Please provide one of the following options for 'config'")
         log()
         printOption(name: "view", description: "Shows current visibility of repos")
@@ -87,7 +87,7 @@ extension Actions {
         case "view":
             await setOption(visibility: nil)
         default:
-            failConfig("Unknown argmument: \(command)")
+            failConfig("Unknown argument: \(command)")
         }
     }
 }

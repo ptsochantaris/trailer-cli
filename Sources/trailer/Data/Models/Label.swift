@@ -3,8 +3,7 @@ import Lista
 import TrailerJson
 import TrailerQL
 
-@MainActor
-struct Label: Item {
+struct Label: @MainActor Item {
     var id: String
     var parents: [String: Lista<Relationship>]
     var syncState = SyncState.none
@@ -57,7 +56,7 @@ struct Label: Item {
 
     mutating func setChildrenSyncStatus(_: SyncState) {}
 
-    static let fragment = Fragment(on: "Label") {
+    nonisolated static let fragment = Fragment(on: "Label") {
         Field.id
         Field("name")
         Field("color")

@@ -6,7 +6,6 @@ enum NotificationMode {
     case none, standard, consoleCommentsAndReviews
 }
 
-@MainActor
 enum DB {
     private static let allTypes: [Databaseable.Type] = [
         Org.self,
@@ -82,7 +81,6 @@ enum DB {
         }
     }
 
-    @MainActor
     static func lookup(type: String, id: String) -> (any Item)? {
         switch type {
         case "Org": Org.allItems[id]
@@ -111,17 +109,13 @@ enum DB {
 
     static func load() async {
         log(level: .debug, "Loading DB...")
-        await withTaskGroup(of: Void.self) { group in
-            let e = JSONDecoder()
-            for type in allTypes {
-                group.addTask {
-                    await type.loadAll(using: e)
-                }
-            }
-            group.addTask { @MainActor in
-                loadRelationships(using: e)
-            }
+        // The models are main-actor isolated, so decoding happens here; each `loadAll` hands only
+        // its file read off to a detached task.
+        let decoder = JSONDecoder()
+        for type in allTypes {
+            await type.loadAll(using: decoder)
         }
+        loadRelationships(using: decoder)
         log(level: .verbose, "Loaded DB")
 
         config.myUser = User.allItems.values.first { $0.isMe }
@@ -162,12 +156,18 @@ enum DB {
 
     static func save(purgeUntouchedItems: Bool, notificationMode: NotificationMode) async {
         log(level: .debug, "Processing Announcements...")
-        allTypes.forEach { $0.processAnnouncements(notificationMode: notificationMode) }
+        for type in allTypes {
+            type.processAnnouncements(notificationMode: notificationMode)
+        }
 
         if purgeUntouchedItems {
             log(level: .debug, "Purging stale items...")
-            allTypes.forEach { $0.purgeUntouchedItems() }
-            allTypes.forEach { $0.purgeStaleRelationships() }
+            for type in allTypes {
+                type.purgeUntouchedItems()
+            }
+            for type in allTypes {
+                type.purgeStaleRelationships()
+            }
         }
 
         if config.dryRun {
@@ -176,17 +176,11 @@ enum DB {
         }
 
         log(level: .debug, "Saving DB...")
-        await withTaskGroup(of: Void.self) { group in
-            let e = JSONEncoder()
-            for type in allTypes {
-                group.addTask {
-                    await type.saveAll(using: e)
-                }
-            }
-            group.addTask { @MainActor in
-                saveRelationships(using: e)
-            }
+        let encoder = JSONEncoder()
+        for type in allTypes {
+            await type.saveAll(using: encoder)
         }
+        saveRelationships(using: encoder)
         log(level: .verbose, "Saved DB to \(config.saveLocation.path)/")
     }
 

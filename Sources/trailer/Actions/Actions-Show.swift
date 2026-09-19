@@ -2,7 +2,7 @@ import Foundation
 
 extension Actions {
     static func failShow(_ message: String?) {
-        printErrorMesage(message)
+        printErrorMessage(message)
         printOptionHeader("Please provide one of the following options for 'show'")
         printOption(name: "item <number>", description: "Show any item with the specified number")
         printOption(name: "pr <number>", description: "Show a PR with the specified number")
@@ -53,7 +53,7 @@ extension Actions {
             }
 
         default:
-            failShow("Unknown argmument: \(command)")
+            failShow("Unknown argument: \(command)")
         }
     }
 
@@ -65,7 +65,7 @@ extension Actions {
                 }
                 item.printDetails()
             }
-            return items.count > 0
+            return !items.isEmpty
         }
         return false
     }

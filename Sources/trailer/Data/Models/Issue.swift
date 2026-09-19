@@ -3,8 +3,7 @@ import Lista
 import TrailerJson
 import TrailerQL
 
-@MainActor
-struct Issue: Item, Announceable, Closeable, Sortable {
+struct Issue: @MainActor Item, Announceable, Closeable, Sortable {
     var id: String
     var parents: [String: Lista<Relationship>]
     var syncState = SyncState.none
@@ -182,7 +181,7 @@ struct Issue: Item, Announceable, Closeable, Sortable {
         let ra = TTY.rightAlign("#\(number)")
         log("[![*\(ra)*] \(title)!]")
         let l = labels
-        if l.count > 0 {
+        if !l.isEmpty {
             log("\t\t[" + l.map(\.id).joined(separator: "] [") + "]")
         }
         log()
@@ -203,7 +202,7 @@ struct Issue: Item, Announceable, Closeable, Sortable {
         log()
 
         let react = reactions
-        if react.hasItems {
+        if !react.isEmpty {
             log("[!Reactions!]")
             let line = react.map { "[\($0.emoji) @\($0.user?.login ?? "")]" }.joined(separator: " ")
             log(line)
@@ -212,7 +211,7 @@ struct Issue: Item, Announceable, Closeable, Sortable {
 
         if CommandLine.argument(exists: "-body") {
             let b = bodyText.trimmingCharacters(in: .whitespacesAndNewlines)
-            if b.count > 0 {
+            if !b.isEmpty {
                 log("[!Body!]")
                 log(b, unformatted: true)
                 log()
@@ -221,7 +220,7 @@ struct Issue: Item, Announceable, Closeable, Sortable {
 
         if CommandLine.argument(exists: "-comments") {
             let co = comments.sorted(by: { $0.createdAt < $1.createdAt })
-            if co.hasItems {
+            if !co.isEmpty {
                 for c in co {
                     c.printDetails()
                 }
@@ -294,7 +293,7 @@ struct Issue: Item, Announceable, Closeable, Sortable {
         return nil
     }
 
-    static let fragment = Fragment(on: "Issue") {
+    nonisolated static let fragment = Fragment(on: "Issue") {
         Field.id
         Field("bodyText")
         Field("createdAt")
@@ -312,17 +311,17 @@ struct Issue: Item, Announceable, Closeable, Sortable {
         Group("reactions") { Field("totalCount") }
     }
 
-    static let reactionsFragment = Fragment(on: "Issue") {
+    nonisolated static let reactionsFragment = Fragment(on: "Issue") {
         Field.id // not using fragment, no need to re-parse
         Group("reactions", paging: .first(count: 100, paging: true)) { Reaction.fragment }
     }
 
-    static let commentsFragment = Fragment(on: "Issue") {
+    nonisolated static let commentsFragment = Fragment(on: "Issue") {
         Field.id // not using fragment, no need to re-parse
         Group("comments", paging: .first(count: 100, paging: true)) { Comment.fragmentForItems }
     }
 
-    static var fragmentWithComments: Fragment {
+    nonisolated static var fragmentWithComments: Fragment {
         fragment.addingElement(
             Group("comments", paging: .first(count: 100, paging: true)) { Comment.fragmentForItems }
         )

@@ -3,8 +3,7 @@ import Lista
 import TrailerJson
 import TrailerQL
 
-@MainActor
-struct User: Item {
+struct User: @MainActor Item {
     var id: String
     var parents: [String: Lista<Relationship>]
     var syncState = SyncState.none
@@ -45,7 +44,7 @@ struct User: Item {
 
     mutating func setChildrenSyncStatus(_: SyncState) {}
 
-    static let fragment = Fragment(on: "User") {
+    nonisolated static let fragment = Fragment(on: "User") {
         Field.id
         Field("login")
         Field("avatarUrl")

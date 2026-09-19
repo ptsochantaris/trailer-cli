@@ -3,8 +3,7 @@ import Lista
 import TrailerJson
 import TrailerQL
 
-@MainActor
-struct Org: Item {
+struct Org: @MainActor Item {
     var id: String
     var parents: [String: Lista<Relationship>]
     var syncState = SyncState.none
@@ -50,7 +49,7 @@ struct Org: Item {
         children(field: "repositories")
     }
 
-    static let fragmentWithRepos = Fragment(on: "Organization") {
+    nonisolated static let fragmentWithRepos = Fragment(on: "Organization") {
         Field.id
         Field("name")
         Group("repositories", paging: .first(count: 100, paging: true)) { Repo.fragment }

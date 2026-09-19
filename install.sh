@@ -33,5 +33,5 @@ if [ $? -eq 0 ]; then
 	echo "*** Done"
 else
 	echo
-	echo "*** Build failed, ensure you are using Swift 5.x on the command line"
+	echo "*** Build failed, ensure you are using Swift 6.4 or later on the command line"
 fi

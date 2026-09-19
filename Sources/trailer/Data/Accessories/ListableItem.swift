@@ -1,6 +1,5 @@
 import Foundation
 
-@MainActor
 enum ListableItem: Equatable, Sortable {
     case pullRequest(PullRequest)
     case issue(Issue)
@@ -43,23 +42,6 @@ enum ListableItem: Equatable, Sortable {
             i.printSummaryLine()
         case let .pullRequest(pr):
             pr.printSummaryLine()
-        }
-    }
-
-    nonisolated static func == (lhs: ListableItem, rhs: ListableItem) -> Bool {
-        switch lhs {
-        case let .pullRequest(pr1):
-            switch rhs {
-            case let .pullRequest(pr2):
-                pr1 == pr2
-            default: false
-            }
-        case let .issue(issue1):
-            switch rhs {
-            case let .issue(issue2):
-                issue1 == issue2
-            default: false
-            }
         }
     }
 

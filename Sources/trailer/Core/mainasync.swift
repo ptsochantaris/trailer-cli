@@ -5,19 +5,28 @@ import TrailerQL
 #endif
 
 @main
-@MainActor
 struct MainApp {
     static func main() async {
-        Task { @LogActor in
-            TQL.debugLog = { message in
-                Task { @MainActor in
-                    log(level: .debug, indent: 0, message)
-                }
-            }
-        }
+        await installDebugLog()
 
         let app = MainApp()
-        try? await app.go()
+        do {
+            try await app.go()
+        } catch {
+            Actions.printErrorMessage(error.localizedDescription)
+            exit(1)
+        }
+    }
+
+    /// Awaited rather than fired off in a detached task, so that debug output from the very first
+    /// query is not lost to a race with the logger being installed.
+    @LogActor
+    private static func installDebugLog() {
+        TQL.debugLog = { message in
+            Task { @MainActor in
+                log(level: .debug, indent: 0, message)
+            }
+        }
     }
 
     private func setupConsole() {
@@ -50,7 +59,7 @@ struct MainApp {
 
         if CommandLine.argument(exists: "-version") {
             log("[!Version [*\(config.versionString)*]!]")
-            await Actions.checkForUpdates(reportError: true, alwaysCheck: true)
+            await Actions.checkForUpdates(alwaysCheck: true)
             log()
             exit(0)
         }

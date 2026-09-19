@@ -7,8 +7,7 @@ enum RepoVisibility: String, Codable {
     case hidden, visible, onlyPrs, onlyIssues
 }
 
-@MainActor
-struct Repo: Item, Announceable {
+struct Repo: @MainActor Item, Announceable {
     var id: String
     var parents: [String: Lista<Relationship>]
     var syncState = SyncState.none
@@ -159,7 +158,7 @@ struct Repo: Item, Announceable {
         }
     }
 
-    static let fragment = Fragment(on: "Repository") {
+    nonisolated static let fragment = Fragment(on: "Repository") {
         Field.id
         Field("nameWithOwner")
         Field("isFork")
@@ -168,18 +167,18 @@ struct Repo: Item, Announceable {
         Field("updatedAt")
     }
 
-    static let prAndIssueIdsFragment = Fragment(on: "Repository") {
+    nonisolated static let prAndIssueIdsFragment = Fragment(on: "Repository") {
         Field.id
         Group("pullRequests", ("states", "[OPEN]"), paging: .first(count: 100, paging: true)) { Field.id }
         Group("issues", ("states", "[OPEN]"), paging: .first(count: 100, paging: true)) { Field.id }
     }
 
-    static let prIdsFragment = Fragment(on: "Repository") {
+    nonisolated static let prIdsFragment = Fragment(on: "Repository") {
         Field.id
         Group("pullRequests", ("states", "[OPEN]"), paging: .first(count: 100, paging: true)) { Field.id }
     }
 
-    static let issueIdsFragment = Fragment(on: "Repository") {
+    nonisolated static let issueIdsFragment = Fragment(on: "Repository") {
         Field.id
         Group("issues", ("states", "[OPEN]"), paging: .first(count: 100, paging: true)) { Field.id }
     }

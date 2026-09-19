@@ -3,8 +3,7 @@ import Lista
 import TrailerJson
 import TrailerQL
 
-@MainActor
-struct Comment: Item, Announceable {
+struct Comment: @MainActor Item, Announceable {
     var id: String
     var parents: [String: Lista<Relationship>]
     var syncState = SyncState.none
@@ -97,7 +96,7 @@ struct Comment: Item, Announceable {
         log(body.trimmingCharacters(in: .whitespacesAndNewlines), unformatted: true)
 
         let react = reactions
-        if react.hasItems {
+        if !react.isEmpty {
             let reactionList: [String] = react.compactMap {
                 if let u = $0.user {
                     return "[\($0.emoji) @\(u.login)]"
@@ -162,7 +161,7 @@ struct Comment: Item, Announceable {
     }
 
     @TrailerQL.ElementsBuilder
-    private static func commentFields() -> [any Element] {
+    private nonisolated static func commentFields() -> [any Element] {
         Field.id
         Field("body")
         Field("viewerDidAuthor")
@@ -172,15 +171,15 @@ struct Comment: Item, Announceable {
         Group("author") { User.fragment }
     }
 
-    static let fragmentForItems = Fragment(on: "IssueComment", elements: commentFields)
-    static let fragmentForReviews = Fragment(on: "PullRequestReviewComment", elements: commentFields)
+    nonisolated static let fragmentForItems = Fragment(on: "IssueComment", elements: commentFields)
+    nonisolated static let fragmentForReviews = Fragment(on: "PullRequestReviewComment", elements: commentFields)
 
-    static let pullRequestReviewCommentReactionFragment = Fragment(on: "PullRequestReviewComment") {
+    nonisolated static let pullRequestReviewCommentReactionFragment = Fragment(on: "PullRequestReviewComment") {
         Field.id // not using fragment, no need to re-parse
         Group("reactions", paging: .first(count: 100, paging: true)) { Reaction.fragment }
     }
 
-    static let issueCommentReactionFragment = Fragment(on: "IssueComment") {
+    nonisolated static let issueCommentReactionFragment = Fragment(on: "IssueComment") {
         Field.id // not using fragment, no need to re-parse
         Group("reactions", paging: .first(count: 100, paging: true)) { Reaction.fragment }
     }

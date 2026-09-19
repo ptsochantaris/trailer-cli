@@ -7,9 +7,20 @@ enum UpdateType {
     case repos, prs, issues, comments, reactions
 }
 
+enum UpdateError: LocalizedError {
+    case queryFailed(name: String, reason: String)
+
+    var errorDescription: String? {
+        switch self {
+        case let .queryFailed(name, reason):
+            "Query '\(name)' failed: \(reason)"
+        }
+    }
+}
+
 extension Actions {
     static func failUpdate(_ message: String?) {
-        printErrorMesage(message)
+        printErrorMessage(message)
         printOptionHeader("Please provide one of the following options for 'update'")
         printOption(name: "all", description: "Update all items")
         log()
@@ -53,7 +64,7 @@ extension Actions {
         return (newVersion, success)
     }
 
-    static func checkForUpdates(reportError _: Bool, alwaysCheck: Bool) async {
+    static func checkForUpdates(alwaysCheck: Bool) async {
         let (newVersion, success) = await updateCheck(alwaysCheck: alwaysCheck)
         if let newVersion {
             log("[![G*New Trailer version \(newVersion) is available*]!]")
@@ -88,7 +99,7 @@ extension Actions {
                 failUpdate(nil)
                 return
             default:
-                failUpdate("Unknown argmument: \(param)")
+                failUpdate("Unknown argument: \(param)")
                 return
             }
         }
@@ -167,32 +178,38 @@ extension Actions {
         }
     }
 
-    private static func itemIdParser(output: ParseOutput, prIdList: inout [String: String], issueIdList: inout [String: String]) {
-        guard case let .node(node) = output,
-              let parent = node.parent, parent.elementType == "Repository" else {
-            return
+    /// Accumulates the PR and Issue IDs discovered by the "Item IDs" query. Queries in a batch run
+    /// concurrently and their `perNode` blocks are `@NodeActor`, so the collector is main-actor
+    /// isolated and every registration hops onto it.
+    private final class ItemIdCollector {
+        var prIds: [String: String]
+        var issueIds: [String: String]
+
+        init(prIds: [String: String], issueIds: [String: String]) {
+            self.prIds = prIds
+            self.issueIds = issueIds
         }
 
-        let repoId = parent.id
-        guard let repo = Repo.allItems[repoId], repo.syncState != .none, repo.visibility != .hidden else {
-            return
-        }
-
-        if node.elementType == "PullRequest" {
-            switch repo.visibility {
-            case .onlyPrs, .visible:
-                let id = node.id
-                prIdList[id] = repoId
-                log(level: .debug, indent: 1, "Registered PR ID: \(id)")
-            default: break
+        func register(_ output: ParseOutput) {
+            guard case let .node(node) = output,
+                  let parent = node.parent, parent.elementType == "Repository" else {
+                return
             }
-        } else if node.elementType == "Issue" {
-            switch repo.visibility {
-            case .onlyIssues, .visible:
-                let id = node.id
-                issueIdList[id] = repoId
-                log(level: .debug, indent: 1, "Registered Issue ID: \(id)")
-            default: break
+
+            let repoId = parent.id
+            guard let repo = Repo.allItems[repoId], repo.syncState != .none, repo.visibility != .hidden else {
+                return
+            }
+
+            switch (node.elementType, repo.visibility) {
+            case ("PullRequest", .onlyPrs), ("PullRequest", .visible):
+                prIds[node.id] = repoId
+                log(level: .debug, indent: 1, "Registered PR ID: \(node.id)")
+            case ("Issue", .onlyIssues), ("Issue", .visible):
+                issueIds[node.id] = repoId
+                log(level: .debug, indent: 1, "Registered Issue ID: \(node.id)")
+            default:
+                break
             }
         }
     }
@@ -281,14 +298,13 @@ extension Actions {
                 userWantsIssues ? [Repo.issueIdsFragment] :
                 []
             if !fields.isEmpty {
-                nonisolated(unsafe) var prList = prIdList
-                nonisolated(unsafe) var issueList = issueIdList
+                let collector = ItemIdCollector(prIds: prIdList, issueIds: issueIdList)
                 let queries = Query.batching("Item IDs", groupName: "nodes", idList: repoIds, maxCost: config.maxNodeCost, perNode: {
-                    await itemIdParser(output: $0, prIdList: &prList, issueIdList: &issueList)
+                    await collector.register($0)
                 }) { fields }
                 try await run(queries)
-                prIdList = prList
-                issueIdList = issueList
+                prIdList = collector.prIds
+                issueIdList = collector.issueIds
             }
         } else {
             log(level: .info, "[*Item IDs*] (Skipped)")
@@ -296,7 +312,7 @@ extension Actions {
 
         if !keepOnlyNewItems {
             if !userWantsPrs || filtersRequested || limitToRepoNames != nil { // do not expire items which are not included in this sync
-                let limitIds = PullRequest.allItems.keys.filter { issueIdList[$0] == nil }
+                let limitIds = PullRequest.allItems.keys.filter { prIdList[$0] == nil }
                 PullRequest.setSyncStatus(.updated, andChildren: true, limitToIds: limitIds)
             }
 
@@ -521,8 +537,8 @@ extension Actions {
             }
 
             try await run(Query.batching("Reactions", groupName: "nodes", idList: itemIdsWithReactions, maxCost: config.maxNodeCost, perNode: { await parse(output: $0) }) {
-                Comment.pullRequestReviewCommentReactionFragment
-                PullRequest.reactionsFragment
+                Comment.issueCommentReactionFragment
+                Issue.reactionsFragment
             })
 
             await DB.save(purgeUntouchedItems: false, notificationMode: .none)
@@ -539,7 +555,7 @@ extension Actions {
                 try await run(query, shouldRetry: shouldRetry - 1)
             } else {
                 log("[*\(query.name)*] \(message)")
-                throw NSError(domain: "build.bru.trailer-cli.query", code: 1, userInfo: [NSLocalizedDescriptionKey: message])
+                throw UpdateError.queryFailed(name: query.name, reason: message)
             }
         }
 
@@ -616,12 +632,14 @@ extension Actions {
             lastRunTitle = title
             log(title)
         }
-        try await withThrowingTaskGroup(of: Void.self) { group in
+        try await withThrowingTaskGroup { group in
             for query in queries {
                 group.addTask {
                     try await run(query)
                 }
             }
+            // Explicit: the implicit drain at scope exit does not rethrow, so without this a
+            // failing query would be silently swallowed.
             try await group.waitForAll()
         }
     }

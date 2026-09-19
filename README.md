@@ -31,7 +31,7 @@ It's very hard to maintain builds for various distros, as Swift currently can't 
 An experimental build is available for Windows in the [Releases](../../releases) page. It does seem to require a few DLLs to be in the same directory, which are bundled into the ZIP.
 
 ### Source
-You can build the project from source using the simple `./install.sh` script. It requires Swift 5.0 or later to be installed.
+You can build the project from source using the simple `./install.sh` script. It requires Swift 6.4 or later to be installed, and macOS 15 or later when building for macOS.
 
 ## Quickstart
 Run Trailer without any arguments for some help. To get started:

@@ -1,6 +1,5 @@
 import Foundation
 
-@MainActor
 enum TTY {
     static func rightAlign(_ message: String) -> String {
         let c = max(0, 15 - message.count)
@@ -22,60 +21,41 @@ enum TTY {
         "&]": "\u{1b}[25m"
     ]
 
-    private enum PostProcessState {
-        case one, two, three
-    }
+    /// Marker lengths, longest first, so that the three-character colour codes win over the
+    /// two-character ones sharing their prefix (`[R*` before `[*`).
+    private static let markerLengths = Set(colourMap.keys.map(\.count)).sorted(by: >)
 
+    /// Replaces the `[!`…`!]` style markup with ANSI escapes, or strips it in monochrome mode.
+    /// Anything that is not a complete marker is passed through untouched, so item titles
+    /// containing brackets or asterisks survive intact.
     static func postProcess(_ message: String) -> String {
         let colour = !config.monochrome
 
         var output = ""
         output.reserveCapacity(message.count)
 
-        var pending = ""
-        pending.reserveCapacity(3)
-
-        var state = PostProcessState.one
-        for c in message {
-            switch state {
-            case .one:
-                switch c {
-                case "!", "[", "*", "&":
-                    pending.append(c)
-                    state = .two
-                default:
-                    output.append(c)
+        var index = message.startIndex
+        while index < message.endIndex {
+            if let (length, replacement) = marker(in: message, at: index) {
+                if colour {
+                    output.append(replacement)
                 }
-            case .two:
-                switch c {
-                case "B", "C", "G", "R":
-                    pending.append(c)
-                    state = .three
-                case "!", "]", "*", "&", "$":
-                    pending.append(c)
-                    if colour, let replacement = colourMap[pending] {
-                        output.append(replacement)
-                    }
-                    pending = ""
-                    state = .one
-                default:
-                    output.append(pending)
-                    pending = ""
-                    state = .one
-                }
-            case .three:
-                if c == "*" {
-                    pending.append(c)
-                    if colour, let replacement = colourMap[pending] {
-                        output.append(replacement)
-                    }
-                } else {
-                    output.append(pending)
-                }
-                pending = ""
-                state = .one
+                index = message.index(index, offsetBy: length)
+            } else {
+                output.append(message[index])
+                index = message.index(after: index)
             }
         }
         return output
+    }
+
+    private static func marker(in message: String, at index: String.Index) -> (length: Int, replacement: String)? {
+        for length in markerLengths {
+            guard let end = message.index(index, offsetBy: length, limitedBy: message.endIndex) else { continue }
+            if let replacement = colourMap[String(message[index ..< end])] {
+                return (length, replacement)
+            }
+        }
+        return nil
     }
 }

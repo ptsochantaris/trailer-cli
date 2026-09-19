@@ -1,11 +1,13 @@
-// swift-tools-version: 6.0
+// swift-tools-version: 6.4
 
 import PackageDescription
 
+// `platforms` constrains Apple platforms only, so this single manifest also serves the Linux and
+// Windows builds described in the README.
 let package = Package(
     name: "trailer-cli",
     platforms: [
-        .macOS(.v11)
+        .macOS(.v15)
     ],
     products: [
         .executable(name: "trailer", targets: ["trailer"])
@@ -22,6 +24,17 @@ let package = Package(
             .product(name: "TrailerJson", package: "trailer-json"),
             .product(name: "Semalot", package: "semalot"),
             .product(name: "Lista", package: "lista")
-        ])
+        ], swiftSettings: swiftSettings),
+        .testTarget(name: "trailerTests", dependencies: ["trailer"], swiftSettings: swiftSettings)
     ]
 )
+
+// This is a single-threaded CLI: the whole module defaults to the main actor, and the few genuinely
+// concurrent pieces (file I/O, TrailerQL's node parsing) opt out explicitly.
+var swiftSettings: [SwiftSetting] {
+    [
+        .defaultIsolation(MainActor.self),
+        .enableUpcomingFeature("InferIsolatedConformances"),
+        .enableUpcomingFeature("NonisolatedNonsendingByDefault")
+    ]
+}

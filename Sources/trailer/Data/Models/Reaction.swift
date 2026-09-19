@@ -3,8 +3,7 @@ import Lista
 import TrailerJson
 import TrailerQL
 
-@MainActor
-struct Reaction: Item {
+struct Reaction: @MainActor Item {
     var id: String
     var parents: [String: Lista<Relationship>]
     var syncState = SyncState.none
@@ -64,7 +63,7 @@ struct Reaction: Item {
         }
     }
 
-    static let fragment = Fragment(on: "Reaction") {
+    nonisolated static let fragment = Fragment(on: "Reaction") {
         Field.id
         Field("content")
         Group("user") {

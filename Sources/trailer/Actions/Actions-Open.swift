@@ -2,7 +2,7 @@ import Foundation
 
 extension Actions {
     static func failOpen(_ message: String?) {
-        printErrorMesage(message)
+        printErrorMessage(message)
         printOptionHeader("Please provide one of the following options for 'open'")
         printOption(name: "item <number>", description: "Open any item with the specified number")
         printOption(name: "pr <number>", description: "Open an issue with the specified number")
@@ -67,7 +67,7 @@ extension Actions {
                 open(url: repos.first!.url)
             }
         default:
-            failOpen("Unknown argmument: \(command)")
+            failOpen("Unknown argument: \(command)")
         }
     }
 
@@ -76,7 +76,7 @@ extension Actions {
             if items.count == 1, let item = items.first {
                 item.openUrl()
             }
-            return items.count > 0
+            return !items.isEmpty
         }
         return false
     }

@@ -1,16 +1,9 @@
 import Foundation
 
 struct Config {
-    enum LogLevel: Int, Comparable {
+    /// Ordered least to most severe; `Comparable` is synthesised from the declaration order.
+    enum LogLevel: Comparable {
         case debug, verbose, info
-
-        static func < (lhs: LogLevel, rhs: LogLevel) -> Bool {
-            lhs.rawValue < rhs.rawValue
-        }
-
-        static func > (lhs: LogLevel, rhs: LogLevel) -> Bool {
-            lhs.rawValue > rhs.rawValue
-        }
     }
 
     var globalLogLevel = LogLevel.info
@@ -23,29 +16,20 @@ struct Config {
 
     static let emptyURL = URL(string: "http://github.com")!
 
-    private static let versionNumbers = [1, 6, 0]
+    private static let versionNumbers = [1, 7, 0]
     let versionString = versionNumbers.map { String($0) }.joined(separator: ".")
 
+    /// True when `version` (as reported by the releases API) is later than the version we are built as.
     static func isNewer(_ version: String) -> Bool {
         let components = version
             .split(separator: ".")
             .compactMap { Int($0) }
 
-        guard components.count == 3 else {
+        guard components.count == versionNumbers.count else {
             return false
         }
 
-        for check in versionNumbers.enumerated() {
-            let v = check.element
-            let i = check.offset
-            if v < versionNumbers[i] {
-                return true
-            } else if v > versionNumbers[i] {
-                return false
-            }
-        }
-
-        return false
+        return versionNumbers.lexicographicallyPrecedes(components)
     }
 
     var httpHeaders: [(String, String)] {
@@ -83,26 +67,25 @@ struct Config {
     var myLogin = ""
 
     var token: String {
-        get {
-            if let d = try? Data(contentsOf: saveLocation.appendingPathComponent("token")) {
-                return String(data: d, encoding: .utf8) ?? ""
-            }
-            return ""
-        }
+        get { fetchString(name: "token") ?? "" }
         set {
-            let tokenFileURL = saveLocation.appendingPathComponent("token")
-            try! newValue.data(using: .utf8)?.write(to: tokenFileURL)
-            try! FileManager.default.setAttributes([.posixPermissions: NSNumber(0o600)], ofItemAtPath: tokenFileURL.path)
+            let tokenFileURL = saveLocation.appending(path: "token")
+            do {
+                try Data(newValue.utf8).write(to: tokenFileURL)
+                try FileManager.default.setAttributes([.posixPermissions: NSNumber(0o600)], ofItemAtPath: tokenFileURL.path)
+            } catch {
+                log("[R*Could not store the token: \(error.localizedDescription)*]")
+            }
         }
     }
 
     var usingNewIds: Bool {
         get {
-            let path = saveLocation.appendingPathComponent("using-new-ids").path
+            let path = saveLocation.appending(path: "using-new-ids").path
             return FileManager.default.fileExists(atPath: path)
         }
         set {
-            let path = saveLocation.appendingPathComponent("using-new-ids").path
+            let path = saveLocation.appending(path: "using-new-ids").path
             if newValue {
                 FileManager.default.createFile(atPath: path, contents: nil)
             } else {
@@ -112,9 +95,7 @@ struct Config {
     }
 
     private func store(date: Date?, name: String) {
-        var dateTickString: String?
-        if let d = date { dateTickString = String(d.timeIntervalSince1970) }
-        store(string: dateTickString, name: name)
+        store(string: date.map { String($0.timeIntervalSince1970) }, name: name)
     }
 
     private func fetchDate(name: String) -> Date? {
@@ -125,21 +106,23 @@ struct Config {
     }
 
     private func store(string: String?, name: String) {
-        let fileURL = saveLocation.appendingPathComponent(name)
-        if let s = string {
-            try! s.data(using: .utf8)?.write(to: fileURL)
-        } else {
-            if FileManager.default.fileExists(atPath: fileURL.path) {
-                try! FileManager.default.removeItem(at: fileURL)
+        let fileURL = saveLocation.appending(path: name)
+        do {
+            if let string {
+                try Data(string.utf8).write(to: fileURL)
+            } else if FileManager.default.fileExists(atPath: fileURL.path) {
+                try FileManager.default.removeItem(at: fileURL)
             }
+        } catch {
+            log("[R*Could not store '\(name)': \(error.localizedDescription)*]")
         }
     }
 
     private func fetchString(name: String) -> String? {
-        if let d = try? Data(contentsOf: saveLocation.appendingPathComponent(name)) {
-            return String(data: d, encoding: .utf8)
+        guard let data = try? Data(contentsOf: saveLocation.appending(path: name)) else {
+            return nil
         }
-        return nil
+        return String(decoding: data, as: UTF8.self)
     }
 
     var latestSyncDate: Date? {
@@ -166,16 +149,21 @@ struct Config {
     var totalApiRemaining = Int.max
 
     var saveLocation: URL {
-        let c = URLComponents(url: server, resolvingAgainstBaseURL: false)
-        let f = FileManager.default
-        let h = URL(string: "file://" + NSHomeDirectory())!
-        let d = h.appendingPathComponent(".trailer", isDirectory: true).appendingPathComponent(c!.host!, isDirectory: true)
-        if !f.fileExists(atPath: d.path) {
-            try! f.createDirectory(at: d, withIntermediateDirectories: true, attributes: nil)
+        guard let host = server.host() else {
+            Actions.reportAndExit(message: "Server URL '\(server.absoluteString)' has no host component")
         }
-        return d
+        let directory = URL.homeDirectory
+            .appending(path: ".trailer", directoryHint: .isDirectory)
+            .appending(path: host, directoryHint: .isDirectory)
+        if !FileManager.default.fileExists(atPath: directory.path) {
+            do {
+                try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+            } catch {
+                Actions.reportAndExit(message: "Could not create '\(directory.path)': \(error.localizedDescription)")
+            }
+        }
+        return directory
     }
 }
 
-@MainActor
 var config = Config()

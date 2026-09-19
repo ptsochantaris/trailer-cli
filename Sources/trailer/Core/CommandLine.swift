@@ -1,47 +1,62 @@
 import Foundation
 
-private let _args = CommandLine.arguments.map { $0.lowercased() }
+/// The command-line parsing logic, held separately from the process's own arguments so it can be
+/// exercised in tests with a synthetic argument list.
+nonisolated struct ArgumentList: Sendable {
+    private let original: [String]
+    private let lowercased: [String]
 
-extension CommandLine {
-    static func value(for argument: String, keepCase: Bool = false) -> String? {
-        guard let index = _args.firstIndex(of: argument) else { return nil }
+    init(_ arguments: [String]) {
+        original = arguments
+        lowercased = arguments.map { $0.lowercased() }
+    }
+
+    /// The value following `argument`. Returns `nil` if the argument is absent, and an empty string
+    /// if it is present but has no value (either nothing follows it, or the next entry is a flag).
+    func value(for argument: String, keepCase: Bool = false) -> String? {
+        guard let index = lowercased.firstIndex(of: argument) else { return nil }
 
         let valueIndex = index + 1
-        if _args.count > valueIndex {
-            let nextArg = keepCase ? CommandLine.arguments[valueIndex] : _args[valueIndex]
-            if nextArg.hasPrefix("-") {
-                return ""
-            }
-            return nextArg
-        }
-        return ""
+        guard valueIndex < lowercased.count else { return "" }
+
+        let nextArg = keepCase ? original[valueIndex] : lowercased[valueIndex]
+        return nextArg.hasPrefix("-") ? "" : nextArg
+    }
+
+    func contains(_ argument: String) -> Bool {
+        lowercased.contains(argument)
+    }
+
+    func first(matching argument: String) -> String? {
+        lowercased.first { $0 == argument }
+    }
+
+    /// `argument` plus every following entry up to the next flag, e.g. `["show", "pr", "42"]`.
+    func sequence(starting: String) -> [String]? {
+        guard let index = lowercased.firstIndex(of: starting) else { return nil }
+
+        let rest = lowercased[(index + 1)...].prefix { !$0.hasPrefix("-") }
+        return [starting] + rest
+    }
+}
+
+extension CommandLine {
+    private static let parsed = ArgumentList(CommandLine.arguments)
+
+    static func value(for argument: String, keepCase: Bool = false) -> String? {
+        parsed.value(for: argument, keepCase: keepCase)
     }
 
     static func argument(exists argument: String) -> Bool {
-        _args.contains(argument)
+        parsed.contains(argument)
     }
 
     static func argument(matching argument: String) -> String? {
-        if let index = _args.firstIndex(of: argument) {
-            return _args[index]
-        }
-        return nil
+        parsed.first(matching: argument)
     }
 
     static func sequence(starting: String) -> [String]? {
-        guard let index = _args.firstIndex(of: starting) else { return nil }
-
-        var valueIndex = index + 1
-        var value = [starting]
-        while _args.count > valueIndex {
-            let nextArg = _args[valueIndex]
-            if nextArg.hasPrefix("-") {
-                break
-            }
-            value.append(nextArg)
-            valueIndex += 1
-        }
-        return value
+        parsed.sequence(starting: starting)
     }
 }
 
@@ -64,121 +79,64 @@ struct ListFieldsDefinition {
     }
 }
 
-@MainActor
-private struct ListSortDefinition {
-    enum Criterion: String {
+struct ListSortDefinition {
+    enum Criterion: String, CaseIterable {
         case number, title, repo, branch, author, created, updated, type
     }
 
-    let sortFunctions: [(Sortable, Sortable) -> Bool?]
+    static let defaultCriteria: [Criterion] = [.number, .title, .created]
 
-    init() {
-        let criteria: [Criterion]
+    let comparators: [@MainActor (any Sortable, any Sortable) -> ComparisonResult]
 
-        let components = CommandLine.value(for: "-sort")?.split(separator: ",")
-        let s = components?.compactMap { Criterion(rawValue: String($0)) }
-        if let s, s.hasItems {
-            criteria = s
-        } else {
-            criteria = [.number, .title, .created]
-        }
-
-        sortFunctions = criteria.map { sortCriterion -> ((Sortable, Sortable) -> Bool?) in
-            switch sortCriterion {
-            case .number:
-                {
-                    let n1 = $0.number
-                    let n2 = $1.number
-                    if n1 < n2 { return true }
-                    if n1 > n2 { return false }
-                    return nil
-                }
-            case .author:
-                {
-                    let a1 = $0.author?.login ?? ""
-                    let a2 = $1.author?.login ?? ""
-                    let res = a1.localizedCaseInsensitiveCompare(a2)
-                    switch res {
-                    case .orderedAscending: return true
-                    case .orderedDescending: return false
-                    case .orderedSame: return nil
-                    }
-                }
-            case .branch:
-                {
-                    let a1 = $0.headRefName
-                    let a2 = $1.headRefName
-                    let res = a1.localizedCaseInsensitiveCompare(a2)
-                    switch res {
-                    case .orderedAscending: return true
-                    case .orderedDescending: return false
-                    case .orderedSame: return nil
-                    }
-                }
-            case .created:
-                {
-                    let d1 = $0.createdAt
-                    let d2 = $1.createdAt
-                    if d1 < d2 { return true }
-                    if d1 > d2 { return false }
-                    return nil
-                }
-            case .updated:
-                {
-                    let u1 = $0.updatedAt
-                    let u2 = $1.updatedAt
-                    if u1 < u2 { return true }
-                    if u1 > u2 { return false }
-                    return nil
-                }
-            case .repo:
-                {
-                    let a1 = $0.repo?.nameWithOwner ?? ""
-                    let a2 = $1.repo?.nameWithOwner ?? ""
-                    let res = a1.localizedCaseInsensitiveCompare(a2)
-                    switch res {
-                    case .orderedAscending: return true
-                    case .orderedDescending: return false
-                    case .orderedSame: return nil
-                    }
-                }
-            case .title:
-                {
-                    let a1 = $0.title
-                    let a2 = $1.title
-                    let res = a1.localizedCaseInsensitiveCompare(a2)
-                    switch res {
-                    case .orderedAscending: return true
-                    case .orderedDescending: return false
-                    case .orderedSame: return nil
-                    }
-                }
-            case .type:
-                {
-                    let t1 = $0.type
-                    let t2 = $1.type
-                    if t1 < t2 { return true }
-                    if t1 > t2 { return false }
-                    return nil
-                }
+    init(criteria: [Criterion]) {
+        comparators = criteria.map { criterion in
+            switch criterion {
+            case .number: { Self.compare($0.number, $1.number) }
+            case .created: { Self.compare($0.createdAt, $1.createdAt) }
+            case .updated: { Self.compare($0.updatedAt, $1.updatedAt) }
+            case .type: { Self.compare($0.type, $1.type) }
+            case .title: { $0.title.localizedCaseInsensitiveCompare($1.title) }
+            case .branch: { $0.headRefName.localizedCaseInsensitiveCompare($1.headRefName) }
+            case .author: { Self.compareText($0.author?.login, $1.author?.login) }
+            case .repo: { Self.compareText($0.repo?.nameWithOwner, $1.repo?.nameWithOwner) }
             }
         }
     }
+
+    /// Parses `-sort`, falling back to the default ordering if it is absent or lists nothing valid.
+    init(arguments: ArgumentList) {
+        let requested = arguments.value(for: "-sort")?
+            .split(separator: ",")
+            .compactMap { Criterion(rawValue: String($0)) }
+        self.init(criteria: (requested?.isEmpty == false) ? requested! : Self.defaultCriteria)
+    }
+
+    /// Applies each comparator in turn, the first non-equal result winning.
+    @MainActor
+    func isAscending(_ lhs: any Sortable, _ rhs: any Sortable) -> Bool {
+        for comparator in comparators {
+            switch comparator(lhs, rhs) {
+            case .orderedAscending: return true
+            case .orderedDescending: return false
+            case .orderedSame: continue
+            }
+        }
+        return false
+    }
+
+    private static func compare<T: Comparable>(_ lhs: T, _ rhs: T) -> ComparisonResult {
+        if lhs < rhs { .orderedAscending } else if rhs < lhs { .orderedDescending } else { .orderedSame }
+    }
+
+    private static func compareText(_ lhs: String?, _ rhs: String?) -> ComparisonResult {
+        (lhs ?? "").localizedCaseInsensitiveCompare(rhs ?? "")
+    }
 }
 
-@MainActor
-private let listSortDefinition = ListSortDefinition()
+private let listSortDefinition = ListSortDefinition(arguments: ArgumentList(CommandLine.arguments))
 
 extension Array where Element: Sortable {
-    @MainActor
     var sortedByCriteria: [Element] {
-        sorted {
-            for sf in listSortDefinition.sortFunctions {
-                if let result = sf($0, $1) {
-                    return result
-                }
-            }
-            return false
-        }
+        sorted { listSortDefinition.isAscending($0, $1) }
     }
 }

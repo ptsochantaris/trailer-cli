@@ -27,8 +27,7 @@ protocol Sortable {
     var type: Int { get }
 }
 
-@MainActor
-struct PullRequest: Item, Announceable, Closeable, Sortable {
+struct PullRequest: @MainActor Item, Announceable, Closeable, Sortable {
     var id: String
     var parents: [String: Lista<Relationship>]
     var syncState: SyncState
@@ -68,7 +67,7 @@ struct PullRequest: Item, Announceable, Closeable, Sortable {
         case headRefName
     }
 
-    nonisolated init(from decoder: Decoder) throws {
+    init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         id = try c.decode(String.self, forKey: .id)
         parents = try c.decode([String: Lista<Relationship>].self, forKey: .parents)
@@ -87,7 +86,7 @@ struct PullRequest: Item, Announceable, Closeable, Sortable {
         syncState = .none
     }
 
-    nonisolated func encode(to encoder: Encoder) throws {
+    func encode(to encoder: Encoder) throws {
         var c = encoder.container(keyedBy: CodingKeys.self)
         try c.encode(id, forKey: .id)
         try c.encode(parents, forKey: .parents)
@@ -237,14 +236,14 @@ struct PullRequest: Item, Announceable, Closeable, Sortable {
         let x = components.pop()! + "!]"
         components.push(x)
 
-        if listFieldsDefinition.labels, labels.hasItems {
+        if listFieldsDefinition.labels, !labels.isEmpty {
             let l = labels.map(\.name).joined(separator: "] [")
             components.push("[\(l)]")
         }
         if listFieldsDefinition.repo, let r = repo {
             components.push("(\(r.nameWithOwner))")
         }
-        if listFieldsDefinition.branch, headRefName.hasItems {
+        if listFieldsDefinition.branch, !headRefName.isEmpty {
             components.push("(\(headRefName))")
         }
         if listFieldsDefinition.author, let a = author {
@@ -301,12 +300,12 @@ struct PullRequest: Item, Announceable, Closeable, Sortable {
 
         let latestReviewResults = latestReviews.filter { $0.state == .approved || $0.state == .changes_requested }.compactMap { $0.author?.login }
         let waitingFor = requests.compactMap { $0.reviewer?.login }.filter { !latestReviewResults.contains($0) }
-        return waitingFor.count > 0
+        return !waitingFor.isEmpty
     }
 
     var allReviewersApprove: Bool {
         let r = latestReviews
-        return r.count > 0 && !(r.contains { $0.state != .approved })
+        return !r.isEmpty && !(r.contains { $0.state != .approved })
     }
 
     var someReviewersBlock: Bool {
@@ -318,14 +317,14 @@ struct PullRequest: Item, Announceable, Closeable, Sortable {
         let ra = TTY.rightAlign("#\(number)")
         log("[![*\(ra)*] \(title)!]")
         let l = labels
-        if l.count > 0 {
+        if !l.isEmpty {
             log("\t\t[" + l.map(\.name).joined(separator: "] [") + "]")
         }
         log()
         if let r = repo {
             log("           [$Repo!] \(r.nameWithOwner)")
         }
-        if headRefName.hasItems {
+        if !headRefName.isEmpty {
             log("         [$Branch!] \(headRefName)")
         }
         log("            [$URL!] \(url.absoluteString)")
@@ -357,14 +356,14 @@ struct PullRequest: Item, Announceable, Closeable, Sortable {
         let reviewComments = rs.reduce([]) { $0 + $1.comments }
         let reviewsWithText = rs.filter { !($0.state == .commented && $0.body.isEmpty) }
         let commentItems = reviewsWithText as [DetailPrinter] + reviewComments as [DetailPrinter] + comments as [DetailPrinter]
-        if commentItems.count > 0 {
+        if !commentItems.isEmpty {
             log("       [$Comments!] \(commentItems.count)")
         }
 
         log()
 
         let react = reactions
-        if react.hasItems {
+        if !react.isEmpty {
             log("[!Reactions!]")
             let line = react.map { "[\($0.emoji) @\($0.user?.login ?? "")]" }.joined(separator: " ")
             log(line)
@@ -372,7 +371,7 @@ struct PullRequest: Item, Announceable, Closeable, Sortable {
         }
 
         let st = latestStatuses
-        if st.hasItems {
+        if !st.isEmpty {
             log("[!Statuses")
             for s in st {
                 switch s.state {
@@ -390,23 +389,23 @@ struct PullRequest: Item, Announceable, Closeable, Sortable {
         }
 
         let latest = latestReviews
-        if latest.hasItems {
+        if !latest.isEmpty {
             let approvingReviewers = latest.filter { $0.state == .approved }.compactMap { $0.author?.login }.map { "@" + $0 }
             let blockingReviewers = latest.filter { $0.state == .changes_requested }.compactMap { $0.author?.login }.map { "@" + $0 }
             let pendingReviewers = reviewRequests.compactMap { $0.reviewer?.login }.map { "@" + $0 }.filter { !(approvingReviewers.contains($0) || blockingReviewers.contains($0)) }
-            if approvingReviewers.hasItems || blockingReviewers.hasItems || pendingReviewers.hasItems {
+            if !approvingReviewers.isEmpty || !blockingReviewers.isEmpty || !pendingReviewers.isEmpty {
                 log("[!Reviews")
-                if approvingReviewers.count > 0 {
+                if !approvingReviewers.isEmpty {
                     log("[G*[+] " + approvingReviewers.joined(separator: ", ") + " approved changes")
                 }
-                if blockingReviewers.count > 0 {
+                if !blockingReviewers.isEmpty {
                     if blockingReviewers.count > 1 {
                         log("[R*[X] " + blockingReviewers.joined(separator: ", ") + " request changes")
                     } else {
                         log("[R*[X] " + blockingReviewers.joined(separator: ", ") + " requests changes")
                     }
                 }
-                if pendingReviewers.count > 0 {
+                if !pendingReviewers.isEmpty {
                     if pendingReviewers.count > 1 {
                         log("[*[ ] " + pendingReviewers.joined(separator: ", ") + " haven't reviewed yet")
                     } else {
@@ -419,7 +418,7 @@ struct PullRequest: Item, Announceable, Closeable, Sortable {
 
         if CommandLine.argument(exists: "-body") {
             let b = bodyText.trimmingCharacters(in: .whitespacesAndNewlines)
-            if b.count > 0 {
+            if !b.isEmpty {
                 log("[!Body!]")
                 log(b, unformatted: true)
                 log()
@@ -428,7 +427,7 @@ struct PullRequest: Item, Announceable, Closeable, Sortable {
 
         if CommandLine.argument(exists: "-comments") {
             let co = commentItems.sorted(by: { $0.createdAt < $1.createdAt })
-            if co.hasItems {
+            if !co.isEmpty {
                 for c in co {
                     c.printDetails()
                 }
@@ -536,7 +535,7 @@ struct PullRequest: Item, Announceable, Closeable, Sortable {
         }
     }
 
-    static let fragment = Fragment(on: "PullRequest") {
+    nonisolated static let fragment = Fragment(on: "PullRequest") {
         Field.id
         Field("updatedAt")
         Field("mergeable")
@@ -577,18 +576,18 @@ struct PullRequest: Item, Announceable, Closeable, Sortable {
         }
     }
 
-    static var fragmentWithComments: Fragment {
+    nonisolated static var fragmentWithComments: Fragment {
         fragment.addingElement(
             Group("comments", paging: .first(count: 100, paging: true)) { Comment.fragmentForItems }
         )
     }
 
-    static let reactionsFragment = Fragment(on: "PullRequest") {
+    nonisolated static let reactionsFragment = Fragment(on: "PullRequest") {
         Field.id // not using fragment, no need to re-parse
         Group("reactions", paging: .first(count: 100, paging: true)) { Reaction.fragment }
     }
 
-    static let commentsFragment = Fragment(on: "PullRequest") {
+    nonisolated static let commentsFragment = Fragment(on: "PullRequest") {
         Field.id // not using fragment, no need to re-parse
         Group("comments", paging: .first(count: 100, paging: true)) { Comment.fragmentForItems }
     }

@@ -1,6 +1,5 @@
 import Foundation
 
-@MainActor
 struct Relationship: Codable, Equatable {
     let parentId: String
     var syncState = SyncState.none
@@ -14,7 +13,7 @@ struct Relationship: Codable, Equatable {
         syncState = .new
     }
 
-    nonisolated static func == (lhs: Relationship, rhs: Relationship) -> Bool {
+    static func == (lhs: Relationship, rhs: Relationship) -> Bool {
         lhs.parentId == rhs.parentId
     }
 }

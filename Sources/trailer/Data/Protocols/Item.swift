@@ -3,7 +3,7 @@ import Lista
 import TrailerJson
 
 @MainActor
-protocol Item: Identifiable, Databaseable, Equatable {
+protocol Item: ItemIdentity, Databaseable, Equatable {
     static var allItems: [String: Self] { get set }
 
     static func parse(parent: Parent?, elementType: String, node: TypedJson.Entry, level: Int) -> Self?
@@ -52,7 +52,6 @@ extension Item {
         DB.lookup(type: type, id: id) != nil
     }
 
-    @MainActor
     static func purgeStaleRelationships() {
         allItems = allItems.mapValues { item in
             var newItem = item
@@ -130,16 +129,15 @@ extension Item {
             log(level: .verbose, "Created \(newItemCount) \(typeName) item(s) after update")
         }
 
-        let items = allItems
+        // Encoding stays on the main actor, since the models are main-actor isolated. Only the
+        // file write, which is the slow part, is handed off.
         let url = dataURL
-        await Task.detached {
-            do {
-                let data = try encoder.encode(items)
-                try data.write(to: url)
-            } catch {
-                await log("Error saving to \(url)")
-            }
-        }.value
+        do {
+            let data = try encoder.encode(allItems)
+            try await Task.detached { try data.write(to: url) }.value
+        } catch {
+            log("Error saving to \(url): \(error.localizedDescription)")
+        }
     }
 
     static func loadAll(using decoder: JSONDecoder) async {
@@ -217,7 +215,7 @@ extension Item {
         }
     }
 
-    nonisolated static func == (lhs: Self, rhs: Self) -> Bool {
+    static func == (lhs: Self, rhs: Self) -> Bool {
         lhs.id == rhs.id
     }
 }

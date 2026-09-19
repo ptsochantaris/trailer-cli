@@ -13,25 +13,19 @@ enum Action: String {
     case stats
 }
 
-@MainActor
 enum Actions {
+    private static let knownArguments: Set<String> = [
+        "-a", "-active", "-approved", "-b", "-before", "-blocked", "-body", "-c", "-comments", "-conflict", "-debug", "-dryrun", "-e", "-fields", "-fresh", "-from", "-green",
+        "-h", "-inactive", "-l", "-m", "-max-node-cost", "-mentioned", "-mergeable", "-mine", "-mono", "-n", "-number", "-o", "-participated", "-purge",
+        "-r", "-red", "-refresh", "-server", "-set-default", "-sort", "-t", "-token", "-unreviewed", "-v", "-version", "-within"
+    ]
+
     private static func checkArguments() -> [String]? {
         // Very rough sanity check to catch typos, should be more fine-grained per action
-        let invalidArguments = CommandLine.arguments.filter { $0.hasPrefix("-") }.map { $0.lowercased() }.filter { arg in
-            switch arg {
-            case "-a", "-active", "-approved", "-b", "-before", "-blocked", "-body", "-c", "-comments", "-conflict", "-debug", "-dryrun", "-e", "-fields", "-fresh", "-from", "-green",
-                 "-h", "-inactive", "-l", "-m", "-max-node-cost", "-mentioned", "-mergeable", "-mine", "-mono", "-n", "-number", "-o", "-participated", "-purge",
-                 "-r", "-red", "-refresh", "-server", "-set-default", "-sort", "-t", "-token", "-unreviewed", "-v", "-version", "-within":
-                false
-            default:
-                true
-            }
-        }
-        if invalidArguments.count > 0 {
-            return invalidArguments
-        } else {
-            return nil
-        }
+        let invalidArguments = CommandLine.arguments
+            .map { $0.lowercased() }
+            .filter { $0.hasPrefix("-") && !knownArguments.contains($0) }
+        return invalidArguments.isEmpty ? nil : invalidArguments
     }
 
     static func performAction(_ action: Action, listSequence: [String]?) async throws {
@@ -49,9 +43,13 @@ enum Actions {
             log("[!Will delete token and data for '\(config.server)' in 5 seconds[R*")
             log("[&Press CTRL-C to abort*]&]!]")
             log()
-            try? await Task.sleep(nanoseconds: 5_000_000_000)
-            try! FileManager.default.removeItem(at: config.saveLocation)
-            log("All data for [*\(config.server)*] has been removed")
+            try? await Task.sleep(for: .seconds(5))
+            do {
+                try FileManager.default.removeItem(at: config.saveLocation)
+                log("All data for [*\(config.server)*] has been removed")
+            } catch {
+                reportAndExit(message: "Could not remove data for '\(config.server)': \(error.localizedDescription)")
+            }
 
         case .list:
             if let i = checkArguments() {
@@ -118,7 +116,7 @@ enum Actions {
             }
             line += (word + " ")
         }
-        if line.hasItems {
+        if !line.isEmpty {
             log("[!\(line)!]")
         }
     }
@@ -144,12 +142,12 @@ enum Actions {
             }
             line += (word + " ")
         }
-        if line.hasItems {
+        if !line.isEmpty {
             dumpLine()
         }
     }
 
-    static func printErrorMesage(_ message: String?) {
+    static func printErrorMessage(_ message: String?) {
         if let message {
             log()
             log("[![R*!! \(message)*]!]")

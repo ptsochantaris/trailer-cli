@@ -3,8 +3,7 @@ import Lista
 import TrailerJson
 import TrailerQL
 
-@MainActor
-struct ReviewRequest: Item {
+struct ReviewRequest: @MainActor Item {
     var id: String
     var parents: [String: Lista<Relationship>]
     var syncState = SyncState.none
@@ -52,7 +51,7 @@ struct ReviewRequest: Item {
         return nil
     }
 
-    static let fragment = Fragment(on: "ReviewRequest") {
+    nonisolated static let fragment = Fragment(on: "ReviewRequest") {
         Field.id
         Group("requestedReviewer") { User.fragment }
     }

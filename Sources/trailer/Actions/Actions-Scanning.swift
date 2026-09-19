@@ -122,7 +122,7 @@ extension Actions {
             if let s = a.searchForRepo, !r.nameWithOwner.localizedCaseInsensitiveContains(s) {
                 return false
             }
-            if a.onlyEmpty, r.pullRequests.count > 0 || r.issues.count > 0 {
+            if a.onlyEmpty, !r.pullRequests.isEmpty || !r.issues.isEmpty {
                 return false
             }
             if a.hideEmpty, r.visibility == .hidden || (r.pullRequests.isEmpty && r.issues.isEmpty) {
