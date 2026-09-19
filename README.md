@@ -59,10 +59,17 @@ You'll need the Swift toolchain from [swift.org](https://www.swift.org/install/w
 
 Build from an **x64 Native Tools Command Prompt for VS 2022** — the plain "Developer Command Prompt" and the x86 one both target 32-bit, which compiles but then fails to link:
 ```
-swift build -c release -Xswiftc -Ounchecked -Xswiftc -gnone
+swift build -c release -Xswiftc -Ounchecked
 swift build -c release --show-bin-path
 ```
 Copy `trailer.exe` out of the directory that the second command prints, along with the DLLs from `%LOCALAPPDATA%\Programs\Swift\Runtimes\<version>\usr\bin`, into a directory on your `PATH`. Swift on Windows has no static runtime, so those DLLs need to travel with the executable.
+
+Then, from that directory, strip the debug information and set the stack size:
+```
+llvm-objcopy --strip-all trailer.exe
+editbin /stack:24117248 trailer.exe
+```
+Run these in that order: `llvm-objcopy` rewrites the executable, so stripping afterwards would discard the stack setting. The larger stack matters because Windows cannot raise it at runtime the way the other platforms do, and the 1MB default is not enough for deeply nested items.
 
 ## Quickstart
 Run Trailer without any arguments for some help. To get started:
