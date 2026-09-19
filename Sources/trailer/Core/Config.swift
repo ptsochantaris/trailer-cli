@@ -87,7 +87,9 @@ struct Config {
         set {
             let path = saveLocation.appending(path: "using-new-ids").path
             if newValue {
-                FileManager.default.createFile(atPath: path, contents: nil)
+                if !FileManager.default.createFile(atPath: path, contents: nil) {
+                    log("[R*Could not create marker file at '\(path)'*]")
+                }
             } else {
                 try? FileManager.default.removeItem(atPath: path)
             }
