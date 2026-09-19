@@ -27,7 +27,7 @@ brew install ptsochantaris/tap/trailer-cli
 Otherwise put the downloaded binary into `/usr/local/bin`.
 
 ### Linux
-Put the downloaded binary into `/usr/local/bin`.
+Put the downloaded binary into `/usr/local/bin`. It is statically linked, so it needs no Swift runtime installed, but it does read the system's CA certificates in order to reach GitHub — minimal container images will need their `ca-certificates` package added.
 
 ### Windows
 Extract the downloaded ZIP into a directory on your `PATH`. The Swift runtime DLLs are bundled alongside `trailer.exe` and must stay in the same directory as it.
